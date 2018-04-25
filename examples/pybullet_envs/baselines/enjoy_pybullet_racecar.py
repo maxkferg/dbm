@@ -6,18 +6,16 @@ os.sys.path.insert(0,parentdir)
 
 import gym
 from pybullet_envs.bullet.racecarGymEnv import RacecarGymEnv
-
 from baselines import deepq
 
 
 def main():
-    
-    env = RacecarGymEnv(renders=True,isDiscrete=True)
+    env = RacecarGymEnv(renders=True, isDiscrete=True)
     act = deepq.load("racecar_model.pkl")
     print(act)
     while True:
         obs, done = env.reset(), False
-        print("===================================")        
+        print("===================================")
         print("obs")
         print(obs)
         episode_rew = 0

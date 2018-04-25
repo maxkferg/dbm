@@ -60,8 +60,8 @@ class RacecarGymEnv(gym.Env):
        action_dim = 2
        self._action_bound = 1
        action_high = np.array([self._action_bound] * action_dim)
-       self.action_space = spaces.Box(-action_high, action_high)
-    self.observation_space = spaces.Box(-observation_high, observation_high)
+       self.action_space = spaces.Box(-action_high, action_high, dtype=np.float32)
+    self.observation_space = spaces.Box(-observation_high, observation_high, dtype=np.float32)
     self.viewer = None
 
   def _reset(self):
@@ -110,6 +110,7 @@ class RacecarGymEnv(gym.Env):
      return self._observation
 
   def _step(self, action):
+    #print("Step")
     if (self._renders):
       basePos,orn = self._p.getBasePositionAndOrientation(self._racecar.racecarUniqueId)
       #self._p.resetDebugVisualizerCamera(1, 30, -40, basePos)

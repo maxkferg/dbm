@@ -17,13 +17,12 @@ def callback(lcl, glb):
     # stop training if reward exceeds 199
     total = sum(lcl['episode_rewards'][-101:-1]) / 100
     totalt = lcl['t']
-    is_solved = totalt > 2000 and total >= -50
+    is_solved = totalt > 2000 and total >= -40
     return is_solved
 
 
 def main():
-  
-    env = RacecarGymEnv(renders=False,isDiscrete=True)
+    env = RacecarGymEnv(renders=False, isDiscrete=True)
     model = deepq.models.mlp([64])
     act = deepq.learn(
         env,
