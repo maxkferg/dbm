@@ -32,10 +32,10 @@ horizontals = []
 verticals = []
 
 for row in range(im.size[1]):
-    if row % 10 == 0:
+    if row % 10 == 0 and row != 0:
         sys.stdout.write('.')
         sys.stdout.flush()
-    if row % 500 == 0:
+    if row % 500 == 0 and row != 0:
         print('#')
     for col in range(im.size[0]):
         if px[col, row][0] != 255:
@@ -60,24 +60,76 @@ for row in range(im.size[1]):
 clean_horizontals = [h for h in horizontals if h[0][0] != h[0][1]]
 clean_verticals = [v for v in verticals if v[1][0] != v[1][1]]
 
-print("HORIZONTALS:")
+print("\n")
+
+print("HORIZONTALS:" + str(len(clean_horizontals)))
 print(clean_horizontals)
-print("\n\n\n")
-print("VERTICALS:")
+print("\n")
+print("VERTICALS:" + str(len(clean_verticals)))
 print(clean_verticals)
+print("\n")
 
-# Test the algorithm by outputting a diagram of the same size with the walls highlighted in red
+# Compute stats about the mesh
 
-img = Image.new('RGB', im.size, color='white')
+min_x = im.size[0]
+max_x = 0
+min_y = im.size[1]
+max_y = 0
+
+for h in clean_horizontals:
+    if h[0][0] < min_x: min_x = h[0][0]
+    elif h[0][1] > max_x: max_x = h[0][1]
+
+    if h[1] < min_y: min_y = h[1]
+    elif h[1] > max_y: max_y = h[1]
+
+print("TOP_LEFT:     [", min_x, min_y, "]")
+print("BOTTOM_RIGHT: [", max_x, max_y, "]")
+
+
+def find_adjoining(line):
+    if is_horizontal(line):                             # [ [x_min, x_max], y ]
+        print("Horizontal, search the verticals")       # [ x, [y_min, y_max] ]
+        return list(filter(lambda l: (line[1] == l[1][0] or line[1] == l[1][1]) and
+                                     (line[0][0] == l[0] or line[0][1] == l[0]), verticals))
+    elif is_vertical(line):                             # [ x, [y_min, y_max] ]
+        print("Vertical, search the horizontals")       # [ [x_min, x_max], y ]
+        return list(filter(lambda l: (line[0] == l[0][0] or line[0] == l[0][1]) and
+                                     (line[1][0] == l[1] or line[1][1] == l[1]), horizontals))
+    else:
+        print("Error, not a valid vertical or horizontal line")
+        return []
+
+
+# Compute the normals of the walls
+#
+# Notes:
+# 1) Seed the first two lines with the correct normal
+# 2) For each line, find all connectors and rotate normal accordingly
+# 3) If no connector is found, search for the nearest line above or to the left of the line and negate
+
+
+horz_normals = [[0, -1]]
+vert_normals = [[+1, 0]]
+
+
+for h in clean_horizontals:
+    print(h, find_adjoining(h))
+
+for v in clean_verticals:
+    print(v, find_adjoining(v))
+
+# Test the algorithm by outputting a diagram of the same size with the walls highlighted in red and normals in blue
+
+img = Image.new('RGB', im.size, color='black')
 px = img.load()
 
 for h in clean_horizontals:
-    for col in range(h[0][0], h[0][1]):
+    for col in range(h[0][0], h[0][1]+1):
         px[col, h[1]] = (255, 0, 0)
 
 for v in clean_verticals:
-    for row in range(v[1][0], v[1][1]):
+    for row in range(v[1][0], v[1][1]+1):
         px[v[0], row] = (255, 0, 0)
 
 img.save("/Users/otgaard/Development/dbm/sim/assets/test.png", "PNG")
-
