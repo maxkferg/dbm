@@ -1,4 +1,4 @@
-name: dbm
+name: sim 
 channels:
 - defaults
 dependencies:
@@ -64,5 +64,5 @@ dependencies:
   - urllib3==1.22
   - werkzeug==0.14.1
   - zmq==0.0.0
-prefix: /Users/otgaard/anaconda2/envs/dbm
+prefix: /Users/otgaard/anaconda2/envs/sim
 
