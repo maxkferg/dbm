@@ -109,32 +109,51 @@ def find_adjoining(line):
 # 2) For each line, find all connectors and rotate normal accordingly
 # 3) If no connector is found, assume must be interior wall, if vertical, normal is -1 if horizontal, normal is -1
 
+lines = verticals + horizontals
+normals = [[]]*len(lines)
+normals[0] = [+1, 0]
 
-horz_normals = [[]]*len(horizontals)
-horz_normals[0] = [0, +1]
-vert_normals = [[]]*len(verticals)
-vert_normals[0] = [+1, 0]
+# curr_idx = 0
+# curr_line = lines[0]
+# curr_normal = normals[0]
+#
+# while curr_line:
+#     neighbours = find_adjoining(curr_line)
+#     nidx = list(map(lambda x: lines.index(x), neighbours))
+#     print(curr_idx, curr_line, neighbours, nidx)
+#
+#     if normals[nidx[0]] == []:
+#         curr_line = lines[nidx[0]]
+#         normals[nidx[0]] =
+#         curr_idx = nidx[0]
+#
+#     elif normals[nidx[1]] == []:
+#         curr_idx = nidx[1]
+#         curr_line = lines[curr_idx]
+#
+#     else:
+#         curr_line = None
 
-
-for h in range(len(horizontals)):
-    lne = horizontals[h]
+for h in range(len(lines)):
+    lne = lines[h]
     neighbours = find_adjoining(lne)
-    n_idx = list(map(lambda x: verticals.index(x), neighbours))
-    print(h, lne, neighbours, n_idx)
-    if horz_normals[h] == []:
-        if len(n_idx) == 0 or vert_normals[n_idx[0]] == []:
-            horz_normals[h] = [0,-1]
-        else:
-            if neighbours[0][1][0] == lne[0]:
-                horz_normals[h] = [0,-1]
+    if is_horizontal(lne):
+        n_idx = list(map(lambda x: verticals.index(x), neighbours))
+        print(h, lne, neighbours, n_idx)
+        if normals[h] == []:
+            if len(n_idx) == 0 or normals[n_idx[0]] == []:
+                normals[h] = [0,-1]
             else:
-                horz_normals[h] = [0,+1]
+                if neighbours[0][1][0] == lne[0]:
+                    normals[h] = [0,-1]
+                else:
+                    normals[h] = [0,+1]
 
-for v in range(len(verticals)):
-    lne = verticals[v]
-    neighbours = find_adjoining(lne)
-    n_idx = list(map(lambda x: horizontals.index(x), neighbours))
-    print(v, lne, neighbours, n_idx)
+#for v in range(len(verticals)):
+#    lne = verticals[v]
+#    neighbours = find_adjoining(lne)
+#    n_idx = list(map(lambda x: horizontals.index(x), neighbours))
+#    print(v, lne, neighbours, n_idx)
 
 # Test the algorithm by outputting a diagram of the same size with the walls highlighted in red and normals in blue
 
@@ -151,29 +170,29 @@ for v in verticals:
 
 # Draw the normals
 
-for h in range(len(horz_normals)):
-    nor = horz_normals[h]
-    lne = horizontals[h]
-    #print(nor, lne)
-    hw = (lne[0][0] + lne[0][1])/2
-    if nor != [] and nor[1] == 1:
-        for row in range(lne[1], lne[1] + 20):
-            px[hw, row] = (0, 0, 255)
-    elif nor != [] and nor[1] == -1:
-        for row in range(lne[1] - 20, lne[1]):
-            px[hw, row] = (0, 0, 255)
+for l in range(len(lines)):
+    if is_horizontal(lines[l]):
+        nor = normals[l]
+        lne = lines[l]
+        #print(nor, lne)
+        hw = (lne[0][0] + lne[0][1])/2
+        if nor != [] and nor[1] == 1:
+            for row in range(lne[1], lne[1] + 20):
+                px[hw, row] = (0, 0, 255)
+        elif nor != [] and nor[1] == -1:
+            for row in range(lne[1] - 20, lne[1]):
+                px[hw, row] = (0, 0, 255)
+    elif is_vertical(lines[l]):
+        nor = normals[l]
+        lne = lines[l]
+        #print(nor, lne)
+        hh = (lne[1][0] + lne[1][1])/2
+        if nor != [] and nor[0] == 1:
+            for col in range(lne[0], lne[0] + 20):
+                px[col, hh] = (0, 0, 255)
+        elif nor != [] and nor[0] == -1:
+            for col in range(lne[0] - 20, lne[0]):
+                px[col, hh] = (0, 0, 255)
 
-for v in range(len(vert_normals)):
-    nor = vert_normals[v]
-    lne = verticals[v]
-    #print(nor, lne)
-    hh = (lne[1][0] + lne[1][1])/2
-    if nor != [] and nor[0] == 1:
-        for col in range(lne[0], lne[0] + 20):
-            px[col, hh] = (0, 0, 255)
-    elif nor != [] and nor[0] == -1:
-        for col in range(lne[0] - 20, lne[0]):
-            px[col, hh] = (0, 0, 255)
 
-
-img.save("/Users/otgaard/Development/dbm/sim/assets/test.png", "PNG")
+img.save("assets/test.png", "PNG")
