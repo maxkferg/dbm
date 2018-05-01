@@ -43,6 +43,8 @@ for row in range(im.size[1]):
                     for line in horzs:
                         if line[0][1] == col - 1:
                             line[0][1] += 1
+                            if px[col, row+1][0] != 255:
+                                verticals.append([col, [row, row]])
                         appended = True
                 else:
                     print("Not Found, adding to verticals")
@@ -53,15 +55,22 @@ for row in range(im.size[1]):
                 for line in verts:
                     if line[1][1] == row - 1:
                         line[1][1] += 1
+                        if px[col+1, row][0] != 255:
+                            horizontals.append([[col, col], row])
                         appended = True
+
                 if not appended:
                     horzs = list(filter(lambda l: l[1] == row, horizontals))
                     if len(horzs) > 0:
                         for line in horzs:
                             if line[0][1] == col - 1:
                                 line[0][1] += 1
-                            appended = True
-
+                                if px[col, row + 1][0] != 255:
+                                    verticals.append([col, [row, row]])
+                    else:
+                        print("Not Found, adding to verticals")
+                        verticals.append([col, [row, row]])  # Add a pixel
+                        horizontals.append([[col, col], row])
 
 print("HORIZONTALS:")
 print(horizontals)
@@ -70,5 +79,18 @@ print("VERTICALS:")
 print(verticals)
 
 
+# Test the algorithm by outputting a diagram of the same size with the walls highlighted in red
 
+img = Image.new('RGB', im.size, color='white')
+px = img.load()
+
+for h in horizontals:
+    for col in range(h[0][0], h[0][1]):
+        px[col, h[1]] = (255, 0, 0)
+
+for v in verticals:
+    for row in range(v[1][0], v[1][1]):
+        px[v[0], row] = (255, 0, 0)
+
+img.save("/Users/otgaard/Development/dbm/sim/assets/test.png", "PNG")
 
