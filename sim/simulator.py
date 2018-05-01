@@ -1,3 +1,4 @@
+import sys
 from PIL import Image
 import numpy as np
 import scipy as sp
@@ -31,9 +32,13 @@ horizontals = []
 verticals = []
 
 for row in range(im.size[1]):
+    if row % 10 == 0:
+        sys.stdout.write('.')
+        sys.stdout.flush()
+    if row % 500 == 0:
+        print('#')
     for col in range(im.size[0]):
         if px[col, row][0] != 255:
-            print("[" + str(col) + ", " + str(row) + "]")
             verts = list(filter(lambda l: l[0] == col and l[1][1] == row-1, verticals))
             horzs = list(filter(lambda l: l[1] == row and l[0][1] == col-1, horizontals))
 
@@ -51,63 +56,26 @@ for row in range(im.size[1]):
                 else:
                     horizontals.append([[col, col], row])
 
-# for row in range(im.size[1]):
-#     for col in range(im.size[0]):
-#         if px[col, row][0] != 255:
-#             print("[" + str(col) + ", " + str(row) + "]")
-#             verts = list(filter(lambda l: l[0] == col, verticals))
-#
-#             if len(verts) == 0:
-#                 horzs = list(filter(lambda l: l[1] == row, horizontals))
-#                 if len(horzs) > 0:
-#                     appended = False
-#                     for line in horzs:
-#                         if line[0][1] == col - 1:
-#                             line[0][1] += 1
-#                             if px[col, row+1][0] != 255:
-#                                 verticals.append([col, [row, row]])
-#                         appended = True
-#                 else:
-#                     verticals.append([col, [row, row]])          # Add a pixel
-#                     horizontals.append([[col, col], row])
-#             else:
-#                 appended = False
-#                 for line in verts:
-#                     if line[1][1] == row - 1:
-#                         line[1][1] += 1
-#                         if px[col+1, row][0] != 255:
-#                             horizontals.append([[col, col], row])
-#                         appended = True
-#
-#                 if not appended:
-#                     horzs = list(filter(lambda l: l[1] == row, horizontals))
-#                     if len(horzs) > 0:
-#                         for line in horzs:
-#                             if line[0][1] == col - 1:
-#                                 line[0][1] += 1
-#                                 if px[col, row + 1][0] != 255:
-#                                     verticals.append([col, [row, row]])
-#                     else:
-#                         verticals.append([col, [row, row]])  # Add a pixel
-#                         horizontals.append([[col, col], row])
+# Remove all single-pixel lines
+clean_horizontals = [h for h in horizontals if h[0][0] != h[0][1]]
+clean_verticals = [v for v in verticals if v[1][0] != v[1][1]]
 
 print("HORIZONTALS:")
-print(horizontals)
+print(clean_horizontals)
 print("\n\n\n")
 print("VERTICALS:")
-print(verticals)
-
+print(clean_verticals)
 
 # Test the algorithm by outputting a diagram of the same size with the walls highlighted in red
 
 img = Image.new('RGB', im.size, color='white')
 px = img.load()
 
-for h in horizontals:
+for h in clean_horizontals:
     for col in range(h[0][0], h[0][1]):
         px[col, h[1]] = (255, 0, 0)
 
-for v in verticals:
+for v in clean_verticals:
     for row in range(v[1][0], v[1][1]):
         px[v[0], row] = (255, 0, 0)
 
