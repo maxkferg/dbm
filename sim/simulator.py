@@ -34,43 +34,62 @@ for row in range(im.size[1]):
     for col in range(im.size[0]):
         if px[col, row][0] != 255:
             print("[" + str(col) + ", " + str(row) + "]")
-            verts = list(filter(lambda l: l[0] == col, verticals))
+            verts = list(filter(lambda l: l[0] == col and l[1][1] == row-1, verticals))
+            horzs = list(filter(lambda l: l[1] == row and l[0][1] == col-1, horizontals))
 
-            if len(verts) == 0:
-                horzs = list(filter(lambda l: l[1] == row, horizontals))
-                if len(horzs) > 0:
-                    appended = False
-                    for line in horzs:
-                        if line[0][1] == col - 1:
-                            line[0][1] += 1
-                            if px[col, row+1][0] != 255:
-                                verticals.append([col, [row, row]])
-                        appended = True
-                else:
-                    print("Not Found, adding to verticals")
-                    verticals.append([col, [row, row]])          # Add a pixel
-                    horizontals.append([[col, col], row])
+            if len(verts) == 0 and len(horzs) == 0:
+                verticals.append([col, [row, row]])          # Add a pixel
+                horizontals.append([[col, col], row])
             else:
-                appended = False
-                for line in verts:
-                    if line[1][1] == row - 1:
-                        line[1][1] += 1
-                        if px[col+1, row][0] != 255:
-                            horizontals.append([[col, col], row])
-                        appended = True
+                if len(verts) > 0:
+                    verts[0][1][1] += 1
+                else:
+                    verticals.append([col, [row, row]])
 
-                if not appended:
-                    horzs = list(filter(lambda l: l[1] == row, horizontals))
-                    if len(horzs) > 0:
-                        for line in horzs:
-                            if line[0][1] == col - 1:
-                                line[0][1] += 1
-                                if px[col, row + 1][0] != 255:
-                                    verticals.append([col, [row, row]])
-                    else:
-                        print("Not Found, adding to verticals")
-                        verticals.append([col, [row, row]])  # Add a pixel
-                        horizontals.append([[col, col], row])
+                if len(horzs) > 0:
+                    horzs[0][0][1] += 1
+                else:
+                    horizontals.append([[col, col], row])
+
+# for row in range(im.size[1]):
+#     for col in range(im.size[0]):
+#         if px[col, row][0] != 255:
+#             print("[" + str(col) + ", " + str(row) + "]")
+#             verts = list(filter(lambda l: l[0] == col, verticals))
+#
+#             if len(verts) == 0:
+#                 horzs = list(filter(lambda l: l[1] == row, horizontals))
+#                 if len(horzs) > 0:
+#                     appended = False
+#                     for line in horzs:
+#                         if line[0][1] == col - 1:
+#                             line[0][1] += 1
+#                             if px[col, row+1][0] != 255:
+#                                 verticals.append([col, [row, row]])
+#                         appended = True
+#                 else:
+#                     verticals.append([col, [row, row]])          # Add a pixel
+#                     horizontals.append([[col, col], row])
+#             else:
+#                 appended = False
+#                 for line in verts:
+#                     if line[1][1] == row - 1:
+#                         line[1][1] += 1
+#                         if px[col+1, row][0] != 255:
+#                             horizontals.append([[col, col], row])
+#                         appended = True
+#
+#                 if not appended:
+#                     horzs = list(filter(lambda l: l[1] == row, horizontals))
+#                     if len(horzs) > 0:
+#                         for line in horzs:
+#                             if line[0][1] == col - 1:
+#                                 line[0][1] += 1
+#                                 if px[col, row + 1][0] != 255:
+#                                     verticals.append([col, [row, row]])
+#                     else:
+#                         verticals.append([col, [row, row]])  # Add a pixel
+#                         horizontals.append([[col, col], row])
 
 print("HORIZONTALS:")
 print(horizontals)
