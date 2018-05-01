@@ -88,12 +88,10 @@ print("BOTTOM_RIGHT: [", max_x, max_y, "]")
 
 
 def find_adjoining(line):
-    if is_horizontal(line):                             # [ [x_min, x_max], y ]
-        print("Horizontal, search the verticals")       # [ x, [y_min, y_max] ]
+    if is_horizontal(line):                             # [ [x_min, x_max], y ], [ x, [y_min, y_max] ]
         return list(filter(lambda l: (line[1] == l[1][0] or line[1] == l[1][1]) and
                                      (line[0][0] == l[0] or line[0][1] == l[0]), verticals))
-    elif is_vertical(line):                             # [ x, [y_min, y_max] ]
-        print("Vertical, search the horizontals")       # [ [x_min, x_max], y ]
+    elif is_vertical(line):                             # [ x, [y_min, y_max] ], [ [x_min, x_max], y ]
         return list(filter(lambda l: (line[0] == l[0][0] or line[0] == l[0][1]) and
                                      (line[1][0] == l[1] or line[1][1] == l[1]), horizontals))
     else:
@@ -109,7 +107,7 @@ def find_adjoining(line):
 # 3) If no connector is found, search for the nearest line above or to the left of the line and negate
 
 
-horz_normals = [[0, -1]]
+horz_normals = [[0, +1]]
 vert_normals = [[+1, 0]]
 
 
@@ -131,5 +129,32 @@ for h in clean_horizontals:
 for v in clean_verticals:
     for row in range(v[1][0], v[1][1]+1):
         px[v[0], row] = (255, 0, 0)
+
+# Draw the normals
+
+for h in range(len(horz_normals)):
+    nor = horz_normals[h]
+    lne = horizontals[h]
+    print(nor, lne)
+    hw = (lne[0][0] + lne[0][1])/2
+    if nor[1] == 1:
+        for row in range(lne[1], lne[1] + 20):
+            px[hw, row] = (0, 0, 255)
+    elif nor[1] == -1:
+        for row in range(lne[1] - 20, lne[1]):
+            px[hw, row] = (0, 0, 255)
+
+for v in range(len(vert_normals)):
+    nor = vert_normals[v]
+    lne = verticals[v]
+    print(nor, lne)
+    hh = (lne[1][0] + lne[1][1])/2
+    if nor[0] == 1:
+        for col in range(lne[0], lne[0] + 20):
+            px[col, hh] = (0, 0, 255)
+    elif nor[0] == -1:
+        for col in range(lne[0] - 20, lne[0]):
+            px[col, hh] = (0, 0, 255)
+
 
 img.save("/Users/otgaard/Development/dbm/sim/assets/test.png", "PNG")
