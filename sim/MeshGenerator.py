@@ -25,6 +25,16 @@ def end_pos(line):
     return [line[0][1], line[1]] if is_horizontal(line) else [line[0], line[1][1]]
 
 
+def centre_pos(line):
+    SP = start_pos(line)
+    EP = end_pos(line)
+    return [(SP[0] + EP[0])/2., (SP[1] + SP[1])/2.]
+
+
+def line_len(line):
+    return line[0][1] - line[0][0] if is_horizontal(line) else line[1][1] - line[1][0]
+
+
 # Basically the 2D perp operator
 def turn_left(normal):
     return [-normal[1], normal[0]]
@@ -34,6 +44,14 @@ def turn_left(normal):
 def turn_right(normal):
     return [normal[1], -normal[0]]
 
+
+def get_angle(normal):
+    if normal[0] == 0:
+        if normal[1] == 1: return 0.
+        elif normal[1] == -1: return math.pi
+    elif normal[1] == 0:
+        if normal[0] == 1: return math.pi/2.
+        elif normal[0] == -1: return 3.*math.pi/2.
 
 def compute_normal(neigh_line, neigh_normal, curr_line):
     nSP = start_pos(neigh_line)
@@ -247,24 +265,6 @@ class Generator:
                     for col in range(lne[0] - normal_len, lne[0]):
                         px[col, hh] = (0, 0, 255)
 
-        # Quick hack to test the affine functions, draw a translated box in yellow
-
-        points = [
-            [-10., -10., 0., 1.],
-            [+10., -10., 0., 1.],
-            [+10., +10., 0., 1.],
-            [-10., +10., 0., 1.]]
-
-        T = make_translation([100, 100, 0])
-        R = make_rotation([0., 0., 1.], math.pi/4.)
-        M = np.dot(T, R)
-        transformed = list(map(lambda x: np.dot(M, x), points))
-
-        print(transformed)
-
-        for el in transformed:
-            px[el[0], el[1]] = (255, 255, 0)
-
         img.save(filename, "PNG")
 
     def export_to_object(self, filename="assets/output.obj"):
@@ -272,7 +272,50 @@ class Generator:
         dim = max(self.size[0], self.size[1])
         inv_dim = 1./dim
 
-        planes = []         # len(planes) = len(lines)
+        scale = make_scale([inv_dim, inv_dim, inv_dim])
+
+        # Turn a generic plane into a plane centered at the midpoint, with the normal in the correct position
+        rot_axis = [0, 0, 1]
+
+        vertices = []
+        indices = []
+
+        for i in range(len(self.lines)):
+            normal = self.normals[i]
+            if not normal: continue
+            line = self.lines[i]
+            rot = make_rotation(rot_axis, get_angle(normal))
+            ln = line_len(line)
+            hlen = ln/2.
+            print(ln, hlen)
+
+            positions = [
+                [-hlen, 0., 0., 1.],
+                [+hlen, 0., 0., 1.],
+                [+hlen, 0., 1., 1.],
+                [-hlen, 0., 1., 1.]]
+            centre = centre_pos(line) + [0.]
+            print(centre)
+            trans = make_translation(centre)
+
+            model_mat = np.dot(scale, np.dot(trans, rot))
+            vidx = len(vertices)
+            for p in positions:
+                vertices.append(np.dot(model_mat, p))
+
+            indices.append(vidx)
+            indices.append(vidx+1)
+            indices.append(vidx+2)
+            indices.append(vidx)
+            indices.append(vidx+2)
+            indices.append(vidx+3)
+
+        print(vertices)
+        print(indices)
+
+
+
+
 
 
 
