@@ -1,5 +1,7 @@
 import sys
 from PIL import Image
+import numpy as np
+import math
 
 '''Lines are based on the assumption that they are horizontal or vertical and
 therefore are identified by a range over x or y and a single value for the coordinate
@@ -52,6 +54,34 @@ def compute_normal(neigh_line, neigh_normal, curr_line):
 
     return []
 
+
+def translation_matrix(pos):
+    return np.array([[1., 0., 0., pos[0]],
+                     [0., 1., 0., pos[1]],
+                     [0., 0., 1., pos[2]],
+                     [0., 0., 0., 1.]])
+
+
+def scale_matrix(scale):
+    return np.array([[scale[0], 0., 0., 0.],
+                     [0., scale[1], 0., 0.],
+                     [0., 0., scale[2], 0.],
+                     [0., 0., 0., 1.]])
+
+
+# Adapted to affine version from https://stackoverflow.com/questions/6802577/rotation-of-3d-vectors
+def rotation_matrix(axis, theta):
+    axis = np.asarray(axis)
+    axis = axis/math.sqrt(np.dot(axis, axis))
+    a = math.cos(theta/2.0)
+    b, c, d = -axis*math.sin(theta/2.0)
+    aa, bb, cc, dd = a*a, b*b, c*c, d*d
+    bc, ad, ac, ab, bd, cd = b*c, a*d, a*c, a*b, b*d, c*d
+    return np.array([[aa+bb-cc-dd, 2*(bc+ad), 2*(bd-ac), 0.],
+                     [2*(bc-ad), aa+cc-bb-dd, 2*(cd+ab), 0.],
+                     [2*(bd+ac), 2*(cd-ab), aa+dd-bb-cc, 0.],
+                     [0., 0., 0., 1.]])
+
 # Notes:
 # 1) All lines are vertical or horizontal
 # 2) Any corner in the image must be split into two lines
@@ -81,8 +111,7 @@ def compute_normal(neigh_line, neigh_normal, curr_line):
 # it must be an internal wall
 
 
-
-class MeshGenerator:
+class Generator:
     def __init__(self):
         self.horizontals = []
         self.verticals = []
@@ -167,7 +196,7 @@ class MeshGenerator:
                 self.normals[nidx[0]] = compute_normal(curr_line, curr_normal, self.lines[nidx[0]])
                 curr_normal = self.normals[nidx[0]]
                 curr_line = self.lines[nidx[0]]
-            elif not self.normals[nidx[1]]:
+            elif len(nidx) > 1 and not self.normals[nidx[1]]:
                 self.normals[nidx[1]] = compute_normal(curr_line, curr_normal, self.lines[nidx[1]])
                 curr_normal = self.normals[nidx[1]]
                 curr_line = self.lines[nidx[1]]
@@ -180,7 +209,7 @@ class MeshGenerator:
                     curr_normal = [-1, 0]
                     self.normals[idx] = [-1, 0]
 
-    def render_to_image(self, normal_len=5, filename="assets/output.png"):
+    def render_to_image(self, filename="assets/output.png", normal_len=5):
         img = Image.new('RGB', self.size, color='black')
         px = img.load()
 
@@ -220,6 +249,13 @@ class MeshGenerator:
 
         img.save(filename, "PNG")
 
-    def export_obj_file(self, filename="assets/output.obj"):
-        pass
+    def export_to_object(self, filename="assets/output.obj"):
+        # Normalise to the image size taking the longer axis as the dimension for the model
+        dim = max(self.size[0], self.size[1])
+        inv_dim = 1./dim
+
+        planes = []         # len(planes) = len(lines)
+
+
+
 
