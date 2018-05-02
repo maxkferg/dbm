@@ -1,8 +1,5 @@
 import argparse
 from MeshGenerator import Generator
-from MeshGenerator import rotation_matrix
-import math
-import numpy as np
 
 # Example:
 # python simulator.py
@@ -18,9 +15,6 @@ parser.add_argument("--dump-")
 args = parser.parse_args()
 
 generator = Generator()
-
-print(np.dot(rotation_matrix([0, 0, 1], math.pi), [1, 0, 0]))
-exit(0)
 
 generator.process_image(args.plan_file)
 if args.render_image:

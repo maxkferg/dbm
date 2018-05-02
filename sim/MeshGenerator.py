@@ -55,14 +55,14 @@ def compute_normal(neigh_line, neigh_normal, curr_line):
     return []
 
 
-def translation_matrix(pos):
+def make_translation(pos):
     return np.array([[1., 0., 0., pos[0]],
                      [0., 1., 0., pos[1]],
                      [0., 0., 1., pos[2]],
                      [0., 0., 0., 1.]])
 
 
-def scale_matrix(scale):
+def make_scale(scale):
     return np.array([[scale[0], 0., 0., 0.],
                      [0., scale[1], 0., 0.],
                      [0., 0., scale[2], 0.],
@@ -70,7 +70,7 @@ def scale_matrix(scale):
 
 
 # Adapted to affine version from https://stackoverflow.com/questions/6802577/rotation-of-3d-vectors
-def rotation_matrix(axis, theta):
+def make_rotation(axis, theta):
     axis = np.asarray(axis)
     axis = axis/math.sqrt(np.dot(axis, axis))
     a = math.cos(theta/2.0)
@@ -247,6 +247,24 @@ class Generator:
                     for col in range(lne[0] - normal_len, lne[0]):
                         px[col, hh] = (0, 0, 255)
 
+        # Quick hack to test the affine functions, draw a translated box in yellow
+
+        points = [
+            [-10., -10., 0., 1.],
+            [+10., -10., 0., 1.],
+            [+10., +10., 0., 1.],
+            [-10., +10., 0., 1.]]
+
+        T = make_translation([100, 100, 0])
+        R = make_rotation([0., 0., 1.], math.pi/4.)
+        M = np.dot(T, R)
+        transformed = list(map(lambda x: np.dot(M, x), points))
+
+        print(transformed)
+
+        for el in transformed:
+            px[el[0], el[1]] = (255, 255, 0)
+
         img.save(filename, "PNG")
 
     def export_to_object(self, filename="assets/output.obj"):
@@ -255,6 +273,8 @@ class Generator:
         inv_dim = 1./dim
 
         planes = []         # len(planes) = len(lines)
+
+
 
 
 
