@@ -122,11 +122,11 @@ normals = [[]]*len(lines)
 normals[0] = [+1, 0]
 
 
-def perp(normal):
+def turn_left(normal):
     return [-normal[1], normal[0]]
 
 
-def rev_perp(normal):
+def turn_right(normal):
     return [normal[1], -normal[0]]
 
 
@@ -137,15 +137,15 @@ def compute_normal(neigh_line, neigh_normal, curr_line):
     cEP = end_pos(curr_line)
 
     if is_horizontal(curr_line):
-        if cSP == nEP: return rev_perp(neigh_normal)
-        elif cSP == nSP: return perp(neigh_normal)
-        elif cEP == nEP: return perp(neigh_normal)
-        elif cEP == nSP: return rev_perp(neigh_normal)
+        if cSP == nEP: return turn_right(neigh_normal)
+        elif cSP == nSP: return turn_left(neigh_normal)
+        elif cEP == nEP: return turn_left(neigh_normal)
+        elif cEP == nSP: return turn_right(neigh_normal)
     elif is_vertical(curr_line):
-        if cSP == nEP: return perp(neigh_normal)
-        elif cSP == nSP: return rev_perp(neigh_normal)
-        elif cEP == nEP: return rev_perp(neigh_normal)
-        elif cEP == nSP: return perp(neigh_normal)
+        if cSP == nEP: return turn_left(neigh_normal)
+        elif cSP == nSP: return turn_right(neigh_normal)
+        elif cEP == nEP: return turn_right(neigh_normal)
+        elif cEP == nSP: return turn_left(neigh_normal)
 
     return []
 
@@ -169,7 +169,13 @@ while curr_line:
         curr_normal = normals[nidx[1]]
         curr_line = lines[nidx[1]]
     else:
-        curr_line = None
+        # Search for the next line without a normal, it must, by inference, be a vertical line to the left and
+        # therefore has a normal of [-1,0], repeat until no more vertical lines with null normals remain
+        idx = normals.index([])
+        curr_line = lines[idx] if is_vertical(lines[idx]) else None
+        if curr_line:
+            curr_normal = [-1, 0]
+            normals[idx] = [-1, 0]
 
 # Test the algorithm by outputting a diagram of the same size with the walls highlighted in red and normals in blue
 
