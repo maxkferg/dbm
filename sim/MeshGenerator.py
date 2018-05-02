@@ -292,8 +292,8 @@ class Generator:
             positions = [
                 [-hlen, 0., 0., 1.],
                 [+hlen, 0., 0., 1.],
-                [+hlen, 0., 1., 1.],
-                [-hlen, 0., 1., 1.]]
+                [+hlen, 0., 100., 1.],
+                [-hlen, 0., 100., 1.]]
             centre = centre_pos(line) + [0.]
             print(centre)
             trans = make_translation(centre)
@@ -301,11 +301,12 @@ class Generator:
             model_mat = np.dot(scale, np.dot(trans, rot))
             vidx = len(vertices)
             for p in positions:
-                vertices.append(np.dot(model_mat, p))
+                vertices.append([np.dot(model_mat, p), normal + [0.]])
 
             indices.append(vidx)
             indices.append(vidx+1)
             indices.append(vidx+2)
+
             indices.append(vidx)
             indices.append(vidx+2)
             indices.append(vidx+3)
@@ -313,12 +314,24 @@ class Generator:
         print(vertices)
         print(indices)
 
+        vertex_string = "v {} {} {}\n"
+        normal_string = "vn {} {} {}\n"
+        face_string = "f {} {} {}\n"
 
+        file = open(filename, "w")
 
+        for v in vertices:
+            file.write(vertex_string.format(v[0][0], v[0][1], v[0][2]))
 
+        file.write("\n")
 
+        for v in vertices:
+            file.write(normal_string.format(v[1][0], v[1][1], v[1][2]))
 
+        file.write("\n")
 
+        for i in range(int(len(indices)/3)):
+            idx = 3*i
+            file.write(face_string.format(indices[idx]+1, indices[idx+1]+1, indices[idx+2]+1))
 
-
-
+        file.close()
