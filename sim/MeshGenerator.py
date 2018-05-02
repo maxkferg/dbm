@@ -28,7 +28,7 @@ def end_pos(line):
 def centre_pos(line):
     SP = start_pos(line)
     EP = end_pos(line)
-    return [(SP[0] + EP[0])/2., (SP[1] + SP[1])/2.]
+    return [(SP[0] + EP[0])/2., (SP[1] + EP[1])/2.]
 
 
 def line_len(line):
@@ -47,8 +47,8 @@ def turn_right(normal):
 
 def get_angle(normal):
     if normal[0] == 0:
-        if normal[1] == 1: return 0.
-        elif normal[1] == -1: return math.pi
+        if normal[1] == 1: return math.pi
+        elif normal[1] == -1: return 0.
     elif normal[1] == 0:
         if normal[0] == 1: return math.pi/2.
         elif normal[0] == -1: return 3.*math.pi/2.
@@ -280,6 +280,8 @@ class Generator:
         vertices = []
         indices = []
 
+        line_height = 40.
+
         for i in range(len(self.lines)):
             normal = self.normals[i]
             if not normal: continue
@@ -287,15 +289,13 @@ class Generator:
             rot = make_rotation(rot_axis, get_angle(normal))
             ln = line_len(line)
             hlen = ln/2.
-            print(ln, hlen)
 
             positions = [
                 [-hlen, 0., 0., 1.],
                 [+hlen, 0., 0., 1.],
-                [+hlen, 0., 100., 1.],
-                [-hlen, 0., 100., 1.]]
+                [+hlen, 0., line_height, 1.],
+                [-hlen, 0., line_height, 1.]]
             centre = centre_pos(line) + [0.]
-            print(centre)
             trans = make_translation(centre)
 
             model_mat = np.dot(scale, np.dot(trans, rot))
@@ -310,9 +310,6 @@ class Generator:
             indices.append(vidx)
             indices.append(vidx+2)
             indices.append(vidx+3)
-
-        print(vertices)
-        print(indices)
 
         vertex_string = "v {} {} {}\n"
         normal_string = "vn {} {} {}\n"
