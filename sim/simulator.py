@@ -90,6 +90,14 @@ print("TOP_LEFT:     [", min_x, min_y, "]")
 print("BOTTOM_RIGHT: [", max_x, max_y, "]")
 
 
+def start_pos(line):
+    return [line[0][0], line[1]] if is_horizontal(line) else [line[0], line[1][0]]
+
+
+def end_pos(line):
+    return [line[0][1], line[1]] if is_horizontal(line) else [line[0], line[1][1]]
+
+
 def find_adjoining(line):
     if is_horizontal(line):                             # [ [x_min, x_max], y ], [ x, [y_min, y_max] ]
         return list(filter(lambda l: (line[1] == l[1][0] or line[1] == l[1][1]) and
@@ -113,47 +121,55 @@ lines = verticals + horizontals
 normals = [[]]*len(lines)
 normals[0] = [+1, 0]
 
-# curr_idx = 0
-# curr_line = lines[0]
-# curr_normal = normals[0]
-#
-# while curr_line:
-#     neighbours = find_adjoining(curr_line)
-#     nidx = list(map(lambda x: lines.index(x), neighbours))
-#     print(curr_idx, curr_line, neighbours, nidx)
-#
-#     if normals[nidx[0]] == []:
-#         curr_line = lines[nidx[0]]
-#         normals[nidx[0]] =
-#         curr_idx = nidx[0]
-#
-#     elif normals[nidx[1]] == []:
-#         curr_idx = nidx[1]
-#         curr_line = lines[curr_idx]
-#
-#     else:
-#         curr_line = None
 
-for h in range(len(lines)):
-    lne = lines[h]
-    neighbours = find_adjoining(lne)
-    if is_horizontal(lne):
-        n_idx = list(map(lambda x: verticals.index(x), neighbours))
-        print(h, lne, neighbours, n_idx)
-        if normals[h] == []:
-            if len(n_idx) == 0 or normals[n_idx[0]] == []:
-                normals[h] = [0,-1]
-            else:
-                if neighbours[0][1][0] == lne[0]:
-                    normals[h] = [0,-1]
-                else:
-                    normals[h] = [0,+1]
+def perp(normal):
+    return [-normal[1], normal[0]]
 
-#for v in range(len(verticals)):
-#    lne = verticals[v]
-#    neighbours = find_adjoining(lne)
-#    n_idx = list(map(lambda x: horizontals.index(x), neighbours))
-#    print(v, lne, neighbours, n_idx)
+
+def rev_perp(normal):
+    return [normal[1], -normal[0]]
+
+
+def compute_normal(neigh_line, neigh_normal, curr_line):
+    nSP = start_pos(neigh_line)
+    nEP = end_pos(neigh_line)
+    cSP = start_pos(curr_line)
+    cEP = end_pos(curr_line)
+
+    if is_horizontal(curr_line):
+        if cSP == nEP: return rev_perp(neigh_normal)
+        elif cSP == nSP: return perp(neigh_normal)
+        elif cEP == nEP: return perp(neigh_normal)
+        elif cEP == nSP: return rev_perp(neigh_normal)
+    elif is_vertical(curr_line):
+        if cSP == nEP: return perp(neigh_normal)
+        elif cSP == nSP: return rev_perp(neigh_normal)
+        elif cEP == nEP: return rev_perp(neigh_normal)
+        elif cEP == nSP: return perp(neigh_normal)
+
+    return []
+
+# The outside wall is a connected graph so we can traverse it and induce the first normal to derive the rest
+# Inner walls will have to be induced by some other method (possibly searching for opposite walls?)
+
+curr_line = lines[0]
+curr_normal = normals[0]
+
+while curr_line:
+    neighbours = find_adjoining(curr_line)
+    nidx = list(map(lambda x: lines.index(x), neighbours))
+    print("Curr line:", curr_line, "Curr N:", curr_normal, "Neighbours:", neighbours, "Neighbour Ids:", nidx)
+
+    if not normals[nidx[0]]:
+        normals[nidx[0]] = compute_normal(curr_line, curr_normal, lines[nidx[0]])
+        curr_normal = normals[nidx[0]]
+        curr_line = lines[nidx[0]]
+    elif not normals[nidx[1]]:
+        normals[nidx[1]] = compute_normal(curr_line, curr_normal, lines[nidx[1]])
+        curr_normal = normals[nidx[1]]
+        curr_line = lines[nidx[1]]
+    else:
+        curr_line = None
 
 # Test the algorithm by outputting a diagram of the same size with the walls highlighted in red and normals in blue
 
