@@ -298,8 +298,15 @@ class Generator:
         px = self.pixels
 
         for row in range(self.y_min, self.y_max):                       # Start just inside
+            outside = True
             for col in range(self.x_min, self.x_max):
+                if row == 54 and col == 168:
+                    print("Here")
+
                 if is_wall(px[col, row]):
+                    if px[col, row] != px[col+1, row]: outside = not outside
+
+                    if outside: continue
                     # Find the neighbouring open rectangle and close it
                     for o in open:
                         tl = top_left(o)
@@ -310,10 +317,13 @@ class Generator:
                             open.remove(o)
                             break
                         if tl[1] == row and tr[0] > col:
+                            open.append([top_left(o), [col, row]])
+                            o[1][1] -= 1
                             closed.append(o)
                             open.remove(o)
                             break
                 else:
+                    if outside: continue
                     found = False
                     for o in open:
                         tl = top_left(o)
@@ -346,6 +356,14 @@ class Generator:
     def render_to_image(self, filename="assets/output.png", normal_len=5):
         img = Image.new('RGB', self.size, color='black')
         px = img.load()
+
+        # Draw the floor first on the bottom
+
+        for r in self.rects:
+            colour = get_rand3(0, 256)
+            for row in range(r[0][1], r[1][1]+1):
+                for col in range(r[0][0], r[1][0]+1):
+                    px[col, row] = colour
 
         for h in self.horizontals:
             for col in range(h[0][0], h[0][1] + 1):
@@ -380,14 +398,6 @@ class Generator:
                 elif nor != [] and nor[0] == -1:
                     for col in range(lne[0] - normal_len, lne[0]):
                         px[col, hh] = (0, 0, 255)
-
-        # Paint each floor a different colour
-
-        for r in self.rects:
-            colour = get_rand3(0, 256)
-            for row in range(r[0][1], r[1][1]+1):
-                for col in range(r[0][0], r[1][0]+1):
-                    px[col, row] = colour
 
         img.save(filename, "PNG")
 
