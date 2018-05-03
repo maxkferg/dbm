@@ -239,6 +239,29 @@ class Generator:
             print("Error, not a valid vertical or horizontal line")
             return []
 
+    def is_interior(self, line):
+        if self.verticals[0] == line: return True
+
+        visited = [False] * len(self.lines)
+        visited[0] = True
+        curr_line = self.verticals[0]
+
+        while curr_line:
+            neighbours = self.find_adjoining(curr_line)
+            nidx = list(map(lambda x: self.lines.index(x), neighbours))
+
+            if neighbours[0] == line or neighbours[1] == line: return True
+            elif not visited[nidx[0]]:
+                visited[nidx[0]] = True
+                curr_line = self.lines[nidx[0]]
+            elif not visited[nidx[1]]:
+                visited[nidx[1]] = True
+                curr_line = self.lines[nidx[1]]
+            else:
+                curr_line = None
+
+        return False
+
     def compute_normals(self, starting_normal=[+1, 0]):
         curr_line = self.lines[0]
         self.normals[0] = starting_normal
@@ -280,6 +303,9 @@ class Generator:
             if EP[0] > self.x_max: self.x_max = EP[0]
             if SP[1] > self.y_max: self.y_max = EP[1]
 
+    def find_horizontal(self, start):
+        return list(filter(lambda x: start_pos(x) == start, self.horizontals))
+
     # Note: Calculate the floor tessellation for the interior, decompose rectilinear polygon to maximal rectangles
     #
     # Algorithm:
@@ -300,11 +326,18 @@ class Generator:
         for row in range(self.y_min, self.y_max):                       # Start just inside
             outside = True
             for col in range(self.x_min, self.x_max):
-                if row == 54 and col == 168:
-                    print("Here")
-
                 if is_wall(px[col, row]):
-                    if px[col, row] != px[col+1, row]: outside = not outside
+                    # Find the horz
+                    horz = self.find_horizontal([col, row])
+                    inside = False if len(horz) == 0 else self.is_interior(horz[0])
+                    if px[col, row] != px[col+1, row]:
+                        if inside and px[col-1,row] == px[col,row]:
+                            outside = False
+                            continue
+                        elif px[col-1,row] == px[col,row]:
+                            outside = True
+                        else:
+                            outside = not outside
 
                     if outside: continue
                     # Find the neighbouring open rectangle and close it
