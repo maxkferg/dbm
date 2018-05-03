@@ -104,7 +104,7 @@ def make_rotation(axis, theta):
 
 
 def get_rand3(minimum, maximum):
-    return [random.randint(minimum, maximum+1), random.randint(minimum, maximum+1), random.randint(minimum, maximum+1)]
+    return (random.randint(minimum, maximum+1), random.randint(minimum, maximum+1), random.randint(minimum, maximum+1))
 
 
 # Define the rect type and related functions
@@ -161,6 +161,11 @@ class Generator:
         self.normals = []
         self.size = (0, 0)
         self.pixels = None
+        self.rects = []
+        self.x_min = 0
+        self.x_max = 0
+        self.y_min = 0
+        self.y_max = 0
 
     def clear(self):
         self.horizontals = []
@@ -169,6 +174,11 @@ class Generator:
         self.normals = []
         self.size = (0, 0)
         self.pixels = None
+        self.rects = []
+        self.x_min = 0
+        self.x_max = 0
+        self.y_min = 0
+        self.y_max = 0
 
     def process_image(self, image_path="assets/Level 2 floor plan walls.png"):
         self.clear()
@@ -207,6 +217,8 @@ class Generator:
         # Remove all single-pixel lines
         clean_horizontals = list(filter(lambda h: h[0][0] != h[0][1], self.horizontals))
         clean_verticals = list(filter(lambda v: v[1][0] != v[1][1], self.verticals))
+
+        self.compute_bounds()
 
         self.horizontals = clean_horizontals
         self.verticals = clean_verticals
@@ -255,6 +267,19 @@ class Generator:
                     curr_normal = [-1, 0]
                     self.normals[idx] = [-1, 0]
 
+    def compute_bounds(self):
+        self.x_min = self.size[0]
+        self.x_max = 0
+        self.y_min = self.size[1]
+        self.y_max = 0
+        for v in self.verticals:
+            SP = start_pos(v)
+            EP = end_pos(v)
+            if SP[0] < self.x_min: self.x_min = SP[0]
+            if SP[1] < self.y_min: self.y_min = SP[1]
+            if EP[0] > self.x_max: self.x_max = EP[0]
+            if SP[1] > self.y_max: self.y_max = EP[1]
+
     # Note: Calculate the floor tessellation for the interior, decompose rectilinear polygon to maximal rectangles
     #
     # Algorithm:
@@ -265,9 +290,6 @@ class Generator:
 
     def compute_covering(self):
         # Start scanning at top left
-        bl = start_pos(self.lines[0])       # First line is bottom left (top left-hand corner)
-        tr = end_pos(self.verticals[-1])    # Last vertical is on the top right
-
         open = []
         closed = []
 
@@ -275,23 +297,51 @@ class Generator:
 
         px = self.pixels
 
-        for row in range(bl[1]+1, tr[1]):                       # Start just inside
-            for col in range(bl[0]+1, tr[0]):
+        for row in range(self.y_min, self.y_max):                       # Start just inside
+            for col in range(self.x_min, self.x_max):
                 if is_wall(px[col, row]):
                     # Find the neighbouring open rectangle and close it
                     for o in open:
                         tl = top_left(o)
-                        if tl[1] == row-1 and tl[0] == col:
+                        tr = top_right(o)
+
+                        if tl[1] == row-1 and tl[0] < col:
                             closed.append(o)
+                            open.remove(o)
+                            break
+                        if tl[1] == row and tr[0] > col:
+                            closed.append(o)
+                            open.remove(o)
+                            break
                 else:
+                    found = False
                     for o in open:
                         tl = top_left(o)
-                        if tl[1] == row-1 and tl[0] == col:
-                            o[1][0] += 1
-                            o[1][1] += 1
-                        elif tl[1] == row and tl[0] == col:
-                            o[1][0] += 1
+                        tr = top_right(o)
 
+                        if tl[1] == row-1 and tl[0] == col:
+                            o[1][1] += 1
+                            found = True
+                            break
+                        elif tl[1] == row and tr[0] == col-1:
+                            o[1][0] += 1
+                            found = True
+                            break
+                        elif tl[1] == row and col <= tr[0]:
+                            found = True
+                            break
+
+                    if not found:
+                        # Add a new rectangle
+                        open.append([[col, row], [col, row]])
+
+        self.rects = closed
+
+        print("Verts:", self.verticals)
+        print("Horz:", self.horizontals)
+
+        print("OPEN:", open)
+        print("CLOSED:", closed)
 
     def render_to_image(self, filename="assets/output.png", normal_len=5):
         img = Image.new('RGB', self.size, color='black')
@@ -330,6 +380,14 @@ class Generator:
                 elif nor != [] and nor[0] == -1:
                     for col in range(lne[0] - normal_len, lne[0]):
                         px[col, hh] = (0, 0, 255)
+
+        # Paint each floor a different colour
+
+        for r in self.rects:
+            colour = get_rand3(0, 256)
+            for row in range(r[0][1], r[1][1]+1):
+                for col in range(r[0][0], r[1][0]+1):
+                    px[col, row] = colour
 
         img.save(filename, "PNG")
 
