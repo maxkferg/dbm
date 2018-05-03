@@ -2,6 +2,7 @@ import sys
 from PIL import Image
 import numpy as np
 import math
+import random
 
 '''Lines are based on the assumption that they are horizontal or vertical and
 therefore are identified by a range over x or y and a single value for the coordinate
@@ -53,6 +54,7 @@ def get_angle(normal):
         if normal[0] == 1: return math.pi/2.
         elif normal[0] == -1: return 3.*math.pi/2.
 
+
 def compute_normal(neigh_line, neigh_normal, curr_line):
     nSP = start_pos(neigh_line)
     nEP = end_pos(neigh_line)
@@ -100,6 +102,29 @@ def make_rotation(axis, theta):
                      [2*(bd+ac), 2*(cd-ab), aa+dd-bb-cc, 0.],
                      [0., 0., 0., 1.]])
 
+
+def get_rand3(minimum, maximum):
+    return [random.randint(minimum, maximum+1), random.randint(minimum, maximum+1), random.randint(minimum, maximum+1)]
+
+
+# Define the rect type and related functions
+# A rect is defined by [ [x_min, y_min], [x_max, y_max] ]
+
+def is_rect(rect): return isinstance(rect, list) and isinstance(rect[0], list) and isinstance(rect[1], list)
+
+
+def bottom_left(rect): return rect[0]
+
+
+def bottom_right(rect): return [ rect[1][0], rect[0][1] ]
+
+
+def top_left(rect): return [ rect[0][0], rect[1][1] ]
+
+
+def top_right(rect): return rect[1]
+
+
 # Notes:
 # 1) All lines are vertical or horizontal
 # 2) Any corner in the image must be split into two lines
@@ -128,7 +153,6 @@ def make_rotation(axis, theta):
 # a vertical line (lines = verticals + horizontals) and due to the scan order, must be a wall facing the left because
 # it must be an internal wall
 
-
 class Generator:
     def __init__(self):
         self.horizontals = []
@@ -136,6 +160,7 @@ class Generator:
         self.lines = []
         self.normals = []
         self.size = (0, 0)
+        self.pixels = None
 
     def clear(self):
         self.horizontals = []
@@ -143,12 +168,14 @@ class Generator:
         self.lines = []
         self.normals = []
         self.size = (0, 0)
+        self.pixels = None
 
     def process_image(self, image_path="assets/Level 2 floor plan walls.png"):
         self.clear()
 
         image = Image.open(image_path)
-        px = image.load()
+        self.pixels = image.load()
+        px = self.pixels
         print("Image Size:", image.size)
         self.size = image.size
 
@@ -187,6 +214,7 @@ class Generator:
         self.normals = [[]]*len(self.lines)
 
         self.compute_normals()
+        self.compute_covering()
 
     def find_adjoining(self, line):
         if is_horizontal(line):  # [ [x_min, x_max], y ], [ x, [y_min, y_max] ]
@@ -226,6 +254,44 @@ class Generator:
                 if curr_line:
                     curr_normal = [-1, 0]
                     self.normals[idx] = [-1, 0]
+
+    # Note: Calculate the floor tessellation for the interior, decompose rectilinear polygon to maximal rectangles
+    #
+    # Algorithm:
+    # 1) Start scanning at first interior wall.  Each horizontal line is called, in order, from top to bottom.
+    # 2) Create first rectangle and increment x until the first wall found.
+    #    - If another wall is found in the same scanline, start a new polygon.  Keep an open polygon list.
+    # 3) If a corner is found, close current rectangle and start new rectangle.
+
+    def compute_covering(self):
+        # Start scanning at top left
+        bl = start_pos(self.lines[0])       # First line is bottom left (top left-hand corner)
+        tr = end_pos(self.verticals[-1])    # Last vertical is on the top right
+
+        open = []
+        closed = []
+
+        def is_wall(p): return p[0] != 255
+
+        px = self.pixels
+
+        for row in range(bl[1]+1, tr[1]):                       # Start just inside
+            for col in range(bl[0]+1, tr[0]):
+                if is_wall(px[col, row]):
+                    # Find the neighbouring open rectangle and close it
+                    for o in open:
+                        tl = top_left(o)
+                        if tl[1] == row-1 and tl[0] == col:
+                            closed.append(o)
+                else:
+                    for o in open:
+                        tl = top_left(o)
+                        if tl[1] == row-1 and tl[0] == col:
+                            o[1][0] += 1
+                            o[1][1] += 1
+                        elif tl[1] == row and tl[0] == col:
+                            o[1][0] += 1
+
 
     def render_to_image(self, filename="assets/output.png", normal_len=5):
         img = Image.new('RGB', self.size, color='black')

@@ -11,7 +11,6 @@ parser = argparse.ArgumentParser()
 parser.add_argument("plan_file")
 parser.add_argument("--render-image", help="Analyse the plan-file and export the walls and normals to an image file")
 parser.add_argument("--export-object", help="Analyse the plan-file and export it to an OBJ mesh file")
-parser.add_argument("--dump-")
 args = parser.parse_args()
 
 generator = Generator()
