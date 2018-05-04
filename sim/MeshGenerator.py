@@ -483,6 +483,7 @@ class Generator:
 
         line_height = 40.
 
+        # Add the walls
         for i in range(len(self.lines)):
             normal = self.normals[i]
             if not normal: continue
@@ -503,6 +504,33 @@ class Generator:
             vidx = len(vertices)
             for p in positions:
                 vertices.append([np.dot(model_mat, p), normal + [0.]])
+
+            indices.append(vidx)
+            indices.append(vidx+1)
+            indices.append(vidx+2)
+
+            indices.append(vidx)
+            indices.append(vidx+2)
+            indices.append(vidx+3)
+
+        # Add the floor planes
+        for rect in self.rects:
+            width = (rect[1][0] - rect[0][0])
+            height = (rect[1][1] - rect[0][1])
+
+            left, bottom = bottom_left(rect)
+
+            positions = [
+                [left, bottom + height, 0., 1.],
+                [left + width, bottom + height, 0., 1.],
+                [left + width, bottom, 0., 1.],
+                [left, bottom, 0., 1.]
+            ]
+            model_mat = scale
+
+            vidx = len(vertices)
+            for p in positions:
+                vertices.append([np.dot(model_mat, p), [0., 0., 1.]])
 
             indices.append(vidx)
             indices.append(vidx+1)
