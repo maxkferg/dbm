@@ -226,7 +226,8 @@ class Generator:
         self.normals = [[]]*len(self.lines)
 
         self.compute_normals()
-        self.compute_covering()
+        #self.compute_covering()
+        self.compute_covering2()
 
     def find_adjoining(self, line):
         if is_horizontal(line):  # [ [x_min, x_max], y ], [ x, [y_min, y_max] ]
@@ -386,6 +387,33 @@ class Generator:
         print("OPEN:", open)
         print("CLOSED:", closed)
 
+    def flood_fill(self, px, pos, colour):
+        width = self.size[0]
+        height = self.size[1]
+
+        old_colour = px[pos[0], pos[1]]
+        queue = [pos]
+        while len(queue) > 0:
+            curr = queue[0]
+            w = list(curr)
+            e = list(curr)
+            while e[0]+1 < width and px[e[0]+1, e[1]] == old_colour:
+                e[0] += 1
+            while w[0]-1 >= 0 and px[w[0]-1, w[1]] == old_colour:
+                w[0] -= 1
+
+            for i in range(w[0], e[0]+1):
+                px[i, curr[1]] = colour
+                if curr[1] + 1 < height and px[i, curr[1]+1] == old_colour:
+                    queue.append([i, curr[1]+1])
+                if curr[1] - 1 >= 0 and px[i, curr[1]-1] == old_colour:
+                    queue.append([i, curr[1]-1])
+
+            queue.pop(0)
+
+    def compute_covering2(self):
+        pass
+
     def render_to_image(self, filename="assets/output.png", normal_len=5):
         img = Image.new('RGB', self.size, color='black')
         px = img.load()
@@ -431,6 +459,14 @@ class Generator:
                 elif nor != [] and nor[0] == -1:
                     for col in range(lne[0] - normal_len, lne[0]):
                         px[col, hh] = (0, 0, 255)
+
+        self.flood_fill(px, [0, 0], (255, 255, 0))
+
+        pos = start_pos(self.verticals[0])
+        pos[0] += 1
+        pos[1] += 1
+
+        self.flood_fill(px, pos, (255, 0, 255))
 
         img.save(filename, "PNG")
 
