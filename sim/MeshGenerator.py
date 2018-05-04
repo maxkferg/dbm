@@ -223,8 +223,7 @@ class Generator:
         self.normals = [[]]*len(self.lines)
 
         self.compute_normals()
-        #self.compute_covering()
-        self.compute_covering2()
+        self.compute_covering()
 
     def find_adjoining(self, line):
         if is_horizontal(line):  # [ [x_min, x_max], y ], [ x, [y_min, y_max] ]
@@ -269,8 +268,6 @@ class Generator:
             neighbours = self.find_adjoining(curr_line)
             nidx = list(map(lambda x: self.lines.index(x), neighbours))
 
-            # print("Curr line:", curr_line, "Curr N:", curr_normal, "Neighbours:", neighbours, "Neighbour Ids:", nidx)
-
             if not self.normals[nidx[0]]:
                 self.normals[nidx[0]] = compute_normal(curr_line, curr_normal, self.lines[nidx[0]])
                 curr_normal = self.normals[nidx[0]]
@@ -304,86 +301,6 @@ class Generator:
 
     def find_horizontal(self, start):
         return list(filter(lambda x: start_pos(x) == start, self.horizontals))
-
-    # Note: Calculate the floor tessellation for the interior, decompose rectilinear polygon to maximal rectangles
-    #
-    # Algorithm:
-    # 1) Start scanning at first interior wall.  Each horizontal line is called, in order, from top to bottom.
-    # 2) Create first rectangle and increment x until the first wall found.
-    #    - If another wall is found in the same scanline, start a new polygon.  Keep an open polygon list.
-    # 3) If a corner is found, close current rectangle and start new rectangle.
-
-    def compute_covering(self):
-        # Start scanning at top left
-        open = []
-        closed = []
-
-        def is_wall(p): return p[0] != 255
-
-        px = self.pixels
-
-        for row in range(self.bounds[0][1], self.bounds[1][1]):                       # Start just inside
-            outside = True
-            for col in range(self.bounds[0][0], self.bounds[1][0]):
-                if is_wall(px[col, row]):
-                    # Find the horz
-                    horz = self.find_horizontal([col, row])
-                    inside = False if len(horz) == 0 else self.is_interior(horz[0])
-                    if px[col, row] != px[col+1, row]:
-                        if inside and px[col-1,row] == px[col,row]:
-                            outside = False
-                            continue
-                        elif px[col-1,row] == px[col,row]:
-                            outside = True
-                        else:
-                            outside = not outside
-
-                    if outside: continue
-                    # Find the neighbouring open rectangle and close it
-                    for o in open:
-                        tl = top_left(o)
-                        tr = top_right(o)
-
-                        if tl[1] == row-1 and tl[0] < col:
-                            closed.append(o)
-                            open.remove(o)
-                            break
-                        if tl[1] == row and tr[0] > col:
-                            open.append([top_left(o), [col, row]])
-                            o[1][1] -= 1
-                            closed.append(o)
-                            open.remove(o)
-                            break
-                else:
-                    if outside: continue
-                    found = False
-                    for o in open:
-                        tl = top_left(o)
-                        tr = top_right(o)
-
-                        if tl[1] == row-1 and tl[0] == col:
-                            o[1][1] += 1
-                            found = True
-                            break
-                        elif tl[1] == row and tr[0] == col-1:
-                            o[1][0] += 1
-                            found = True
-                            break
-                        elif tl[1] == row and col <= tr[0]:
-                            found = True
-                            break
-
-                    if not found:
-                        # Add a new rectangle
-                        open.append([[col, row], [col, row]])
-
-        self.rects = closed
-
-        print("Verts:", self.verticals)
-        print("Horz:", self.horizontals)
-
-        print("OPEN:", open)
-        print("CLOSED:", closed)
 
     def flood_fill(self, px, pos, colour):
         width = self.size[0]
@@ -421,7 +338,15 @@ class Generator:
     def is_space(self, colour):
         return colour == (255, 255, 255)
 
-    def compute_covering2(self, outside_pos=[0, 0]):
+    # Note: Calculate the floor tessellation for the interior, decompose rectilinear polygon to maximal rectangles
+    #
+    # Algorithm:
+    # 1) Start scanning at first interior wall.  Each horizontal line is called, in order, from top to bottom.
+    # 2) Create first rectangle and increment x until the first wall found.
+    #    - If another wall is found in the same scanline, start a new polygon.  Keep an open polygon list.
+    # 3) If a corner is found, close current rectangle and start new rectangle.
+
+    def compute_covering(self, outside_pos=[0, 0]):
         # Use the source image and flood fill the inside and outside to make open rectangle tracking easier
 
         px = self.pixels
@@ -472,14 +397,6 @@ class Generator:
                             o[1][0] += 1
                             found = True
                             break
-                        #elif row == top and right < col:
-                        #    # This is an overrun, close rect and start new one from beginning of line
-                        #    open.append([[top, left], [top, col]])
-                        #    o[1][1] -= 1
-                        #    closed.append(o)
-                        #    open.remove(o)
-                        #    found = True
-                        #    break
                         elif row-1 == top and left == col:
                             # New line starting at beginning of rect
                             o[1][1] += 1
@@ -494,12 +411,6 @@ class Generator:
                         open.append([[col, row], [col, row]])
 
         self.rects = closed
-
-        print("Verts:", self.verticals)
-        print("Horz:", self.horizontals)
-
-        print("OPEN:", open)
-        print("CLOSED:", closed)
 
     def render_to_image(self, filename="assets/output.png", normal_len=5):
         img = Image.new('RGB', self.size, color='black')
