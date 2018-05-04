@@ -157,6 +157,7 @@ class Generator:
     def __init__(self):
         self.horizontals = []
         self.verticals = []
+        self.wall_colour = None
         self.lines = []
         self.normals = []
         self.size = (0, 0)
@@ -167,6 +168,7 @@ class Generator:
     def clear(self):
         self.horizontals = []
         self.verticals = []
+        self.wall_colour = None
         self.lines = []
         self.normals = []
         self.size = (0, 0)
@@ -191,6 +193,7 @@ class Generator:
                 print('#')
             for col in range(image.size[0]):
                 if px[col, row][0] != 255:
+                    if not self.wall_colour: self.wall_colour = px[col, row]
                     verts = list(filter(lambda l: l[0] == col and l[1][1] == row - 1, self.verticals))
                     horzs = list(filter(lambda l: l[1] == row and l[0][1] == col - 1, self.horizontals))
 
@@ -406,15 +409,97 @@ class Generator:
                 if curr[1] - 1 >= 0 and px[i, curr[1]-1] == old_colour:
                     queue.append([i, curr[1]-1])
 
-    def compute_covering2(self):
+    def is_wall(self, colour):
+        return colour == self.wall_colour
+
+    def is_outside(self, colour):
+        return colour == (1, 0, 0)
+
+    def is_inside(self, colour):
+        return colour == (2, 0, 0)
+
+    def is_space(self, colour):
+        return colour == (255, 255, 255)
+
+    def compute_covering2(self, outside_pos=[0, 0]):
         # Use the source image and flood fill the inside and outside to make open rectangle tracking easier
-        self.flood_fill(self.pixels, [0, 0], (1, 0, 0))
+
+        px = self.pixels
+
+        if not self.is_space(px[outside_pos[0], outside_pos[1]]):
+            print("Please set a valid outside pixel position")
+
+        self.flood_fill(px, outside_pos, (1, 0, 0))
 
         startP = start_pos(self.verticals[0])       # Start inside the first wall
         startP[0] += 1
         startP[1] += 1
 
-        self.flood_fill(self.pixels, startP, (2, 0, 0))
+        self.flood_fill(px, startP, (2, 0, 0))
+
+        # The space is partitioned into an outside, an inside, and a clear space (all interior inaccessible polys)
+
+        open = []
+        closed = []
+
+        for row in range(self.bounds[0][1], self.bounds[1][1]+1):
+            for col in range(self.bounds[0][0], self.bounds[1][0]+1):
+                curr = px[col, row]
+
+                if self.is_wall(curr):
+                    for o in open:
+                        left, top = top_left(o)
+                        right, bottom = bottom_right(o)
+
+                        if top == row-1 and left < col:
+                            closed.append(o)
+                            open.remove(o)
+                            break
+                        if top == row and right > col:
+                            open.append([[left, top], [col, row]])
+                            o[1][1] -= 1
+                            closed.append(o)
+                            open.remove(o)
+                            break
+                elif self.is_inside(curr):
+                    found = False
+                    for o in open:
+                        left, top = top_left(o)
+                        right, bottom = bottom_right(o)
+
+                        if row == top and bottom == top and col-1 == right:
+                            # This is the first row, increase until we hit a wall
+                            o[1][0] += 1
+                            found = True
+                            break
+                        #elif row == top and right < col:
+                        #    # This is an overrun, close rect and start new one from beginning of line
+                        #    open.append([[top, left], [top, col]])
+                        #    o[1][1] -= 1
+                        #    closed.append(o)
+                        #    open.remove(o)
+                        #    found = True
+                        #    break
+                        elif row-1 == top and left == col:
+                            # New line starting at beginning of rect
+                            o[1][1] += 1
+                            found = True
+                            break
+                        elif top == row and col <= right:
+                            # Interior of existing rect
+                            found = True
+                            break
+
+                    if not found:
+                        open.append([[col, row], [col, row]])
+
+        self.rects = closed
+
+        print("Verts:", self.verticals)
+        print("Horz:", self.horizontals)
+
+        print("OPEN:", open)
+        print("CLOSED:", closed)
 
     def render_to_image(self, filename="assets/output.png", normal_len=5):
         img = Image.new('RGB', self.size, color='black')
@@ -462,13 +547,13 @@ class Generator:
                     for col in range(lne[0] - normal_len, lne[0]):
                         px[col, hh] = (0, 0, 255)
 
-        self.flood_fill(px, [0, 0], (255, 255, 0))
+        self.flood_fill(px, [0, 0], (50, 50, 50))
 
         pos = start_pos(self.verticals[0])
         pos[0] += 1
         pos[1] += 1
 
-        self.flood_fill(px, pos, (255, 0, 255))
+        self.flood_fill(px, pos, (128, 128, 128))
 
         img.save(filename, "PNG")
 
