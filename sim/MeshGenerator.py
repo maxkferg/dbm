@@ -162,10 +162,7 @@ class Generator:
         self.size = (0, 0)
         self.pixels = None
         self.rects = []
-        self.x_min = 0
-        self.x_max = 0
-        self.y_min = 0
-        self.y_max = 0
+        self.bounds = [[10000000, 10000000], [0, 0]]
 
     def clear(self):
         self.horizontals = []
@@ -175,10 +172,7 @@ class Generator:
         self.size = (0, 0)
         self.pixels = None
         self.rects = []
-        self.x_min = 0
-        self.x_max = 0
-        self.y_min = 0
-        self.y_max = 0
+        self.bounds = [[10000000, 10000000], [0, 0]]
 
     def process_image(self, image_path="assets/Level 2 floor plan walls.png"):
         self.clear()
@@ -292,17 +286,18 @@ class Generator:
                     self.normals[idx] = [-1, 0]
 
     def compute_bounds(self):
-        self.x_min = self.size[0]
-        self.x_max = 0
-        self.y_min = self.size[1]
-        self.y_max = 0
+        self.bounds[0][0] = self.size[0]
+        self.bounds[1][0] = 0
+        self.bounds[0][1] = self.size[1]
+        self.bounds[1][1] = 0
+
         for v in self.verticals:
             SP = start_pos(v)
             EP = end_pos(v)
-            if SP[0] < self.x_min: self.x_min = SP[0]
-            if SP[1] < self.y_min: self.y_min = SP[1]
-            if EP[0] > self.x_max: self.x_max = EP[0]
-            if SP[1] > self.y_max: self.y_max = EP[1]
+            if SP[0] < self.bounds[0][0]: self.bounds[0][0] = SP[0]
+            if SP[1] < self.bounds[0][1]: self.bounds[0][1] = SP[1]
+            if EP[0] > self.bounds[1][0]: self.bounds[1][0] = EP[0]
+            if SP[1] > self.bounds[1][1]: self.bounds[1][1] = EP[1]
 
     def find_horizontal(self, start):
         return list(filter(lambda x: start_pos(x) == start, self.horizontals))
@@ -324,9 +319,9 @@ class Generator:
 
         px = self.pixels
 
-        for row in range(self.y_min, self.y_max):                       # Start just inside
+        for row in range(self.bounds[0][1], self.bounds[1][1]):                       # Start just inside
             outside = True
-            for col in range(self.x_min, self.x_max):
+            for col in range(self.bounds[0][0], self.bounds[1][0]):
                 if is_wall(px[col, row]):
                     # Find the horz
                     horz = self.find_horizontal([col, row])
@@ -395,6 +390,7 @@ class Generator:
         queue = [pos]
         while len(queue) > 0:
             curr = queue[0]
+            queue.pop(0)
             w = list(curr)
             e = list(curr)
             while e[0]+1 < width and px[e[0]+1, e[1]] == old_colour:
@@ -404,15 +400,21 @@ class Generator:
 
             for i in range(w[0], e[0]+1):
                 px[i, curr[1]] = colour
+                if [i, curr[1]] in queue: queue.remove([i, curr[1]])
                 if curr[1] + 1 < height and px[i, curr[1]+1] == old_colour:
                     queue.append([i, curr[1]+1])
                 if curr[1] - 1 >= 0 and px[i, curr[1]-1] == old_colour:
                     queue.append([i, curr[1]-1])
 
-            queue.pop(0)
-
     def compute_covering2(self):
-        pass
+        # Use the source image and flood fill the inside and outside to make open rectangle tracking easier
+        self.flood_fill(self.pixels, [0, 0], (1, 0, 0))
+
+        startP = start_pos(self.verticals[0])       # Start inside the first wall
+        startP[0] += 1
+        startP[1] += 1
+
+        self.flood_fill(self.pixels, startP, (2, 0, 0))
 
     def render_to_image(self, filename="assets/output.png", normal_len=5):
         img = Image.new('RGB', self.size, color='black')
