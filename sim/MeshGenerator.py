@@ -542,10 +542,10 @@ class Generator:
             left, bottom = bottom_left(rect)
 
             positions = [
-                [left, bottom + height, 0., 1.],
-                [left + width, bottom + height, 0., 1.],
-                [left + width, bottom, 0., 1.],
-                [left, bottom, 0., 1.]
+                [left - 1, bottom + height + 1, 0., 1.],
+                [left + width + 1, bottom + height + 1, 0., 1.],
+                [left + width + 1, bottom - 1, 0., 1.],
+                [left - 1, bottom - 1, 0., 1.]
             ]
             model_mat = scale
 
