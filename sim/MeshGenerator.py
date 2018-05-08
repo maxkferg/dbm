@@ -469,12 +469,32 @@ class Generator:
 
         img.save(filename, "PNG")
 
+    def centre_model(self, vertices):
+        """This method will centre the model in the XY-plane and place the floor at z == 0"""
+
+        vtx_count = len(vertices)
+        inv_vtx_count = 1./vtx_count
+
+        if vtx_count == 0: return []
+
+        centre = [0., 0., 0]
+        for v in vertices:
+            centre[0] += v[0][0]
+            centre[1] += v[0][1]
+
+        centre[0] *= inv_vtx_count
+        centre[1] *= inv_vtx_count
+
+        return list(map(lambda x: [[x[0][0] - centre[0], x[0][1] - centre[1], x[0][2]], x[1]], vertices))
+
     def export_to_object(self, filename="assets/output.obj"):
+        """Export the plan file to an object file.  Call this only after the file has been processed."""
         # Normalise to the image size taking the longer axis as the dimension for the model
         dim = max(self.size[0], self.size[1])
         inv_dim = 1./dim
 
-        scale = make_scale([inv_dim, inv_dim, inv_dim])
+        # Flip y due to difference between image space and world space
+        scale = make_scale([inv_dim, -inv_dim, inv_dim])
 
         # Turn a generic plane into a plane centered at the midpoint, with the normal in the correct position
         rot_axis = [0, 0, 1]
@@ -540,6 +560,9 @@ class Generator:
             indices.append(vidx)
             indices.append(vidx+2)
             indices.append(vidx+3)
+
+        # Centre the model in XY-plane
+        vertices = self.centre_model(vertices)
 
         vertex_string = "v {} {} {}\n"
         normal_string = "vn {} {} {}\n"
