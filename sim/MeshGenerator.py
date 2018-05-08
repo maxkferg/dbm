@@ -3,6 +3,7 @@ from PIL import Image
 import numpy as np
 import math
 import random
+from lxml import etree
 
 '''Lines are based on the assumption that they are horizontal or vertical and
 therefore are identified by a range over x or y and a single value for the coordinate
@@ -382,7 +383,7 @@ class Generator:
                             open.remove(o)
                             break
                         if top == row and right > col:
-                            open.append([[left, top], [col, row]])
+                            open.append([[left, top], [col-1, row]])
                             o[1][1] -= 1
                             closed.append(o)
                             open.remove(o)
@@ -493,6 +494,9 @@ class Generator:
         dim = max(self.size[0], self.size[1])
         inv_dim = 1./dim
 
+        # Note: The walls and floors require a repeat texture and are defined in world space with the repeat texture
+        # assumed to be of unit length and wrapable
+
         # Flip y due to difference between image space and world space
         scale = make_scale([inv_dim, -inv_dim, inv_dim])
 
@@ -500,7 +504,8 @@ class Generator:
         rot_axis = [0, 0, 1]
 
         vertices = []
-        indices = []
+        walls_indices = []
+        floor_indices = []
 
         line_height = 40.
 
@@ -526,13 +531,13 @@ class Generator:
             for p in positions:
                 vertices.append([np.dot(model_mat, p), normal + [0.]])
 
-            indices.append(vidx)
-            indices.append(vidx+1)
-            indices.append(vidx+2)
+            walls_indices.append(vidx)
+            walls_indices.append(vidx+1)
+            walls_indices.append(vidx+2)
 
-            indices.append(vidx)
-            indices.append(vidx+2)
-            indices.append(vidx+3)
+            walls_indices.append(vidx)
+            walls_indices.append(vidx+2)
+            walls_indices.append(vidx+3)
 
         # Add the floor planes
         for rect in self.rects:
@@ -547,24 +552,28 @@ class Generator:
                 [left + width + 1, bottom - 1, 0., 1.],
                 [left - 1, bottom - 1, 0., 1.]
             ]
+
             model_mat = scale
 
             vidx = len(vertices)
             for p in positions:
                 vertices.append([np.dot(model_mat, p), [0., 0., 1.]])
 
-            indices.append(vidx)
-            indices.append(vidx+1)
-            indices.append(vidx+2)
+            floor_indices.append(vidx)
+            floor_indices.append(vidx+1)
+            floor_indices.append(vidx+2)
 
-            indices.append(vidx)
-            indices.append(vidx+2)
-            indices.append(vidx+3)
+            floor_indices.append(vidx)
+            floor_indices.append(vidx+2)
+            floor_indices.append(vidx+3)
 
         # Centre the model in XY-plane
-        vertices = self.centre_model(vertices)
+        floor_vertices = self.centre_model(vertices)
 
+        group_string = "g {}\n"
+        material_string = "usemtl {}\n"
         vertex_string = "v {} {} {}\n"
+        texcoord_string = "vt {} {}\n"
         normal_string = "vn {} {} {}\n"
         face_string = "f {} {} {}\n"
 
@@ -578,14 +587,30 @@ class Generator:
         for v in vertices:
             file.write(normal_string.format(v[1][0], v[1][1], v[1][2]))
 
-        file.write("\n")
+        # Write Walls Group
+        file.write(group_string.format("walls"))
+        file.write(material_string.format("walls_material"))
 
-        for i in range(int(len(indices)/3)):
+        for i in range(int(len(walls_indices)/3)):
             idx = 3*i
-            file.write(face_string.format(indices[idx]+1, indices[idx+1]+1, indices[idx+2]+1))
+            file.write(face_string.format(walls_indices[idx]+1, walls_indices[idx+1]+1, walls_indices[idx+2]+1))
+
+        file.write("\n\n")
+
+        # Write Floor Group
+        file.write(group_string.format("floors"))
+        file.write(material_string.format("floors_material"))
+
+        for i in range(int(len(floor_indices)/3)):
+            idx = 3*i
+            file.write(face_string.format(floor_indices[idx]+1, floor_indices[idx+1]+1, floor_indices[idx+2]+1))
 
         file.close()
 
-    def export_sdf(self, filename="assets/output.sdf"):
+    def export_to_sdf(self, filename="assets/output.sdf"):
         print(filename)
-        pass
+        sdf = etree.Element("sdf")
+        model = etree.Element("model", name="building_model")
+        model.append(etree.Element("pose"))
+
+        print(etree.tostring(model, xml_declaration=True))
