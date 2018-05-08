@@ -529,6 +529,13 @@ class Generator:
         else:
             return filename
 
+    def strip_filename(self, path):
+        offset = path.rfind('/')
+        if offset != -1:
+            return path[offset+1:]
+        else:
+            return path
+
     def export_to_object(self, filename="assets/output.obj"):
         """Export the plan file to an object file.  Call this only after the file has been processed."""
         # Normalise to the image size taking the longer axis as the dimension for the model
@@ -560,16 +567,16 @@ class Generator:
             hlen = ln/2.
 
             positions = [
-                [-hlen, 0., 0., 1.],
                 [+hlen, 0., 0., 1.],
-                [+hlen, 0., line_height, 1.],
-                [-hlen, 0., line_height, 1.]]
+                [-hlen, 0., 0., 1.],
+                [-hlen, 0., line_height, 1.],
+                [+hlen, 0., line_height, 1.]]
 
             texcoords = [
-                [0., 0.],
-                [ln, 0.],
-                [ln, line_height],
-                [0., line_height]
+                [ln/10., 0.],
+                [0.,     0.],
+                [0.,     line_height/10],
+                [ln/10., line_height/10]
             ]
 
             centre = centre_pos(line) + [0.]
@@ -604,9 +611,9 @@ class Generator:
 
             texcoords = [
                 [0., 0.],
-                [width, 0.],
-                [width, height],
-                [0., height]
+                [width/10, 0.],
+                [width/10, height/10],
+                [0.,       height/10]
             ]
 
             model_mat = scale
@@ -626,7 +633,8 @@ class Generator:
         # Centre the model in XY-plane
         vertices = self.centre_model(vertices)
 
-        matfile = self.strip_name(filename) + ".mtl"
+        matpath = self.strip_name(filename) + ".mtl"
+        matfile = self.strip_filename(matpath)
 
         group_string = "g {}\n"
         matlib_string = "mtllib {}\n"
@@ -680,7 +688,7 @@ class Generator:
         file.close()
 
         # Add the matching material file
-        self.write_mat_file(matfile)
+        self.write_mat_file(matpath)
 
 
     def export_to_sdf(self, filename="assets/output.sdf"):
