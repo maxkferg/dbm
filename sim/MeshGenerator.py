@@ -488,6 +488,47 @@ class Generator:
 
         return list(map(lambda x: [[x[0][0] - centre[0], x[0][1] - centre[1], x[0][2]], x[1], x[2]], vertices))
 
+    def write_mat_file(self, filename="assets/output.mtl"):
+        mat_def = "newmtl {}\n"
+        amb_def = "Ka {} {} {}\n"
+        diff_def = "Kd {} {} {}\n"
+        spec_def = "Ks {} {} {}\n"
+        exp_def = "Ns {}\n"
+        amb_map = "map_Ka {}\n"
+        diff_map = "map_Kd {}\n"
+
+        file = open(filename, "w")
+
+        # Walls Material
+        file.write(mat_def.format("walls_material"))
+        file.write(amb_def.format(.1, .1, .1))
+        file.write(diff_def.format(.9, .9, .9))
+        file.write(spec_def.format(.3, .3, .3))
+        file.write(exp_def.format(50))
+        file.write(amb_map.format("wall.jpg"))
+        file.write(diff_map.format("wall.jpg"))
+
+        file.write("\n\n")
+
+        # Floors Material
+        file.write(mat_def.format("floors_material"))
+        file.write(amb_def.format(.1, .1, .1))
+        file.write(diff_def.format(.9, .9, .9))
+        file.write(spec_def.format(.3, .3, .3))
+        file.write(exp_def.format(50))
+        file.write(amb_map.format("floor.jpg"))
+        file.write(diff_map.format("floor.jpg"))
+
+        file.close()
+
+    def strip_name(self, filename):
+        """Return the filename stripped of its suffix"""
+        offset = filename.rfind('.')
+        if offset != -1:
+            return filename[:offset]
+        else:
+            return filename
+
     def export_to_object(self, filename="assets/output.obj"):
         """Export the plan file to an object file.  Call this only after the file has been processed."""
         # Normalise to the image size taking the longer axis as the dimension for the model
@@ -583,9 +624,12 @@ class Generator:
             floor_indices.append(vidx+3)
 
         # Centre the model in XY-plane
-        floor_vertices = self.centre_model(vertices)
+        vertices = self.centre_model(vertices)
+
+        matfile = self.strip_name(filename) + ".mtl"
 
         group_string = "g {}\n"
+        matlib_string = "mtllib {}\n"
         material_string = "usemtl {}\n"
         vertex_string = "v {} {} {}\n"
         texcoord_string = "vt {} {}\n"
@@ -611,6 +655,7 @@ class Generator:
 
         # Write Walls Group
         file.write(group_string.format("walls"))
+        file.write(matlib_string.format(matfile))
         file.write(material_string.format("walls_material"))
 
         for i in range(int(len(walls_indices)/3)):
@@ -623,6 +668,7 @@ class Generator:
 
         # Write Floor Group
         file.write(group_string.format("floors"))
+        file.write(matlib_string.format(matfile))
         file.write(material_string.format("floors_material"))
 
         for i in range(int(len(floor_indices)/3)):
@@ -632,6 +678,10 @@ class Generator:
                                           floor_indices[idx+2]+1, floor_indices[idx+2]+1, floor_indices[idx+2]+1))
 
         file.close()
+
+        # Add the matching material file
+        self.write_mat_file(matfile)
+
 
     def export_to_sdf(self, filename="assets/output.sdf"):
         print(filename)
