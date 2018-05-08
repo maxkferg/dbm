@@ -83,10 +83,10 @@ def make_translation(pos):
 
 
 def make_scale(scale):
-    return np.array([[scale[0], 0., 0., 0.],
-                     [0., scale[1], 0., 0.],
-                     [0., 0., scale[2], 0.],
-                     [0., 0., 0., 1.]])
+    return np.array([[scale[0], 0.,       0.,       0.],
+                     [0.,       scale[1], 0.,       0.],
+                     [0.,       0.,       scale[2], 0.],
+                     [0.,       0.,       0.,       1.]])
 
 
 # Adapted to affine version from https://stackoverflow.com/questions/6802577/rotation-of-3d-vectors
@@ -116,10 +116,10 @@ def is_rect(rect): return isinstance(rect, list) and isinstance(rect[0], list) a
 def bottom_left(rect): return rect[0]
 
 
-def bottom_right(rect): return [ rect[1][0], rect[0][1] ]
+def bottom_right(rect): return [rect[1][0], rect[0][1]]
 
 
-def top_left(rect): return [ rect[0][0], rect[1][1] ]
+def top_left(rect): return [rect[0][0], rect[1][1]]
 
 
 def top_right(rect): return rect[1]
@@ -184,6 +184,7 @@ class Generator:
         px = self.pixels
         print("Image Size:", image.size)
         self.size = image.size
+        width, height = self.size
 
         for row in range(image.size[1]):
             if row % 10 == 0 and row != 0:
@@ -204,12 +205,12 @@ class Generator:
                         if len(verts) > 0:
                             verts[0][1][1] += 1
                         else:
-                            self.verticals.append([col, [row, row]])
+                            if row + 1 < height and px[col, row + 1][0] != 255: self.verticals.append([col, [row, row]])
 
                         if len(horzs) > 0:
                             horzs[0][0][1] += 1
                         else:
-                            self.horizontals.append([[col, col], row])
+                            if col + 1 < width and px[col + 1, row][0] != 255: self.horizontals.append([[col, col], row])
 
         # Remove all single-pixel lines
         clean_horizontals = list(filter(lambda h: h[0][0] != h[0][1], self.horizontals))
@@ -561,3 +562,7 @@ class Generator:
             file.write(face_string.format(indices[idx]+1, indices[idx+1]+1, indices[idx+2]+1))
 
         file.close()
+
+    def export_sdf(self, filename="assets/output.sdf"):
+        print(filename)
+        pass
