@@ -486,7 +486,7 @@ class Generator:
         centre[0] *= inv_vtx_count
         centre[1] *= inv_vtx_count
 
-        return list(map(lambda x: [[x[0][0] - centre[0], x[0][1] - centre[1], x[0][2]], x[1]], vertices))
+        return list(map(lambda x: [[x[0][0] - centre[0], x[0][1] - centre[1], x[0][2]], x[1], x[2]], vertices))
 
     def export_to_object(self, filename="assets/output.obj"):
         """Export the plan file to an object file.  Call this only after the file has been processed."""
@@ -523,13 +523,21 @@ class Generator:
                 [+hlen, 0., 0., 1.],
                 [+hlen, 0., line_height, 1.],
                 [-hlen, 0., line_height, 1.]]
+
+            texcoords = [
+                [0., 0.],
+                [ln, 0.],
+                [ln, line_height],
+                [0., line_height]
+            ]
+
             centre = centre_pos(line) + [0.]
             trans = make_translation(centre)
 
             model_mat = np.dot(scale, np.dot(trans, rot))
             vidx = len(vertices)
-            for p in positions:
-                vertices.append([np.dot(model_mat, p), normal + [0.]])
+            for i in range(4):
+                vertices.append([np.dot(model_mat, positions[i]), texcoords[i], normal + [0.]])
 
             walls_indices.append(vidx)
             walls_indices.append(vidx+1)
@@ -553,11 +561,18 @@ class Generator:
                 [left - 1, bottom - 1, 0., 1.]
             ]
 
+            texcoords = [
+                [0., 0.],
+                [width, 0.],
+                [width, height],
+                [0., height]
+            ]
+
             model_mat = scale
 
             vidx = len(vertices)
-            for p in positions:
-                vertices.append([np.dot(model_mat, p), [0., 0., 1.]])
+            for i in range(4):
+                vertices.append([np.dot(model_mat, positions[i]), texcoords[i], [0., 0., 1.]])
 
             floor_indices.append(vidx)
             floor_indices.append(vidx+1)
@@ -575,7 +590,7 @@ class Generator:
         vertex_string = "v {} {} {}\n"
         texcoord_string = "vt {} {}\n"
         normal_string = "vn {} {} {}\n"
-        face_string = "f {} {} {}\n"
+        face_string = "f {}/{}/{} {}/{}/{} {}/{}/{}\n"
 
         file = open(filename, "w")
 
@@ -585,7 +600,14 @@ class Generator:
         file.write("\n")
 
         for v in vertices:
-            file.write(normal_string.format(v[1][0], v[1][1], v[1][2]))
+            file.write(texcoord_string.format(v[1][0], v[1][1]))
+
+        file.write("\n")
+
+        for v in vertices:
+            file.write(normal_string.format(v[2][0], v[2][1], v[2][2]))
+
+        file.write("\n")
 
         # Write Walls Group
         file.write(group_string.format("walls"))
@@ -593,7 +615,9 @@ class Generator:
 
         for i in range(int(len(walls_indices)/3)):
             idx = 3*i
-            file.write(face_string.format(walls_indices[idx]+1, walls_indices[idx+1]+1, walls_indices[idx+2]+1))
+            file.write(face_string.format(walls_indices[idx]+1, walls_indices[idx]+1, walls_indices[idx]+1,
+                                          walls_indices[idx+1]+1, walls_indices[idx+1]+1, walls_indices[idx+1]+1,
+                                          walls_indices[idx+2]+1, walls_indices[idx+2]+1, walls_indices[idx+2]+1))
 
         file.write("\n\n")
 
@@ -603,7 +627,9 @@ class Generator:
 
         for i in range(int(len(floor_indices)/3)):
             idx = 3*i
-            file.write(face_string.format(floor_indices[idx]+1, floor_indices[idx+1]+1, floor_indices[idx+2]+1))
+            file.write(face_string.format(floor_indices[idx]+1, floor_indices[idx]+1, floor_indices[idx]+1,
+                                          floor_indices[idx+1]+1, floor_indices[idx+1]+1, floor_indices[idx+1]+1,
+                                          floor_indices[idx+2]+1, floor_indices[idx+2]+1, floor_indices[idx+2]+1))
 
         file.close()
 
