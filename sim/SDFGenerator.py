@@ -72,9 +72,11 @@ class SDFGenerator:
     # the model so that all links are planes in a one-to-one correspondence with the walls and
     def add_wall(self, pos, dim, normal, line):
         name = wall_template.format(self.wall_count)
-        self.walls_model.append(create_element("static", _text="1"))
-        self.walls_model.append(create_element("pose", frame=name,
-                                               _text=pose_template.format(pos[0], pos[1], pos[2], 0., 0., 0.)))
+        model = create_element("model", name=name)
+        self.world.append(model)
+        model.append(create_element("static", _text="1"))
+        model.append(create_element("pose", frame=name,
+                                    _text=pose_template.format(pos[0], pos[1], pos[2], 0., 0., 0.)))
 
         link = create_element("link", name=name)
         self.world.append(link)
@@ -93,12 +95,14 @@ class SDFGenerator:
         inertia.append(create_element("izz", _text="0.166667"))
 
         collision = create_element("collision")
+        link.append(collision)
         geometry = create_element("geometry")
         collision.append(geometry)
         plane = create_element("plane")
         geometry.append(plane)
         plane.append(create_element("normal", _text=normal_template.format(normal[0], normal[1], 0)))
         plane.append(create_element("size", _text=size_template.format(dim[0], dim[1])))
+        self.wall_count += 1
 
     def add_floors(self, centre, normal, floor_obj_file):
         pass

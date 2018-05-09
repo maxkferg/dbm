@@ -16,6 +16,14 @@ Building Navigation Reinforcement Learning Project
 
 ## Model Preparation <a name="prep"></a>
 
+To run the model preparation, activate the conda environment:
+
+- source activate sim
+
+Run command:
+
+python simulator.py --render-image assets/output.png --export-object assets/output.obj --export-sdf assets/output.sdf assets/Level\ 2\ floor\ plan\ walls.png
+
 ### Preparing the input file (building plan)
 
 The building model consists of several files and processes to extract the mesh from the building plan.  To prepare a
