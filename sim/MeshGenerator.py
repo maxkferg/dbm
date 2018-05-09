@@ -488,7 +488,7 @@ class Generator:
 
         return list(map(lambda x: [[x[0][0] - centre[0], x[0][1] - centre[1], x[0][2]], x[1], x[2]], vertices))
 
-    def write_mat_file(self, filename="assets/output.mtl"):
+    def write_mtl_file(self, filename="assets/output.mtl"):
         mat_def = "newmtl {}\n"
         amb_def = "Ka {} {} {}\n"
         diff_def = "Kd {} {} {}\n"
@@ -688,12 +688,9 @@ class Generator:
         file.close()
 
         # Add the matching material file
-        self.write_mat_file(matpath)
+        self.write_mtl_file(matpath)
 
 
     def export_to_sdf(self, filename="assets/output.sdf"):
-        sdf = SDFGenerator.SDFGenerator()
-
-
-
-        sdf.write_file(filename)
+        sdf = SDFGenerator.SDFGenerator(filename)
+        sdf.write_file()

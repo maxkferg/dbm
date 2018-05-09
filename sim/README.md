@@ -2,9 +2,17 @@ Building Navigation Reinforcement Learning Project
 ==================================================
 
 # Table of Contents
+0. [Important Notes](#notes)
 1. [Model Preparation](#prep)
 2. [Training](#train)
 3. [Playback](#play)
+
+## Important Notes <a name="notes"></a>
+
+(Notes that apply during development to keep track of unresolved issues, outstanding problems, or other relevant info)
+
+1. The roboschool model of the stadium splits the geometry into three object files with one shared material file.  
+2. The models have inertial models in the SDF but are static (find out why).
 
 ## Model Preparation <a name="prep"></a>
 
