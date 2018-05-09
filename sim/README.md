@@ -1,3 +1,37 @@
 Building Navigation Reinforcement Learning Project
 ==================================================
 
+# Table of Contents
+1. [Model Preparation](#prep)
+2. [Training](#train)
+3. [Playback](#play)
+
+## Model Preparation <a name="prep"></a>
+
+### Preparing the input file (building plan)
+
+The building model consists of several files and processes to extract the mesh from the building plan.  To prepare a
+file for processing, start with a high resolution image of the building and trace lines into a separate layer.  Note
+that the input file is essentially a bitmap because it processes only two colours, white (empty space), and non-white
+(wall).  Use a single colour for the wall to ensure the wall colour is correctly detected by the algorithm.
+
+The simulation.py program is a single entry point for executing all related algorithms and processes for the system in 
+order to keep everything simple.  The building plan analysis algorithm extracts the walls from the model by using a
+greedy algorithm to "grow" the walls as long as possible and split them under certain conditions.  Note that input file
+has some restrictions.  The building must consist of an outside, connected wall consisting of only vertical or
+horizontal lines.  No holes are possible.  All internal inaccessible spaces should also be connected walls separating
+the traverseable inside from the inaccessible interior.  Most types of rectilinear plan will work and to create interior
+walls, simply ensure that the wall is two pixels wide so that a closed loop can be formed.
+
+Finally, a single line should be placed at the bottom of the plan.  This line is the scale and may represent any scale
+desired, but will be used to calculate the appropriate scale for the building in the training model.
+
+### Creating the OBJ Model
+
+The first step is to create the OBJ file.  This file is in the [Wavefront OBJ File Format](#https://en.wikipedia.org/wiki/Wavefront_.obj_file).
+The OBJ file also has an associated [Material File Format](#http://paulbourke.net/dataformats/mtl/).   This is used to
+provide the walls and floors with a basic texture.
+
+## Training <a name="train"></a>
+
+## Playback <a name="play"></a>

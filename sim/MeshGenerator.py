@@ -3,7 +3,7 @@ from PIL import Image
 import numpy as np
 import math
 import random
-from lxml import etree
+import SDFGenerator
 
 '''Lines are based on the assumption that they are horizontal or vertical and
 therefore are identified by a range over x or y and a single value for the coordinate
@@ -692,9 +692,8 @@ class Generator:
 
 
     def export_to_sdf(self, filename="assets/output.sdf"):
-        print(filename)
-        sdf = etree.Element("sdf")
-        model = etree.Element("model", name="building_model")
-        model.append(etree.Element("pose"))
+        sdf = SDFGenerator.SDFGenerator()
 
-        print(etree.tostring(model, xml_declaration=True))
+
+
+        sdf.write_file(filename)
