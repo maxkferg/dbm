@@ -6,6 +6,7 @@ pose_template = "{} {} {} {} {} {}"
 normal_template = "{} {} {}"
 size_template = "{} {}"
 wall_template = "wall_{}"
+vec2_template = "{} {}"
 vec3_template = "{} {} {}"
 vec4_template = "{} {} {} {}"
 
@@ -161,53 +162,57 @@ class SDFGenerator:
         atten.append(create_element("quadratic", ".001"))
         light.append(create_element("direction", _text=vec3_template.format(-.5, .1, -.9)))
 
-        """
-    <gravity>0 0 -9.8</gravity>
-    <magnetic_field>6e-06 2.3e-05 -4.2e-05</magnetic_field>
-    <atmosphere type='adiabatic'/>
-    <physics name='default_physics' default='0' type='ode'>
-      <max_step_size>0.001</max_step_size>
-      <real_time_factor>1</real_time_factor>
-      <real_time_update_rate>1000</real_time_update_rate>
-    </physics>
-    <scene>
-      <ambient>0.4 0.4 0.4 1</ambient>
-      <background>0.7 0.7 0.7 1</background>
-      <shadows>1</shadows>
-    </scene>
-    <wind/>
-    <spherical_coordinates>
-      <surface_model>EARTH_WGS84</surface_model>
-      <latitude_deg>0</latitude_deg>
-      <longitude_deg>0</longitude_deg>
-      <elevation>0</elevation>
-      <heading_deg>0</heading_deg>
-    </spherical_coordinates>
-    <state world_name='default'>
-      <sim_time>91 335000000</sim_time>
-      <real_time>91 597715616</real_time>
-      <wall_time>1525882902 618151986</wall_time>
-      <iterations>91335</iterations>
-      <model name='ground_plane'>
-        <pose frame=''>0 0 0 0 -0 0</pose>
-        <scale>1 1 1</scale>
-        <link name='link'>
-          <pose frame=''>0 0 0 0 -0 0</pose>
-          <velocity>0 0 0 0 -0 0</velocity>
-          <acceleration>0 0 0 0 -0 0</acceleration>
-          <wrench>0 0 0 0 -0 0</wrench>
-        </link>
-      </model>
-      <light name='sun'>
-        <pose frame=''>0 0 10 0 -0 0</pose>
-      </light>
-    </state>
-    <gui fullscreen='0'>
-      <camera name='user_camera'>
-        <pose frame=''>14.0123 -16.1314 2.86746 0 0.275643 2.35619</pose>
-        <view_controller>orbit</view_controller>
-        <projection_type>perspective</projection_type>
-      </camera>
-    </gui>
-        """
+        self.world.append(create_element("gravity", vec3_template.format(0, 0, -9.8)))
+        self.world.append(create_element("magnetic_field", vec3_template.format(6e-06, 2.3e-05, -4.2e-05)))
+        self.world.append(create_element("atmosphere", "adiabatic"))
+        physics = create_element("physics", name="default_physics", default="0", type="ode")
+        self.world.append(physics)
+        physics.append(create_element("max_step_size", _text=".001"))
+        physics.append(create_element("real_time_factor", _text="1"))
+        physics.append(create_element("real_time_update_rate", _text="1000"))
+        scene = create_element("scene")
+        self.world.append(scene)
+        scene.append(create_element("ambient", vec4_template.format(.4, .4, .4, 1.)))
+        scene.append(create_element("background", vec4_template.format(.7, .7, .7, 1.)))
+        scene.append(create_element("shadows", _text="1"))
+        self.world.append(create_element("wind"))
 
+        coords = create_element("spherical_coordinates")
+        self.world.append(coords)
+        coords.append(create_element("surface_model", _text="EARTH_WGS84"))
+        coords.append(create_element("latitude_deg", _text="0"))
+        coords.append(create_element("longitude_deg", _text="0"))
+        coords.append(create_element("elevation", _text="0"))
+        coords.append(create_element("heading_deg", _text="0"))
+
+        state = create_element("state", world_name="default")
+        self.world.append(state)
+        state.append(create_element("sim_time", vec2_template.format(91, 335000000)))
+        state.append(create_element("real_time", vec2_template.format(91, 597715616)))
+        state.append(create_element("wall_time", vec2_template.format(1525882902, 618151986)))
+        state.append(create_element("iterations", _text="91335"))
+
+        model = create_element("model", name="ground_plane")
+        state.append(model)
+        model.append(create_element("pose", frame="", _text=pose_template.format(0, 0, 0, 0, 0, 0)))
+        model.append(create_element("scale", _text=vec3_template.format(1, 1, 1)))
+        link = create_element("link", name="link")
+        model.append(link)
+
+        link.append(create_element("pose", frame="", _text=pose_template.format(0, 0, 0, 0, 0, 0)))
+        link.append(create_element("velocity", _text=vec3_template.format(0, 0, 0)))
+        link.append(create_element("acceleration", _text=pose_template.format(0, 0, 0, 0, 0, 0)))
+        link.append(create_element("wrench", _text=pose_template.format(0, 0, 0, 0, 0, 0)))
+
+        light = create_element("light", name="sun")
+        state.append(light)
+        light.append(create_element("pose", frame="", _text=pose_template.format(0, 0, 0, 0, 0, 0)))
+
+        gui = create_element("gui", fullscreen="0")
+        self.world.append(gui)
+        cam = create_element("cam", name="user_camera")
+        gui.append(cam)
+
+        cam.append(create_element("pose", frame="", _text=pose_template.format(14.0123, -16.1314, 2.86746, 0, 0.275643, 2.35619)))
+        cam.append(create_element("view_controller", _text="orbit"))
+        cam.append(create_element("projection_type", _text="perspective"))
