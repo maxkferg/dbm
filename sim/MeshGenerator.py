@@ -693,4 +693,5 @@ class Generator:
 
     def export_to_sdf(self, filename="assets/output.sdf"):
         sdf = SDFGenerator.SDFGenerator(filename)
+        sdf.add_walls(self.strip_name(filename) + ".obj")
         sdf.write_file()
