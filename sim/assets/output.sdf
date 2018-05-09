@@ -3,7 +3,7 @@
   <world name="building_model">
     <model name="walls">
       <static>1</static>
-      <pose frame="walls_frame">0.0 0.0 0.0 0.0 0.0 0.0</pose>
+      <pose frame="walls_frame">0 0 0 0.0 0.0 0.0</pose>
       <link name="walls_link">
         <inertial>
           <mass>0</mass>
@@ -26,7 +26,32 @@
         </visual>
       </link>
     </model>
-    <model name="floors"/>
+    <model name="floors">
+      <static>1</static>
+      <pose frame="floors_frame">0 0 0 0.0 0.0 0.0</pose>
+      <link name="floors_link">
+        <inertial>
+          <mass>0</mass>
+          <inertia>
+            <ixx>0.166667</ixx>
+            <ixy>0.</ixy>
+            <ixz>0.</ixz>
+            <iyy>0.166667</iyy>
+            <iyz>0.</iyz>
+            <izz>0.166667</izz>
+          </inertia>
+        </inertial>
+        <visual>
+          <geometry>
+            <mesh>
+              <scale>1. 1. 1.</scale>
+              <uri>assets/output.obj</uri>
+            </mesh>
+          </geometry>
+        </visual>
+        <collision/>
+      </link>
+    </model>
     <model name="wall_0">
       <static>1</static>
       <pose frame="wall_0">443.0 479.5 0 0.0 0.0 0.0</pose>
@@ -47,7 +72,7 @@
         <geometry>
           <plane>
             <normal>1 0 0</normal>
-            <size>43 0.012121212121212121</size>
+            <size>43 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -72,7 +97,7 @@
         <geometry>
           <plane>
             <normal>-1 0 0</normal>
-            <size>78 0.012121212121212121</size>
+            <size>78 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -97,7 +122,7 @@
         <geometry>
           <plane>
             <normal>-1 0 0</normal>
-            <size>16 0.012121212121212121</size>
+            <size>16 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -122,7 +147,7 @@
         <geometry>
           <plane>
             <normal>1 0 0</normal>
-            <size>7 0.012121212121212121</size>
+            <size>7 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -147,7 +172,7 @@
         <geometry>
           <plane>
             <normal>-1 0 0</normal>
-            <size>7 0.012121212121212121</size>
+            <size>7 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -172,7 +197,7 @@
         <geometry>
           <plane>
             <normal>1 0 0</normal>
-            <size>16 0.012121212121212121</size>
+            <size>16 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -197,7 +222,7 @@
         <geometry>
           <plane>
             <normal>-1 0 0</normal>
-            <size>16 0.012121212121212121</size>
+            <size>16 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -222,7 +247,7 @@
         <geometry>
           <plane>
             <normal>1 0 0</normal>
-            <size>54 0.012121212121212121</size>
+            <size>54 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -247,7 +272,7 @@
         <geometry>
           <plane>
             <normal>-1 0 0</normal>
-            <size>16 0.012121212121212121</size>
+            <size>16 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -272,7 +297,7 @@
         <geometry>
           <plane>
             <normal>1 0 0</normal>
-            <size>16 0.012121212121212121</size>
+            <size>16 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -297,7 +322,7 @@
         <geometry>
           <plane>
             <normal>-1 0 0</normal>
-            <size>145 0.012121212121212121</size>
+            <size>145 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -322,7 +347,7 @@
         <geometry>
           <plane>
             <normal>1 0 0</normal>
-            <size>7 0.012121212121212121</size>
+            <size>7 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -347,7 +372,7 @@
         <geometry>
           <plane>
             <normal>-1 0 0</normal>
-            <size>7 0.012121212121212121</size>
+            <size>7 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -372,7 +397,7 @@
         <geometry>
           <plane>
             <normal>1 0 0</normal>
-            <size>7 0.012121212121212121</size>
+            <size>7 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -397,7 +422,7 @@
         <geometry>
           <plane>
             <normal>-1 0 0</normal>
-            <size>7 0.012121212121212121</size>
+            <size>7 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -422,7 +447,7 @@
         <geometry>
           <plane>
             <normal>1 0 0</normal>
-            <size>16 0.012121212121212121</size>
+            <size>16 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -447,7 +472,7 @@
         <geometry>
           <plane>
             <normal>1 0 0</normal>
-            <size>142 0.012121212121212121</size>
+            <size>142 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -472,7 +497,7 @@
         <geometry>
           <plane>
             <normal>-1 0 0</normal>
-            <size>113 0.012121212121212121</size>
+            <size>113 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -497,7 +522,7 @@
         <geometry>
           <plane>
             <normal>1 0 0</normal>
-            <size>120 0.012121212121212121</size>
+            <size>120 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -522,7 +547,7 @@
         <geometry>
           <plane>
             <normal>-1 0 0</normal>
-            <size>113 0.012121212121212121</size>
+            <size>113 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -547,7 +572,7 @@
         <geometry>
           <plane>
             <normal>-1 0 0</normal>
-            <size>38 0.012121212121212121</size>
+            <size>38 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -572,7 +597,7 @@
         <geometry>
           <plane>
             <normal>1 0 0</normal>
-            <size>113 0.012121212121212121</size>
+            <size>113 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -597,7 +622,7 @@
         <geometry>
           <plane>
             <normal>1 0 0</normal>
-            <size>113 0.012121212121212121</size>
+            <size>113 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -622,7 +647,7 @@
         <geometry>
           <plane>
             <normal>-1 0 0</normal>
-            <size>107 0.012121212121212121</size>
+            <size>107 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -647,7 +672,7 @@
         <geometry>
           <plane>
             <normal>-1 0 0</normal>
-            <size>16 0.012121212121212121</size>
+            <size>16 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -672,7 +697,7 @@
         <geometry>
           <plane>
             <normal>-1 0 0</normal>
-            <size>7 0.012121212121212121</size>
+            <size>7 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -697,7 +722,7 @@
         <geometry>
           <plane>
             <normal>1 0 0</normal>
-            <size>16 0.012121212121212121</size>
+            <size>16 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -722,7 +747,7 @@
         <geometry>
           <plane>
             <normal>1 0 0</normal>
-            <size>16 0.012121212121212121</size>
+            <size>16 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -747,7 +772,7 @@
         <geometry>
           <plane>
             <normal>1 0 0</normal>
-            <size>47 0.012121212121212121</size>
+            <size>47 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -772,7 +797,7 @@
         <geometry>
           <plane>
             <normal>-1 0 0</normal>
-            <size>7 0.012121212121212121</size>
+            <size>7 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -797,7 +822,7 @@
         <geometry>
           <plane>
             <normal>1 0 0</normal>
-            <size>7 0.012121212121212121</size>
+            <size>7 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -822,7 +847,7 @@
         <geometry>
           <plane>
             <normal>-1 0 0</normal>
-            <size>7 0.012121212121212121</size>
+            <size>7 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -847,7 +872,7 @@
         <geometry>
           <plane>
             <normal>-1 0 0</normal>
-            <size>242 0.012121212121212121</size>
+            <size>242 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -872,7 +897,7 @@
         <geometry>
           <plane>
             <normal>1 0 0</normal>
-            <size>234 0.012121212121212121</size>
+            <size>234 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -897,7 +922,7 @@
         <geometry>
           <plane>
             <normal>-1 0 0</normal>
-            <size>234 0.012121212121212121</size>
+            <size>234 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -922,7 +947,7 @@
         <geometry>
           <plane>
             <normal>-1 0 0</normal>
-            <size>184 0.012121212121212121</size>
+            <size>184 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -947,7 +972,7 @@
         <geometry>
           <plane>
             <normal>1 0 0</normal>
-            <size>184 0.012121212121212121</size>
+            <size>184 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -972,7 +997,7 @@
         <geometry>
           <plane>
             <normal>1 0 0</normal>
-            <size>163 0.012121212121212121</size>
+            <size>163 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -997,7 +1022,7 @@
         <geometry>
           <plane>
             <normal>1 0 0</normal>
-            <size>45 0.012121212121212121</size>
+            <size>45 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -1022,7 +1047,7 @@
         <geometry>
           <plane>
             <normal>1 0 0</normal>
-            <size>953 0.012121212121212121</size>
+            <size>953 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -1047,7 +1072,7 @@
         <geometry>
           <plane>
             <normal>-1 0 0</normal>
-            <size>43 0.012121212121212121</size>
+            <size>43 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -1072,7 +1097,7 @@
         <geometry>
           <plane>
             <normal>-1 0 0</normal>
-            <size>15 0.012121212121212121</size>
+            <size>15 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -1097,7 +1122,7 @@
         <geometry>
           <plane>
             <normal>-1 0 0</normal>
-            <size>6 0.012121212121212121</size>
+            <size>6 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -1122,7 +1147,7 @@
         <geometry>
           <plane>
             <normal>1 0 0</normal>
-            <size>570 0.012121212121212121</size>
+            <size>570 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -1147,7 +1172,7 @@
         <geometry>
           <plane>
             <normal>-1 0 0</normal>
-            <size>6 0.012121212121212121</size>
+            <size>6 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -1172,7 +1197,7 @@
         <geometry>
           <plane>
             <normal>1 0 0</normal>
-            <size>15 0.012121212121212121</size>
+            <size>15 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -1197,7 +1222,7 @@
         <geometry>
           <plane>
             <normal>-1 0 0</normal>
-            <size>556 0.012121212121212121</size>
+            <size>556 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -1222,7 +1247,7 @@
         <geometry>
           <plane>
             <normal>-1 0 0</normal>
-            <size>90 0.012121212121212121</size>
+            <size>90 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -1247,7 +1272,7 @@
         <geometry>
           <plane>
             <normal>1 0 0</normal>
-            <size>24 0.012121212121212121</size>
+            <size>24 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -1272,7 +1297,7 @@
         <geometry>
           <plane>
             <normal>-1 0 0</normal>
-            <size>112 0.012121212121212121</size>
+            <size>112 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -1297,7 +1322,7 @@
         <geometry>
           <plane>
             <normal>-1 0 0</normal>
-            <size>41 0.012121212121212121</size>
+            <size>41 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -1322,7 +1347,7 @@
         <geometry>
           <plane>
             <normal>-1 0 0</normal>
-            <size>15 0.012121212121212121</size>
+            <size>15 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -1347,7 +1372,7 @@
         <geometry>
           <plane>
             <normal>-1 0 0</normal>
-            <size>40 0.012121212121212121</size>
+            <size>40 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -1372,7 +1397,7 @@
         <geometry>
           <plane>
             <normal>-1 0 0</normal>
-            <size>112 0.012121212121212121</size>
+            <size>112 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -1397,7 +1422,7 @@
         <geometry>
           <plane>
             <normal>-1 0 0</normal>
-            <size>16 0.012121212121212121</size>
+            <size>16 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -1422,7 +1447,7 @@
         <geometry>
           <plane>
             <normal>1 0 0</normal>
-            <size>129 0.012121212121212121</size>
+            <size>129 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -1447,7 +1472,7 @@
         <geometry>
           <plane>
             <normal>-1 0 0</normal>
-            <size>129 0.012121212121212121</size>
+            <size>129 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -1472,7 +1497,7 @@
         <geometry>
           <plane>
             <normal>-1 0 0</normal>
-            <size>113 0.012121212121212121</size>
+            <size>113 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -1497,7 +1522,7 @@
         <geometry>
           <plane>
             <normal>-1 0 0</normal>
-            <size>16 0.012121212121212121</size>
+            <size>16 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -1522,7 +1547,7 @@
         <geometry>
           <plane>
             <normal>1 0 0</normal>
-            <size>13 0.012121212121212121</size>
+            <size>13 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -1547,7 +1572,7 @@
         <geometry>
           <plane>
             <normal>-1 0 0</normal>
-            <size>13 0.012121212121212121</size>
+            <size>13 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -1572,7 +1597,7 @@
         <geometry>
           <plane>
             <normal>-1 0 0</normal>
-            <size>11 0.012121212121212121</size>
+            <size>11 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -1597,7 +1622,7 @@
         <geometry>
           <plane>
             <normal>1 0 0</normal>
-            <size>7 0.012121212121212121</size>
+            <size>7 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -1622,7 +1647,7 @@
         <geometry>
           <plane>
             <normal>-1 0 0</normal>
-            <size>7 0.012121212121212121</size>
+            <size>7 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -1647,7 +1672,7 @@
         <geometry>
           <plane>
             <normal>-1 0 0</normal>
-            <size>54 0.012121212121212121</size>
+            <size>54 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -1672,7 +1697,7 @@
         <geometry>
           <plane>
             <normal>-1 0 0</normal>
-            <size>195 0.012121212121212121</size>
+            <size>195 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -1697,7 +1722,7 @@
         <geometry>
           <plane>
             <normal>1 0 0</normal>
-            <size>164 0.012121212121212121</size>
+            <size>164 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -1722,7 +1747,7 @@
         <geometry>
           <plane>
             <normal>-1 0 0</normal>
-            <size>165 0.012121212121212121</size>
+            <size>165 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -1747,7 +1772,7 @@
         <geometry>
           <plane>
             <normal>1 0 0</normal>
-            <size>165 0.012121212121212121</size>
+            <size>165 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -1772,7 +1797,7 @@
         <geometry>
           <plane>
             <normal>-1 0 0</normal>
-            <size>164 0.012121212121212121</size>
+            <size>164 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -1797,7 +1822,7 @@
         <geometry>
           <plane>
             <normal>1 0 0</normal>
-            <size>13 0.012121212121212121</size>
+            <size>13 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -1822,7 +1847,7 @@
         <geometry>
           <plane>
             <normal>-1 0 0</normal>
-            <size>13 0.012121212121212121</size>
+            <size>13 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -1847,7 +1872,7 @@
         <geometry>
           <plane>
             <normal>1 0 0</normal>
-            <size>55 0.012121212121212121</size>
+            <size>55 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -1872,7 +1897,7 @@
         <geometry>
           <plane>
             <normal>-1 0 0</normal>
-            <size>161 0.012121212121212121</size>
+            <size>161 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -1897,7 +1922,7 @@
         <geometry>
           <plane>
             <normal>1 0 0</normal>
-            <size>164 0.012121212121212121</size>
+            <size>164 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -1922,7 +1947,7 @@
         <geometry>
           <plane>
             <normal>-1 0 0</normal>
-            <size>163 0.012121212121212121</size>
+            <size>163 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -1947,7 +1972,7 @@
         <geometry>
           <plane>
             <normal>1 0 0</normal>
-            <size>10 0.012121212121212121</size>
+            <size>10 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -1972,7 +1997,7 @@
         <geometry>
           <plane>
             <normal>-1 0 0</normal>
-            <size>319 0.012121212121212121</size>
+            <size>319 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -1997,7 +2022,7 @@
         <geometry>
           <plane>
             <normal>1 0 0</normal>
-            <size>319 0.012121212121212121</size>
+            <size>319 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -2022,7 +2047,7 @@
         <geometry>
           <plane>
             <normal>-1 0 0</normal>
-            <size>406 0.012121212121212121</size>
+            <size>406 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -2047,7 +2072,7 @@
         <geometry>
           <plane>
             <normal>1 0 0</normal>
-            <size>406 0.012121212121212121</size>
+            <size>406 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -2072,7 +2097,7 @@
         <geometry>
           <plane>
             <normal>-1 0 0</normal>
-            <size>319 0.012121212121212121</size>
+            <size>319 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -2097,7 +2122,7 @@
         <geometry>
           <plane>
             <normal>1 0 0</normal>
-            <size>319 0.012121212121212121</size>
+            <size>319 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -2122,7 +2147,7 @@
         <geometry>
           <plane>
             <normal>1 0 0</normal>
-            <size>91 0.012121212121212121</size>
+            <size>91 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -2147,7 +2172,7 @@
         <geometry>
           <plane>
             <normal>1 0 0</normal>
-            <size>15 0.012121212121212121</size>
+            <size>15 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -2172,7 +2197,7 @@
         <geometry>
           <plane>
             <normal>-1 0 0</normal>
-            <size>29 0.012121212121212121</size>
+            <size>29 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -2197,7 +2222,7 @@
         <geometry>
           <plane>
             <normal>1 0 0</normal>
-            <size>128 0.012121212121212121</size>
+            <size>128 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -2222,7 +2247,7 @@
         <geometry>
           <plane>
             <normal>-1 0 0</normal>
-            <size>169 0.012121212121212121</size>
+            <size>169 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -2247,7 +2272,7 @@
         <geometry>
           <plane>
             <normal>1 0 0</normal>
-            <size>169 0.012121212121212121</size>
+            <size>169 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -2272,7 +2297,7 @@
         <geometry>
           <plane>
             <normal>-1 0 0</normal>
-            <size>168 0.012121212121212121</size>
+            <size>168 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -2297,7 +2322,7 @@
         <geometry>
           <plane>
             <normal>1 0 0</normal>
-            <size>168 0.012121212121212121</size>
+            <size>168 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -2322,7 +2347,7 @@
         <geometry>
           <plane>
             <normal>-1 0 0</normal>
-            <size>23 0.012121212121212121</size>
+            <size>23 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -2347,7 +2372,7 @@
         <geometry>
           <plane>
             <normal>-1 0 0</normal>
-            <size>16 0.012121212121212121</size>
+            <size>16 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -2372,7 +2397,7 @@
         <geometry>
           <plane>
             <normal>1 0 0</normal>
-            <size>124 0.012121212121212121</size>
+            <size>124 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -2397,7 +2422,7 @@
         <geometry>
           <plane>
             <normal>-1 0 0</normal>
-            <size>124 0.012121212121212121</size>
+            <size>124 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -2422,7 +2447,7 @@
         <geometry>
           <plane>
             <normal>-1 0 0</normal>
-            <size>81 0.012121212121212121</size>
+            <size>81 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -2447,7 +2472,7 @@
         <geometry>
           <plane>
             <normal>-1 0 0</normal>
-            <size>15 0.012121212121212121</size>
+            <size>15 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -2472,7 +2497,7 @@
         <geometry>
           <plane>
             <normal>-1 0 0</normal>
-            <size>217 0.012121212121212121</size>
+            <size>217 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -2497,7 +2522,7 @@
         <geometry>
           <plane>
             <normal>1 0 0</normal>
-            <size>115 0.012121212121212121</size>
+            <size>115 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -2522,7 +2547,7 @@
         <geometry>
           <plane>
             <normal>-1 0 0</normal>
-            <size>67 0.012121212121212121</size>
+            <size>67 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -2547,7 +2572,7 @@
         <geometry>
           <plane>
             <normal>1 0 0</normal>
-            <size>67 0.012121212121212121</size>
+            <size>67 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -2572,7 +2597,7 @@
         <geometry>
           <plane>
             <normal>-1 0 0</normal>
-            <size>67 0.012121212121212121</size>
+            <size>67 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -2597,7 +2622,7 @@
         <geometry>
           <plane>
             <normal>1 0 0</normal>
-            <size>67 0.012121212121212121</size>
+            <size>67 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -2622,7 +2647,7 @@
         <geometry>
           <plane>
             <normal>1 0 0</normal>
-            <size>14 0.012121212121212121</size>
+            <size>14 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -2647,7 +2672,7 @@
         <geometry>
           <plane>
             <normal>-1 0 0</normal>
-            <size>14 0.012121212121212121</size>
+            <size>14 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -2672,7 +2697,7 @@
         <geometry>
           <plane>
             <normal>1 0 0</normal>
-            <size>14 0.012121212121212121</size>
+            <size>14 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -2697,7 +2722,7 @@
         <geometry>
           <plane>
             <normal>-1 0 0</normal>
-            <size>14 0.012121212121212121</size>
+            <size>14 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -2722,7 +2747,7 @@
         <geometry>
           <plane>
             <normal>1 0 0</normal>
-            <size>14 0.012121212121212121</size>
+            <size>14 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -2747,7 +2772,7 @@
         <geometry>
           <plane>
             <normal>-1 0 0</normal>
-            <size>14 0.012121212121212121</size>
+            <size>14 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -2772,7 +2797,7 @@
         <geometry>
           <plane>
             <normal>0 1 0</normal>
-            <size>842 0.012121212121212121</size>
+            <size>842 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -2797,7 +2822,7 @@
         <geometry>
           <plane>
             <normal>0 -1 0</normal>
-            <size>15 0.012121212121212121</size>
+            <size>15 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -2822,7 +2847,7 @@
         <geometry>
           <plane>
             <normal>0 -1 0</normal>
-            <size>15 0.012121212121212121</size>
+            <size>15 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -2847,7 +2872,7 @@
         <geometry>
           <plane>
             <normal>0 -1 0</normal>
-            <size>20 0.012121212121212121</size>
+            <size>20 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -2872,7 +2897,7 @@
         <geometry>
           <plane>
             <normal>0 -1 0</normal>
-            <size>26 0.012121212121212121</size>
+            <size>26 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -2897,7 +2922,7 @@
         <geometry>
           <plane>
             <normal>0 -1 0</normal>
-            <size>31 0.012121212121212121</size>
+            <size>31 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -2922,7 +2947,7 @@
         <geometry>
           <plane>
             <normal>0 -1 0</normal>
-            <size>16 0.012121212121212121</size>
+            <size>16 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -2947,7 +2972,7 @@
         <geometry>
           <plane>
             <normal>0 -1 0</normal>
-            <size>16 0.012121212121212121</size>
+            <size>16 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -2972,7 +2997,7 @@
         <geometry>
           <plane>
             <normal>0 -1 0</normal>
-            <size>69 0.012121212121212121</size>
+            <size>69 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -2997,7 +3022,7 @@
         <geometry>
           <plane>
             <normal>0 -1 0</normal>
-            <size>243 0.012121212121212121</size>
+            <size>243 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -3022,7 +3047,7 @@
         <geometry>
           <plane>
             <normal>0 -1 0</normal>
-            <size>47 0.012121212121212121</size>
+            <size>47 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -3047,7 +3072,7 @@
         <geometry>
           <plane>
             <normal>0 -1 0</normal>
-            <size>113 0.012121212121212121</size>
+            <size>113 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -3072,7 +3097,7 @@
         <geometry>
           <plane>
             <normal>0 1 0</normal>
-            <size>6 0.012121212121212121</size>
+            <size>6 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -3097,7 +3122,7 @@
         <geometry>
           <plane>
             <normal>0 1 0</normal>
-            <size>13 0.012121212121212121</size>
+            <size>13 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -3122,7 +3147,7 @@
         <geometry>
           <plane>
             <normal>0 1 0</normal>
-            <size>17 0.012121212121212121</size>
+            <size>17 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -3147,7 +3172,7 @@
         <geometry>
           <plane>
             <normal>0 1 0</normal>
-            <size>8 0.012121212121212121</size>
+            <size>8 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -3172,7 +3197,7 @@
         <geometry>
           <plane>
             <normal>0 1 0</normal>
-            <size>14 0.012121212121212121</size>
+            <size>14 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -3197,7 +3222,7 @@
         <geometry>
           <plane>
             <normal>0 1 0</normal>
-            <size>7 0.012121212121212121</size>
+            <size>7 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -3222,7 +3247,7 @@
         <geometry>
           <plane>
             <normal>0 -1 0</normal>
-            <size>51 0.012121212121212121</size>
+            <size>51 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -3247,7 +3272,7 @@
         <geometry>
           <plane>
             <normal>0 -1 0</normal>
-            <size>56 0.012121212121212121</size>
+            <size>56 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -3272,7 +3297,7 @@
         <geometry>
           <plane>
             <normal>0 -1 0</normal>
-            <size>6 0.012121212121212121</size>
+            <size>6 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -3297,7 +3322,7 @@
         <geometry>
           <plane>
             <normal>0 -1 0</normal>
-            <size>17 0.012121212121212121</size>
+            <size>17 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -3322,7 +3347,7 @@
         <geometry>
           <plane>
             <normal>0 -1 0</normal>
-            <size>14 0.012121212121212121</size>
+            <size>14 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -3347,7 +3372,7 @@
         <geometry>
           <plane>
             <normal>0 -1 0</normal>
-            <size>7 0.012121212121212121</size>
+            <size>7 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -3372,7 +3397,7 @@
         <geometry>
           <plane>
             <normal>0 -1 0</normal>
-            <size>44 0.012121212121212121</size>
+            <size>44 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -3397,7 +3422,7 @@
         <geometry>
           <plane>
             <normal>0 1 0</normal>
-            <size>71 0.012121212121212121</size>
+            <size>71 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -3422,7 +3447,7 @@
         <geometry>
           <plane>
             <normal>0 1 0</normal>
-            <size>176 0.012121212121212121</size>
+            <size>176 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -3447,7 +3472,7 @@
         <geometry>
           <plane>
             <normal>0 1 0</normal>
-            <size>6 0.012121212121212121</size>
+            <size>6 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -3472,7 +3497,7 @@
         <geometry>
           <plane>
             <normal>0 1 0</normal>
-            <size>94 0.012121212121212121</size>
+            <size>94 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -3497,7 +3522,7 @@
         <geometry>
           <plane>
             <normal>0 1 0</normal>
-            <size>31 0.012121212121212121</size>
+            <size>31 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -3522,7 +3547,7 @@
         <geometry>
           <plane>
             <normal>0 1 0</normal>
-            <size>16 0.012121212121212121</size>
+            <size>16 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -3547,7 +3572,7 @@
         <geometry>
           <plane>
             <normal>0 1 0</normal>
-            <size>18 0.012121212121212121</size>
+            <size>18 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -3572,7 +3597,7 @@
         <geometry>
           <plane>
             <normal>0 1 0</normal>
-            <size>17 0.012121212121212121</size>
+            <size>17 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -3597,7 +3622,7 @@
         <geometry>
           <plane>
             <normal>0 -1 0</normal>
-            <size>118 0.012121212121212121</size>
+            <size>118 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -3622,7 +3647,7 @@
         <geometry>
           <plane>
             <normal>0 -1 0</normal>
-            <size>222 0.012121212121212121</size>
+            <size>222 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -3647,7 +3672,7 @@
         <geometry>
           <plane>
             <normal>0 1 0</normal>
-            <size>222 0.012121212121212121</size>
+            <size>222 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -3672,7 +3697,7 @@
         <geometry>
           <plane>
             <normal>0 1 0</normal>
-            <size>118 0.012121212121212121</size>
+            <size>118 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -3697,7 +3722,7 @@
         <geometry>
           <plane>
             <normal>0 -1 0</normal>
-            <size>18 0.012121212121212121</size>
+            <size>18 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -3722,7 +3747,7 @@
         <geometry>
           <plane>
             <normal>0 -1 0</normal>
-            <size>17 0.012121212121212121</size>
+            <size>17 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -3747,7 +3772,7 @@
         <geometry>
           <plane>
             <normal>0 -1 0</normal>
-            <size>6 0.012121212121212121</size>
+            <size>6 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -3772,7 +3797,7 @@
         <geometry>
           <plane>
             <normal>0 -1 0</normal>
-            <size>163 0.012121212121212121</size>
+            <size>163 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -3797,7 +3822,7 @@
         <geometry>
           <plane>
             <normal>0 -1 0</normal>
-            <size>16 0.012121212121212121</size>
+            <size>16 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -3822,7 +3847,7 @@
         <geometry>
           <plane>
             <normal>0 -1 0</normal>
-            <size>72 0.012121212121212121</size>
+            <size>72 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -3847,7 +3872,7 @@
         <geometry>
           <plane>
             <normal>0 -1 0</normal>
-            <size>122 0.012121212121212121</size>
+            <size>122 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -3872,7 +3897,7 @@
         <geometry>
           <plane>
             <normal>0 1 0</normal>
-            <size>6 0.012121212121212121</size>
+            <size>6 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -3897,7 +3922,7 @@
         <geometry>
           <plane>
             <normal>0 1 0</normal>
-            <size>7 0.012121212121212121</size>
+            <size>7 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -3922,7 +3947,7 @@
         <geometry>
           <plane>
             <normal>0 -1 0</normal>
-            <size>38 0.012121212121212121</size>
+            <size>38 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -3947,7 +3972,7 @@
         <geometry>
           <plane>
             <normal>0 1 0</normal>
-            <size>11 0.012121212121212121</size>
+            <size>11 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -3972,7 +3997,7 @@
         <geometry>
           <plane>
             <normal>0 -1 0</normal>
-            <size>9 0.012121212121212121</size>
+            <size>9 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -3997,7 +4022,7 @@
         <geometry>
           <plane>
             <normal>0 -1 0</normal>
-            <size>8 0.012121212121212121</size>
+            <size>8 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -4022,7 +4047,7 @@
         <geometry>
           <plane>
             <normal>0 1 0</normal>
-            <size>8 0.012121212121212121</size>
+            <size>8 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -4047,7 +4072,7 @@
         <geometry>
           <plane>
             <normal>0 1 0</normal>
-            <size>9 0.012121212121212121</size>
+            <size>9 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -4072,7 +4097,7 @@
         <geometry>
           <plane>
             <normal>0 -1 0</normal>
-            <size>17 0.012121212121212121</size>
+            <size>17 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -4097,7 +4122,7 @@
         <geometry>
           <plane>
             <normal>0 1 0</normal>
-            <size>41 0.012121212121212121</size>
+            <size>41 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -4122,7 +4147,7 @@
         <geometry>
           <plane>
             <normal>0 1 0</normal>
-            <size>6 0.012121212121212121</size>
+            <size>6 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -4147,7 +4172,7 @@
         <geometry>
           <plane>
             <normal>0 -1 0</normal>
-            <size>6 0.012121212121212121</size>
+            <size>6 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -4172,7 +4197,7 @@
         <geometry>
           <plane>
             <normal>0 1 0</normal>
-            <size>132 0.012121212121212121</size>
+            <size>132 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -4197,7 +4222,7 @@
         <geometry>
           <plane>
             <normal>0 1 0</normal>
-            <size>1672 0.012121212121212121</size>
+            <size>1672 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -4222,7 +4247,7 @@
         <geometry>
           <plane>
             <normal>0 1 0</normal>
-            <size>72 0.012121212121212121</size>
+            <size>72 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -4247,7 +4272,7 @@
         <geometry>
           <plane>
             <normal>0 1 0</normal>
-            <size>290 0.012121212121212121</size>
+            <size>290 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -4272,7 +4297,7 @@
         <geometry>
           <plane>
             <normal>0 1 0</normal>
-            <size>15 0.012121212121212121</size>
+            <size>15 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -4297,7 +4322,7 @@
         <geometry>
           <plane>
             <normal>0 1 0</normal>
-            <size>15 0.012121212121212121</size>
+            <size>15 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -4322,7 +4347,7 @@
         <geometry>
           <plane>
             <normal>0 1 0</normal>
-            <size>16 0.012121212121212121</size>
+            <size>16 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -4347,7 +4372,7 @@
         <geometry>
           <plane>
             <normal>0 1 0</normal>
-            <size>7 0.012121212121212121</size>
+            <size>7 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -4372,7 +4397,7 @@
         <geometry>
           <plane>
             <normal>0 -1 0</normal>
-            <size>267 0.012121212121212121</size>
+            <size>267 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -4397,7 +4422,7 @@
         <geometry>
           <plane>
             <normal>0 -1 0</normal>
-            <size>520 0.012121212121212121</size>
+            <size>520 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -4422,7 +4447,7 @@
         <geometry>
           <plane>
             <normal>0 -1 0</normal>
-            <size>89 0.012121212121212121</size>
+            <size>89 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -4447,7 +4472,7 @@
         <geometry>
           <plane>
             <normal>0 -1 0</normal>
-            <size>401 0.012121212121212121</size>
+            <size>401 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -4472,7 +4497,7 @@
         <geometry>
           <plane>
             <normal>0 -1 0</normal>
-            <size>83 0.012121212121212121</size>
+            <size>83 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -4497,7 +4522,7 @@
         <geometry>
           <plane>
             <normal>0 -1 0</normal>
-            <size>82 0.012121212121212121</size>
+            <size>82 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -4522,7 +4547,7 @@
         <geometry>
           <plane>
             <normal>0 -1 0</normal>
-            <size>53 0.012121212121212121</size>
+            <size>53 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -4547,7 +4572,7 @@
         <geometry>
           <plane>
             <normal>0 -1 0</normal>
-            <size>47 0.012121212121212121</size>
+            <size>47 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -4572,7 +4597,7 @@
         <geometry>
           <plane>
             <normal>0 -1 0</normal>
-            <size>162 0.012121212121212121</size>
+            <size>162 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -4597,7 +4622,7 @@
         <geometry>
           <plane>
             <normal>0 -1 0</normal>
-            <size>163 0.012121212121212121</size>
+            <size>163 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -4622,7 +4647,7 @@
         <geometry>
           <plane>
             <normal>0 -1 0</normal>
-            <size>163 0.012121212121212121</size>
+            <size>163 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -4647,7 +4672,7 @@
         <geometry>
           <plane>
             <normal>0 1 0</normal>
-            <size>29 0.012121212121212121</size>
+            <size>29 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -4672,7 +4697,7 @@
         <geometry>
           <plane>
             <normal>0 -1 0</normal>
-            <size>23 0.012121212121212121</size>
+            <size>23 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -4697,7 +4722,7 @@
         <geometry>
           <plane>
             <normal>0 -1 0</normal>
-            <size>46 0.012121212121212121</size>
+            <size>46 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -4722,7 +4747,7 @@
         <geometry>
           <plane>
             <normal>0 1 0</normal>
-            <size>135 0.012121212121212121</size>
+            <size>135 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -4747,7 +4772,7 @@
         <geometry>
           <plane>
             <normal>0 1 0</normal>
-            <size>6 0.012121212121212121</size>
+            <size>6 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -4772,7 +4797,7 @@
         <geometry>
           <plane>
             <normal>0 1 0</normal>
-            <size>6 0.012121212121212121</size>
+            <size>6 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -4797,7 +4822,7 @@
         <geometry>
           <plane>
             <normal>0 1 0</normal>
-            <size>7 0.012121212121212121</size>
+            <size>7 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -4822,7 +4847,7 @@
         <geometry>
           <plane>
             <normal>0 1 0</normal>
-            <size>7 0.012121212121212121</size>
+            <size>7 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -4847,7 +4872,7 @@
         <geometry>
           <plane>
             <normal>0 1 0</normal>
-            <size>7 0.012121212121212121</size>
+            <size>7 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -4872,7 +4897,7 @@
         <geometry>
           <plane>
             <normal>0 -1 0</normal>
-            <size>7 0.012121212121212121</size>
+            <size>7 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -4897,7 +4922,7 @@
         <geometry>
           <plane>
             <normal>0 -1 0</normal>
-            <size>6 0.012121212121212121</size>
+            <size>6 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -4922,7 +4947,7 @@
         <geometry>
           <plane>
             <normal>0 1 0</normal>
-            <size>157 0.012121212121212121</size>
+            <size>157 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -4947,7 +4972,7 @@
         <geometry>
           <plane>
             <normal>0 1 0</normal>
-            <size>6 0.012121212121212121</size>
+            <size>6 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -4972,7 +4997,7 @@
         <geometry>
           <plane>
             <normal>0 -1 0</normal>
-            <size>51 0.012121212121212121</size>
+            <size>51 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -4997,7 +5022,7 @@
         <geometry>
           <plane>
             <normal>0 -1 0</normal>
-            <size>71 0.012121212121212121</size>
+            <size>71 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -5022,7 +5047,7 @@
         <geometry>
           <plane>
             <normal>0 1 0</normal>
-            <size>261 0.012121212121212121</size>
+            <size>261 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -5047,7 +5072,7 @@
         <geometry>
           <plane>
             <normal>0 -1 0</normal>
-            <size>298 0.012121212121212121</size>
+            <size>298 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -5072,7 +5097,7 @@
         <geometry>
           <plane>
             <normal>0 1 0</normal>
-            <size>162 0.012121212121212121</size>
+            <size>162 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -5097,7 +5122,7 @@
         <geometry>
           <plane>
             <normal>0 1 0</normal>
-            <size>506 0.012121212121212121</size>
+            <size>506 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -5122,7 +5147,7 @@
         <geometry>
           <plane>
             <normal>0 1 0</normal>
-            <size>647 0.012121212121212121</size>
+            <size>647 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -5147,7 +5172,7 @@
         <geometry>
           <plane>
             <normal>0 1 0</normal>
-            <size>3 0.012121212121212121</size>
+            <size>3 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -5172,7 +5197,7 @@
         <geometry>
           <plane>
             <normal>0 1 0</normal>
-            <size>3 0.012121212121212121</size>
+            <size>3 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -5197,7 +5222,7 @@
         <geometry>
           <plane>
             <normal>0 -1 0</normal>
-            <size>506 0.012121212121212121</size>
+            <size>506 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -5222,7 +5247,7 @@
         <geometry>
           <plane>
             <normal>0 -1 0</normal>
-            <size>647 0.012121212121212121</size>
+            <size>647 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -5247,7 +5272,7 @@
         <geometry>
           <plane>
             <normal>0 1 0</normal>
-            <size>163 0.012121212121212121</size>
+            <size>163 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -5272,7 +5297,7 @@
         <geometry>
           <plane>
             <normal>0 -1 0</normal>
-            <size>9 0.012121212121212121</size>
+            <size>9 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -5297,7 +5322,7 @@
         <geometry>
           <plane>
             <normal>0 -1 0</normal>
-            <size>10 0.012121212121212121</size>
+            <size>10 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -5322,7 +5347,7 @@
         <geometry>
           <plane>
             <normal>0 -1 0</normal>
-            <size>9 0.012121212121212121</size>
+            <size>9 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -5347,7 +5372,7 @@
         <geometry>
           <plane>
             <normal>0 -1 0</normal>
-            <size>9 0.012121212121212121</size>
+            <size>9 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -5372,7 +5397,7 @@
         <geometry>
           <plane>
             <normal>0 -1 0</normal>
-            <size>9 0.012121212121212121</size>
+            <size>9 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -5397,7 +5422,7 @@
         <geometry>
           <plane>
             <normal>0 -1 0</normal>
-            <size>9 0.012121212121212121</size>
+            <size>9 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -5422,7 +5447,7 @@
         <geometry>
           <plane>
             <normal>0 -1 0</normal>
-            <size>236 0.012121212121212121</size>
+            <size>236 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -5447,7 +5472,7 @@
         <geometry>
           <plane>
             <normal>0 -1 0</normal>
-            <size>237 0.012121212121212121</size>
+            <size>237 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
@@ -5472,10 +5497,22 @@
         <geometry>
           <plane>
             <normal>0 -1 0</normal>
-            <size>237 0.012121212121212121</size>
+            <size>237 0.0121212121212</size>
           </plane>
         </geometry>
       </collision>
     </link>
+    <light type="directional">
+      <pose frame="">0 0 10 0 0 0</pose>
+      <diffuse>0.8 0.8 0.8 1.0</diffuse>
+      <specular>0.2 0.2 0.2 1.0</specular>
+      <attenuation>
+        <range>1000</range>
+        <constant>.9</constant>
+        <linear>.001</linear>
+        <quadratic>.001</quadratic>
+      </attenuation>
+      <direction>-0.5 0.1 -0.9</direction>
+    </light>
   </world>
 </sdf>

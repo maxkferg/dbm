@@ -709,5 +709,6 @@ class Generator:
 
         # Export Floors
         sdf.add_floors([0, 0, 0], [0, 0, 1], [self.size[0], self.size[1]], self.strip_name(filename) + ".obj")
+        sdf.add_extra()         # This is possibly only required for gazebo
 
         sdf.write_file()

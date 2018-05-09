@@ -14,6 +14,10 @@ Building Navigation Reinforcement Learning Project
 1. The roboschool model of the stadium splits the geometry into three object files with one shared material file.  
 2. The models have inertial models in the SDF but are static (find out why).
 
+Notes on SDF file format
+
+[SDF File format in Gazebo](#https://www.youtube.com/watch?v=sHzC--X0zQE)
+
 ## Model Preparation <a name="prep"></a>
 
 To run the model preparation, activate the conda environment:

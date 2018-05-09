@@ -25,6 +25,10 @@
           </geometry>
         </visual>
       </link>
+    </model>
+    <model name="floors">
+      <static>1</static>
+      <pose frame="floors_frame">0 0 0 0.0 0.0 0.0</pose>
       <link name="floors_link">
         <inertial>
           <mass>0</mass>
@@ -47,10 +51,6 @@
         </visual>
         <collision/>
       </link>
-    </model>
-    <model name="floors">
-      <static>1</static>
-      <pose frame="floors_frame">0 0 0 0.0 0.0 0.0</pose>
     </model>
     <model name="wall_0">
       <static>1</static>
@@ -802,5 +802,17 @@
         </geometry>
       </collision>
     </link>
+    <light type="directional">
+      <pose frame="">0 0 10 0 0 0</pose>
+      <diffuse>0.8 0.8 0.8 1.0</diffuse>
+      <specular>0.2 0.2 0.2 1.0</specular>
+      <attenuation>
+        <range>1000</range>
+        <constant>.9</constant>
+        <linear>.001</linear>
+        <quadratic>.001</quadratic>
+      </attenuation>
+      <direction>-0.5 0.1 -0.9</direction>
+    </light>
   </world>
 </sdf>
