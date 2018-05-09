@@ -690,8 +690,20 @@ class Generator:
         # Add the matching material file
         self.write_mtl_file(matpath)
 
-
     def export_to_sdf(self, filename="assets/output.sdf"):
         sdf = SDFGenerator.SDFGenerator(filename)
         sdf.add_walls(self.strip_name(filename) + ".obj")
+
+        dim = max(self.size[0], self.size[1])
+        inv_dim = 1./dim
+        wall_height = inv_dim * 40.
+
+        # Export five walls
+        for i in range(5):
+            line = self.lines[i]
+            pos = centre_pos(line) + [0]
+            dim = [line_len(line), wall_height]
+            nor = self.normals[i] + [0]
+            sdf.add_wall(pos, dim, nor, line)
+
         sdf.write_file()
