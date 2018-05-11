@@ -166,18 +166,18 @@ class SDFGenerator:
 
     def add_extra(self):
         """This extra stuff is required to load the SDF into Gazebo for testing"""
-        light = create_element("light", type="directional")
+        light = create_element("light", type="directional", name="sun")
         self.world.append(light)
-        light.append(create_element("pose", frame='', _text=pose_template.format(0, 0, 10, 0, 0, 0)))
+        light.append(create_element("pose", frame='', _text=pose_template.format(0, 0, 3, 0, 0, 0)))
         light.append(create_element("diffuse", _text=vec4_template.format(.8, .8, .8, 1.)))
         light.append(create_element("specular", _text=vec4_template.format(.2, .2, .2, 1.)))
         atten = create_element("attenuation")
         light.append(atten)
         atten.append(create_element("range", "1000"))
-        atten.append(create_element("constant", ".9"))
-        atten.append(create_element("linear", ".001"))
+        atten.append(create_element("constant", "1."))
+        atten.append(create_element("linear", ".1"))
         atten.append(create_element("quadratic", ".001"))
-        light.append(create_element("direction", _text=vec3_template.format(-.5, .1, -.9)))
+        light.append(create_element("direction", _text=vec3_template.format(0., 0., -1.)))
 
         self.world.append(create_element("gravity", vec3_template.format(0, 0, -9.8)))
         self.world.append(create_element("magnetic_field", vec3_template.format(6e-06, 2.3e-05, -4.2e-05)))
@@ -189,7 +189,7 @@ class SDFGenerator:
         physics.append(create_element("real_time_update_rate", _text="1000"))
         scene = create_element("scene")
         self.world.append(scene)
-        scene.append(create_element("ambient", vec4_template.format(.4, .4, .4, 1.)))
+        scene.append(create_element("ambient", vec4_template.format(.6, .6, .6, 1.)))
         scene.append(create_element("background", vec4_template.format(.7, .7, .7, 1.)))
         scene.append(create_element("shadows", _text="1"))
         self.world.append(create_element("wind"))

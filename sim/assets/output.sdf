@@ -1,10 +1,10 @@
 <?xml version='1.0' encoding='ASCII'?>
 <sdf version="1.6">
   <world name="building_model">
-    <model name="floors">
+    <model name="walls">
       <static>1</static>
-      <pose frame="floors_frame">0 0 0 0.0 0.0 0.0</pose>
-      <link name="floors_link">
+      <pose frame="walls_frame">0 0 0 0.0 0.0 0.0</pose>
+      <link name="walls_link">
         <inertial>
           <mass>0</mass>
           <inertia>
@@ -16,35 +16,35 @@
             <izz>0.166667</izz>
           </inertia>
         </inertial>
-        <visual name="floors_mesh">
+        <visual name="walls_mesh">
           <geometry>
             <mesh>
-              <scale>0.5 0.5 0.5</scale>
+              <scale>1.0 1.0 1.0</scale>
               <uri>assets/output.obj</uri>
             </mesh>
           </geometry>
         </visual>
-        <collision name="floors_collision">
+        <collision name="walls_collision">
           <geometry>
-            <plane>
-              <normal>0 0 1</normal>
-              <size>3300 2550</size>
-            </plane>
+            <mesh>
+              <scale>1.0 1.0 1.0</scale>
+              <uri>assets/output.obj</uri>
+            </mesh>
           </geometry>
         </collision>
       </link>
     </model>
-    <light type="directional">
-      <pose frame="">0 0 10 0 0 0</pose>
+    <light name="sun" type="directional">
+      <pose frame="">0 0 3 0 0 0</pose>
       <diffuse>0.8 0.8 0.8 1.0</diffuse>
       <specular>0.2 0.2 0.2 1.0</specular>
       <attenuation>
         <range>1000</range>
-        <constant>.9</constant>
-        <linear>.001</linear>
+        <constant>1.</constant>
+        <linear>.1</linear>
         <quadratic>.001</quadratic>
       </attenuation>
-      <direction>-0.5 0.1 -0.9</direction>
+      <direction>0.0 0.0 -1.0</direction>
     </light>
     <gravity>0 0 -9.8</gravity>
     <magnetic_field>6e-06 2.3e-05 -4.2e-05</magnetic_field>
@@ -74,7 +74,7 @@
       <iterations>91335</iterations>
       <model name="ground_plane">
         <pose frame="">0 0 0 0 0 0</pose>
-        <scale>1 1 1</scale>
+        <scale>1.0 1.0 1.0</scale>
         <link name="link">
           <pose frame="">0 0 0 0 0 0</pose>
           <velocity>0 0 0</velocity>
