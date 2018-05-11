@@ -1,7 +1,7 @@
 <?xml version='1.0'?>
 <sdf version='1.6'>
-  <model name='test1_model'>
-    <link name='link_1'>
+  <model name='output'>
+    <link name='link_0'>
       <inertial>
         <mass>1</mass>
         <inertia>
@@ -13,12 +13,12 @@
           <izz>0.166667</izz>
         </inertia>
       </inertial>
-      <pose frame=''>-0 0 0 0 -0 0</pose>
+      <pose frame=''>0 0 0 0 -0 0</pose>
       <visual name='visual'>
         <pose frame=''>0 0 0 0 -0 0</pose>
         <geometry>
           <mesh>
-            <uri>/media/otgaard/Backup/Share/SDF/assets/test1_output.obj</uri>
+            <uri>/media/otgaard/Backup/Share/SDF/assets/output.obj</uri>
             <scale>1 1 1</scale>
           </mesh>
         </geometry>
@@ -38,7 +38,7 @@
         <pose frame=''>0 0 0 0 -0 0</pose>
         <geometry>
           <mesh>
-            <uri>/media/otgaard/Backup/Share/SDF/assets/test1_output.obj</uri>
+            <uri>/media/otgaard/Backup/Share/SDF/assets/output.obj</uri>
             <scale>1 1 1</scale>
           </mesh>
         </geometry>

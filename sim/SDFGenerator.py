@@ -28,9 +28,9 @@ class SDFGenerator:
         self.world = etree.Element("world", name="building_model")
         self.walls_model = etree.Element("model", name="walls")
         self.floors_model = etree.Element("model", name="floors")
-        self.sdf.append(self.world)
-        #self.sdf.append(self.walls_model)
-        self.world.append(self.floors_model)
+        #self.sdf.append(self.world)
+        self.sdf.append(self.walls_model)
+        #self.world.append(self.floors_model)
         self.wall_count = 0
 
     def write_file(self):
@@ -67,7 +67,18 @@ class SDFGenerator:
         visual.append(geometry)
         mesh = create_element("mesh")
         geometry.append(mesh)
-        mesh.append(create_element("scale", _text="1. 1. 1."))
+        scale = 1.
+        mesh.append(create_element("scale", _text=vec3_template.format(scale, scale, scale)))
+        mesh.append(create_element("uri", _text=walls_obj_file))
+
+        collision = create_element("collision", name="walls_collision")
+        link.append(collision)
+        geometry = create_element("geometry")
+        collision.append(geometry)
+        mesh = create_element("mesh")
+        geometry.append(mesh)
+        scale = 1.
+        mesh.append(create_element("scale", _text=vec3_template.format(scale, scale, scale)))
         mesh.append(create_element("uri", _text=walls_obj_file))
 
         # Is this section necessary if loading from OBJ (test on gazebo)
@@ -140,7 +151,7 @@ class SDFGenerator:
         visual.append(geometry)
         mesh = create_element("mesh")
         geometry.append(mesh)
-        scale = .5
+        scale = 1.
         mesh.append(create_element("scale", _text=vec3_template.format(scale, scale, scale)))
         mesh.append(create_element("uri", _text=floor_obj_file))
 
@@ -201,7 +212,8 @@ class SDFGenerator:
         model = create_element("model", name="ground_plane")
         state.append(model)
         model.append(create_element("pose", frame="", _text=pose_template.format(0, 0, 0, 0, 0, 0)))
-        model.append(create_element("scale", _text=vec3_template.format(1, 1, 1)))
+        scale = 1.
+        model.append(create_element("scale", _text=vec3_template.format(scale, scale, scale)))
         link = create_element("link", name="link")
         model.append(link)
 

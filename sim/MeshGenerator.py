@@ -699,16 +699,16 @@ class Generator:
         wall_height = inv_dim * 40.
 
         # Export Walls
-        for i in range(len(self.lines)):
-            line = self.lines[i]
-            pos = centre_pos(line) + [0]
-            dim = [line_len(line), wall_height]
-            nor = self.normals[i] + [0]
-            if not len(nor) == 3: continue
-            sdf.add_wall(pos, dim, nor)
+        #for i in range(len(self.lines)):
+        #    line = self.lines[i]
+        #    pos = centre_pos(line) + [0]
+        #    dim = [line_len(line), wall_height]
+        #    nor = self.normals[i] + [0]
+        #    if not len(nor) == 3: continue
+        #    sdf.add_wall(pos, dim, nor)
 
         # Export Floors
-        sdf.add_floors([0, 0, 0], [0, 0, 1], [self.size[0], self.size[1]], self.strip_name(filename) + ".obj")
-        sdf.add_extra()         # This is possibly only required for gazebo
+        #sdf.add_floors([0, 0, 0], [0, 0, 1], [self.size[0], self.size[1]], self.strip_name(filename) + ".obj")
+        #sdf.add_extra()         # This is possibly only required for gazebo
 
         sdf.write_file()
