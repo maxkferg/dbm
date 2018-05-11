@@ -28,8 +28,8 @@ class SDFGenerator:
         self.world = etree.Element("world", name="building_model")
         self.walls_model = etree.Element("model", name="walls")
         self.floors_model = etree.Element("model", name="floors")
-        #self.sdf.append(self.world)
-        self.sdf.append(self.walls_model)
+        self.sdf.append(self.world)
+        self.world.append(self.walls_model)
         #self.world.append(self.floors_model)
         self.wall_count = 0
 
