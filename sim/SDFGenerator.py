@@ -29,8 +29,8 @@ class SDFGenerator:
         self.walls_model = etree.Element("model", name="walls")
         self.floors_model = etree.Element("model", name="floors")
         self.sdf.append(self.world)
-        self.sdf.append(self.walls_model)
-        self.sdf.append(self.floors_model)
+        #self.sdf.append(self.walls_model)
+        self.world.append(self.floors_model)
         self.wall_count = 0
 
     def write_file(self):
@@ -80,7 +80,7 @@ class SDFGenerator:
         name = wall_template.format(self.wall_count)
         model = create_element("model", name=name)
         #self.world.append(model)
-        self.sdf.append(model)
+        #self.sdf.append(model)
         model.append(create_element("static", _text="1"))
         model.append(create_element("pose", frame=name,
                                     _text=pose_template.format(pos[0], pos[1], pos[2], 0., 0., 0.)))
@@ -140,7 +140,8 @@ class SDFGenerator:
         visual.append(geometry)
         mesh = create_element("mesh")
         geometry.append(mesh)
-        mesh.append(create_element("scale", _text="1. 1. 1."))
+        scale = .5
+        mesh.append(create_element("scale", _text=vec3_template.format(scale, scale, scale)))
         mesh.append(create_element("uri", _text=floor_obj_file))
 
         collision = create_element("collision", name="floors_collision")
@@ -169,7 +170,7 @@ class SDFGenerator:
 
         self.world.append(create_element("gravity", vec3_template.format(0, 0, -9.8)))
         self.world.append(create_element("magnetic_field", vec3_template.format(6e-06, 2.3e-05, -4.2e-05)))
-        self.world.append(create_element("atmosphere", "adiabatic"))
+        self.world.append(create_element("atmosphere", type="adiabatic"))
         physics = create_element("physics", name="default_physics", default="0", type="ode")
         self.world.append(physics)
         physics.append(create_element("max_step_size", _text=".001"))
@@ -215,7 +216,7 @@ class SDFGenerator:
 
         gui = create_element("gui", fullscreen="0")
         self.world.append(gui)
-        cam = create_element("cam", name="user_camera")
+        cam = create_element("camera", name="user_camera")
         gui.append(cam)
 
         cam.append(create_element("pose", frame="", _text=pose_template.format(14.0123, -16.1314, 2.86746, 0, 0.275643, 2.35619)))

@@ -1,6 +1,39 @@
 <?xml version='1.0' encoding='ASCII'?>
 <sdf version="1.6">
   <world name="building_model">
+    <model name="floors">
+      <static>1</static>
+      <pose frame="floors_frame">0 0 0 0.0 0.0 0.0</pose>
+      <link name="floors_link">
+        <inertial>
+          <mass>0</mass>
+          <inertia>
+            <ixx>0.166667</ixx>
+            <ixy>0.</ixy>
+            <ixz>0.</ixz>
+            <iyy>0.166667</iyy>
+            <iyz>0.</iyz>
+            <izz>0.166667</izz>
+          </inertia>
+        </inertial>
+        <visual name="floors_mesh">
+          <geometry>
+            <mesh>
+              <scale>0.001953125 0.001953125 0.001953125</scale>
+              <uri>assets/test2_output.obj</uri>
+            </mesh>
+          </geometry>
+        </visual>
+        <collision name="floors_collision">
+          <geometry>
+            <plane>
+              <normal>0 0 1</normal>
+              <size>256 256</size>
+            </plane>
+          </geometry>
+        </collision>
+      </link>
+    </model>
     <light type="directional">
       <pose frame="">0 0 10 0 0 0</pose>
       <diffuse>0.8 0.8 0.8 1.0</diffuse>
@@ -15,7 +48,7 @@
     </light>
     <gravity>0 0 -9.8</gravity>
     <magnetic_field>6e-06 2.3e-05 -4.2e-05</magnetic_field>
-    <atmosphere>adiabatic</atmosphere>
+    <atmosphere type="adiabatic"/>
     <physics default="0" name="default_physics" type="ode">
       <max_step_size>.001</max_step_size>
       <real_time_factor>1</real_time_factor>
@@ -54,11 +87,11 @@
       </light>
     </state>
     <gui fullscreen="0">
-      <cam name="user_camera">
+      <camera name="user_camera">
         <pose frame="">14.0123 -16.1314 2.86746 0 0.275643 2.35619</pose>
         <view_controller>orbit</view_controller>
         <projection_type>perspective</projection_type>
-      </cam>
+      </camera>
     </gui>
   </world>
   <model name="walls">
@@ -84,39 +117,6 @@
           </mesh>
         </geometry>
       </visual>
-    </link>
-  </model>
-  <model name="floors">
-    <static>1</static>
-    <pose frame="floors_frame">0 0 0 0.0 0.0 0.0</pose>
-    <link name="floors_link">
-      <inertial>
-        <mass>0</mass>
-        <inertia>
-          <ixx>0.166667</ixx>
-          <ixy>0.</ixy>
-          <ixz>0.</ixz>
-          <iyy>0.166667</iyy>
-          <iyz>0.</iyz>
-          <izz>0.166667</izz>
-        </inertia>
-      </inertial>
-      <visual name="floors_mesh">
-        <geometry>
-          <mesh>
-            <scale>1. 1. 1.</scale>
-            <uri>assets/test2_output.obj</uri>
-          </mesh>
-        </geometry>
-      </visual>
-      <collision name="floors_collision">
-        <geometry>
-          <plane>
-            <normal>0 0 1</normal>
-            <size>256 256</size>
-          </plane>
-        </geometry>
-      </collision>
     </link>
   </model>
   <model name="wall_0">
