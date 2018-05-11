@@ -27,10 +27,8 @@ class SDFGenerator:
         self.sdf = etree.Element("sdf", version="1.6")
         self.world = etree.Element("world", name="building_model")
         self.walls_model = etree.Element("model", name="walls")
-        self.floors_model = etree.Element("model", name="floors")
         self.sdf.append(self.world)
         self.world.append(self.walls_model)
-        #self.world.append(self.floors_model)
         self.wall_count = 0
 
     def write_file(self):
@@ -74,10 +72,6 @@ class SDFGenerator:
         material = create_element("material")
         visual.append(material)
         material.append(create_element("lighting", _text=str(1)))
-        #material.append(create_element("ambient", _text=vec4_template.format(.3, .3, .3, 1.)))
-        #material.append(create_element("diffuse", _text=vec4_template.format(.7, .7, .7, 1.)))
-        #material.append(create_element("specular", _text=vec4_template.format(.5, .5, .5, 1.)))
-        #material.append(create_element("emissive", _text=vec4_template.format(.0, .0, .0, 1.)))
 
         collision = create_element("collision", name="walls_collision")
         link.append(collision)
@@ -90,7 +84,7 @@ class SDFGenerator:
         mesh.append(create_element("uri", _text=walls_obj_file))
 
         # Is this section necessary if loading from OBJ (test on gazebo)
-        # material = create_element("material")
+        # materia* = create_element("material")
 
     # Note: Must be in the same space as the OBJ model
     # Each wall is a link within the walls model.  A single 'parent' link will import the obj model for the walls into
@@ -98,8 +92,6 @@ class SDFGenerator:
     def add_wall(self, pos, dim, normal):
         name = wall_template.format(self.wall_count)
         model = create_element("model", name=name)
-        #self.world.append(model)
-        #self.sdf.append(model)
         model.append(create_element("static", _text="1"))
         model.append(create_element("pose", frame=name,
                                     _text=pose_template.format(pos[0], pos[1], pos[2], 0., 0., 0.)))
