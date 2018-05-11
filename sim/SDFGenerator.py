@@ -10,13 +10,16 @@ vec2_template = "{} {}"
 vec3_template = "{} {} {}"
 vec4_template = "{} {} {} {}"
 
+
 def create_element(el_name, _text=None, **kwargs):
     el = etree.Element(el_name, **kwargs)
     el.text = _text
     return el
 
+
 def create_plane():
     pass
+
 
 class SDFGenerator:
     def __init__(self, filename="assets/output.sdf"):
