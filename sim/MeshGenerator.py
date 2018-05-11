@@ -501,7 +501,7 @@ class Generator:
 
         # Walls Material
         file.write(mat_def.format("walls_material"))
-        file.write(amb_def.format(.1, .1, .1))
+        file.write(amb_def.format(.5, .5, .5))
         file.write(diff_def.format(.9, .9, .9))
         file.write(spec_def.format(.3, .3, .3))
         file.write(exp_def.format(50))
@@ -512,7 +512,7 @@ class Generator:
 
         # Floors Material
         file.write(mat_def.format("floors_material"))
-        file.write(amb_def.format(.1, .1, .1))
+        file.write(amb_def.format(.5, .5, .5))
         file.write(diff_def.format(.9, .9, .9))
         file.write(spec_def.format(.3, .3, .3))
         file.write(exp_def.format(50))

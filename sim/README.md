@@ -13,6 +13,7 @@ Building Navigation Reinforcement Learning Project
 
 1. The roboschool model of the stadium splits the geometry into three object files with one shared material file.  
 2. The models have inertial models in the SDF but are static (find out why).
+3. The lighting model in SDF is bit strange, see details here [Materials](#http://gazebosim.org/tutorials?tut=color_model&cat=)
 
 Notes on SDF file format
 

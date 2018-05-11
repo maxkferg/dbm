@@ -23,6 +23,9 @@
               <uri>assets/test2_output.obj</uri>
             </mesh>
           </geometry>
+          <material>
+            <lighting>1</lighting>
+          </material>
         </visual>
         <collision name="walls_collision">
           <geometry>
@@ -35,16 +38,16 @@
       </link>
     </model>
     <light name="sun" type="directional">
-      <pose frame="">0 0 3 0 0 0</pose>
-      <diffuse>0.8 0.8 0.8 1.0</diffuse>
-      <specular>0.2 0.2 0.2 1.0</specular>
+      <pose frame="">0 0 10 0 0 0</pose>
+      <diffuse>0.8 0.8 0.8 0</diffuse>
+      <specular>0.2 0.2 0.2 0</specular>
       <attenuation>
         <range>1000</range>
         <constant>1.</constant>
         <linear>.1</linear>
         <quadratic>.001</quadratic>
       </attenuation>
-      <direction>0.0 0.0 -1.0</direction>
+      <direction>-1.0 -1.0 -1.0</direction>
     </light>
     <gravity>0 0 -9.8</gravity>
     <magnetic_field>6e-06 2.3e-05 -4.2e-05</magnetic_field>
