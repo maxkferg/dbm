@@ -29,8 +29,8 @@ class SDFGenerator:
         self.walls_model = etree.Element("model", name="walls")
         self.floors_model = etree.Element("model", name="floors")
         self.sdf.append(self.world)
-        self.world.append(self.walls_model)
-        self.world.append(self.floors_model)
+        self.sdf.append(self.walls_model)
+        self.sdf.append(self.floors_model)
         self.wall_count = 0
 
     def write_file(self):
@@ -61,7 +61,7 @@ class SDFGenerator:
         inertia.append(create_element("iyz", _text="0."))
         inertia.append(create_element("izz", _text="0.166667"))
 
-        visual = create_element("visual")
+        visual = create_element("visual", name="walls_mesh")
         link.append(visual)
         geometry = create_element("geometry")
         visual.append(geometry)
@@ -79,13 +79,14 @@ class SDFGenerator:
     def add_wall(self, pos, dim, normal):
         name = wall_template.format(self.wall_count)
         model = create_element("model", name=name)
-        self.world.append(model)
+        #self.world.append(model)
+        self.sdf.append(model)
         model.append(create_element("static", _text="1"))
         model.append(create_element("pose", frame=name,
                                     _text=pose_template.format(pos[0], pos[1], pos[2], 0., 0., 0.)))
 
         link = create_element("link", name=name)
-        self.world.append(link)
+        model.append(link)
         inertial = create_element("inertial")
         link.append(inertial)
 
@@ -100,7 +101,7 @@ class SDFGenerator:
         inertia.append(create_element("iyz", _text="0."))
         inertia.append(create_element("izz", _text="0.166667"))
 
-        collision = create_element("collision")
+        collision = create_element("collision", name=name+"_collision")
         link.append(collision)
         geometry = create_element("geometry")
         collision.append(geometry)
@@ -133,7 +134,7 @@ class SDFGenerator:
         inertia.append(create_element("iyz", _text="0."))
         inertia.append(create_element("izz", _text="0.166667"))
 
-        visual = create_element("visual")
+        visual = create_element("visual", name="floors_mesh")
         link.append(visual)
         geometry = create_element("geometry")
         visual.append(geometry)
@@ -142,9 +143,10 @@ class SDFGenerator:
         mesh.append(create_element("scale", _text="1. 1. 1."))
         mesh.append(create_element("uri", _text=floor_obj_file))
 
-        collision = create_element("collision")
+        collision = create_element("collision", name="floors_collision")
         link.append(collision)
         geometry = create_element("geometry")
+        collision.append(geometry)
         plane = create_element("plane")
         geometry.append(plane)
         plane.append(create_element("normal", _text=normal_template.format(normal[0], normal[1], normal[2])))

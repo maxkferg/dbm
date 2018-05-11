@@ -1,257 +1,6 @@
 <?xml version='1.0' encoding='ASCII'?>
 <sdf version="1.6">
   <world name="building_model">
-    <model name="walls">
-      <static>1</static>
-      <pose frame="walls_frame">0 0 0 0.0 0.0 0.0</pose>
-      <link name="walls_link">
-        <inertial>
-          <mass>0</mass>
-          <inertia>
-            <ixx>0.166667</ixx>
-            <ixy>0.</ixy>
-            <ixz>0.</ixz>
-            <iyy>0.166667</iyy>
-            <iyz>0.</iyz>
-            <izz>0.166667</izz>
-          </inertia>
-        </inertial>
-        <visual>
-          <geometry>
-            <mesh>
-              <scale>1. 1. 1.</scale>
-              <uri>assets/test1_output.obj</uri>
-            </mesh>
-          </geometry>
-        </visual>
-      </link>
-    </model>
-    <model name="floors">
-      <static>1</static>
-      <pose frame="floors_frame">0 0 0 0.0 0.0 0.0</pose>
-      <link name="floors_link">
-        <inertial>
-          <mass>0</mass>
-          <inertia>
-            <ixx>0.166667</ixx>
-            <ixy>0.</ixy>
-            <ixz>0.</ixz>
-            <iyy>0.166667</iyy>
-            <iyz>0.</iyz>
-            <izz>0.166667</izz>
-          </inertia>
-        </inertial>
-        <visual>
-          <geometry>
-            <mesh>
-              <scale>1. 1. 1.</scale>
-              <uri>assets/test1_output.obj</uri>
-            </mesh>
-          </geometry>
-        </visual>
-        <collision/>
-      </link>
-    </model>
-    <model name="wall_0">
-      <static>1</static>
-      <pose frame="wall_0">145.0 184.0 0 0.0 0.0 0.0</pose>
-    </model>
-    <link name="wall_0">
-      <inertial>
-        <mass>0</mass>
-        <inertia>
-          <ixx>0.166667</ixx>
-          <ixy>0.</ixy>
-          <ixz>0.</ixz>
-          <iyy>0.166667</iyy>
-          <iyz>0.</iyz>
-          <izz>0.166667</izz>
-        </inertia>
-      </inertial>
-      <collision>
-        <geometry>
-          <plane>
-            <normal>1 0 0</normal>
-            <size>26 0.078125</size>
-          </plane>
-        </geometry>
-      </collision>
-    </link>
-    <model name="wall_1">
-      <static>1</static>
-      <pose frame="wall_1">271.0 196.5 0 0.0 0.0 0.0</pose>
-    </model>
-    <link name="wall_1">
-      <inertial>
-        <mass>0</mass>
-        <inertia>
-          <ixx>0.166667</ixx>
-          <ixy>0.</ixy>
-          <ixz>0.</ixz>
-          <iyy>0.166667</iyy>
-          <iyz>0.</iyz>
-          <izz>0.166667</izz>
-        </inertia>
-      </inertial>
-      <collision>
-        <geometry>
-          <plane>
-            <normal>-1 0 0</normal>
-            <size>51 0.078125</size>
-          </plane>
-        </geometry>
-      </collision>
-    </link>
-    <model name="wall_2">
-      <static>1</static>
-      <pose frame="wall_2">218.0 227.0 0 0.0 0.0 0.0</pose>
-    </model>
-    <link name="wall_2">
-      <inertial>
-        <mass>0</mass>
-        <inertia>
-          <ixx>0.166667</ixx>
-          <ixy>0.</ixy>
-          <ixz>0.</ixz>
-          <iyy>0.166667</iyy>
-          <iyz>0.</iyz>
-          <izz>0.166667</izz>
-        </inertia>
-      </inertial>
-      <collision>
-        <geometry>
-          <plane>
-            <normal>1 0 0</normal>
-            <size>60 0.078125</size>
-          </plane>
-        </geometry>
-      </collision>
-    </link>
-    <model name="wall_3">
-      <static>1</static>
-      <pose frame="wall_3">332.0 239.5 0 0.0 0.0 0.0</pose>
-    </model>
-    <link name="wall_3">
-      <inertial>
-        <mass>0</mass>
-        <inertia>
-          <ixx>0.166667</ixx>
-          <ixy>0.</ixy>
-          <ixz>0.</ixz>
-          <iyy>0.166667</iyy>
-          <iyz>0.</iyz>
-          <izz>0.166667</izz>
-        </inertia>
-      </inertial>
-      <collision>
-        <geometry>
-          <plane>
-            <normal>-1 0 0</normal>
-            <size>35 0.078125</size>
-          </plane>
-        </geometry>
-      </collision>
-    </link>
-    <model name="wall_4">
-      <static>1</static>
-      <pose frame="wall_4">208.0 171.0 0 0.0 0.0 0.0</pose>
-    </model>
-    <link name="wall_4">
-      <inertial>
-        <mass>0</mass>
-        <inertia>
-          <ixx>0.166667</ixx>
-          <ixy>0.</ixy>
-          <ixz>0.</ixz>
-          <iyy>0.166667</iyy>
-          <iyz>0.</iyz>
-          <izz>0.166667</izz>
-        </inertia>
-      </inertial>
-      <collision>
-        <geometry>
-          <plane>
-            <normal>0 1 0</normal>
-            <size>126 0.078125</size>
-          </plane>
-        </geometry>
-      </collision>
-    </link>
-    <model name="wall_5">
-      <static>1</static>
-      <pose frame="wall_5">181.5 197.0 0 0.0 0.0 0.0</pose>
-    </model>
-    <link name="wall_5">
-      <inertial>
-        <mass>0</mass>
-        <inertia>
-          <ixx>0.166667</ixx>
-          <ixy>0.</ixy>
-          <ixz>0.</ixz>
-          <iyy>0.166667</iyy>
-          <iyz>0.</iyz>
-          <izz>0.166667</izz>
-        </inertia>
-      </inertial>
-      <collision>
-        <geometry>
-          <plane>
-            <normal>0 -1 0</normal>
-            <size>73 0.078125</size>
-          </plane>
-        </geometry>
-      </collision>
-    </link>
-    <model name="wall_6">
-      <static>1</static>
-      <pose frame="wall_6">301.5 222.0 0 0.0 0.0 0.0</pose>
-    </model>
-    <link name="wall_6">
-      <inertial>
-        <mass>0</mass>
-        <inertia>
-          <ixx>0.166667</ixx>
-          <ixy>0.</ixy>
-          <ixz>0.</ixz>
-          <iyy>0.166667</iyy>
-          <iyz>0.</iyz>
-          <izz>0.166667</izz>
-        </inertia>
-      </inertial>
-      <collision>
-        <geometry>
-          <plane>
-            <normal>0 1 0</normal>
-            <size>61 0.078125</size>
-          </plane>
-        </geometry>
-      </collision>
-    </link>
-    <model name="wall_7">
-      <static>1</static>
-      <pose frame="wall_7">275.0 257.0 0 0.0 0.0 0.0</pose>
-    </model>
-    <link name="wall_7">
-      <inertial>
-        <mass>0</mass>
-        <inertia>
-          <ixx>0.166667</ixx>
-          <ixy>0.</ixy>
-          <ixz>0.</ixz>
-          <iyy>0.166667</iyy>
-          <iyz>0.</iyz>
-          <izz>0.166667</izz>
-        </inertia>
-      </inertial>
-      <collision>
-        <geometry>
-          <plane>
-            <normal>0 -1 0</normal>
-            <size>114 0.078125</size>
-          </plane>
-        </geometry>
-      </collision>
-    </link>
     <light type="directional">
       <pose frame="">0 0 10 0 0 0</pose>
       <diffuse>0.8 0.8 0.8 1.0</diffuse>
@@ -312,4 +61,262 @@
       </cam>
     </gui>
   </world>
+  <model name="walls">
+    <static>1</static>
+    <pose frame="walls_frame">0 0 0 0.0 0.0 0.0</pose>
+    <link name="walls_link">
+      <inertial>
+        <mass>0</mass>
+        <inertia>
+          <ixx>0.166667</ixx>
+          <ixy>0.</ixy>
+          <ixz>0.</ixz>
+          <iyy>0.166667</iyy>
+          <iyz>0.</iyz>
+          <izz>0.166667</izz>
+        </inertia>
+      </inertial>
+      <visual name="walls_mesh">
+        <geometry>
+          <mesh>
+            <scale>1. 1. 1.</scale>
+            <uri>assets/test1_output.obj</uri>
+          </mesh>
+        </geometry>
+      </visual>
+    </link>
+  </model>
+  <model name="floors">
+    <static>1</static>
+    <pose frame="floors_frame">0 0 0 0.0 0.0 0.0</pose>
+    <link name="floors_link">
+      <inertial>
+        <mass>0</mass>
+        <inertia>
+          <ixx>0.166667</ixx>
+          <ixy>0.</ixy>
+          <ixz>0.</ixz>
+          <iyy>0.166667</iyy>
+          <iyz>0.</iyz>
+          <izz>0.166667</izz>
+        </inertia>
+      </inertial>
+      <visual name="floors_mesh">
+        <geometry>
+          <mesh>
+            <scale>1. 1. 1.</scale>
+            <uri>assets/test1_output.obj</uri>
+          </mesh>
+        </geometry>
+      </visual>
+      <collision name="floors_collision">
+        <geometry>
+          <plane>
+            <normal>0 0 1</normal>
+            <size>512 512</size>
+          </plane>
+        </geometry>
+      </collision>
+    </link>
+  </model>
+  <model name="wall_0">
+    <static>1</static>
+    <pose frame="wall_0">145.0 184.0 0 0.0 0.0 0.0</pose>
+    <link name="wall_0">
+      <inertial>
+        <mass>0</mass>
+        <inertia>
+          <ixx>0.166667</ixx>
+          <ixy>0.</ixy>
+          <ixz>0.</ixz>
+          <iyy>0.166667</iyy>
+          <iyz>0.</iyz>
+          <izz>0.166667</izz>
+        </inertia>
+      </inertial>
+      <collision name="wall_0_collision">
+        <geometry>
+          <plane>
+            <normal>1 0 0</normal>
+            <size>26 0.078125</size>
+          </plane>
+        </geometry>
+      </collision>
+    </link>
+  </model>
+  <model name="wall_1">
+    <static>1</static>
+    <pose frame="wall_1">271.0 196.5 0 0.0 0.0 0.0</pose>
+    <link name="wall_1">
+      <inertial>
+        <mass>0</mass>
+        <inertia>
+          <ixx>0.166667</ixx>
+          <ixy>0.</ixy>
+          <ixz>0.</ixz>
+          <iyy>0.166667</iyy>
+          <iyz>0.</iyz>
+          <izz>0.166667</izz>
+        </inertia>
+      </inertial>
+      <collision name="wall_1_collision">
+        <geometry>
+          <plane>
+            <normal>-1 0 0</normal>
+            <size>51 0.078125</size>
+          </plane>
+        </geometry>
+      </collision>
+    </link>
+  </model>
+  <model name="wall_2">
+    <static>1</static>
+    <pose frame="wall_2">218.0 227.0 0 0.0 0.0 0.0</pose>
+    <link name="wall_2">
+      <inertial>
+        <mass>0</mass>
+        <inertia>
+          <ixx>0.166667</ixx>
+          <ixy>0.</ixy>
+          <ixz>0.</ixz>
+          <iyy>0.166667</iyy>
+          <iyz>0.</iyz>
+          <izz>0.166667</izz>
+        </inertia>
+      </inertial>
+      <collision name="wall_2_collision">
+        <geometry>
+          <plane>
+            <normal>1 0 0</normal>
+            <size>60 0.078125</size>
+          </plane>
+        </geometry>
+      </collision>
+    </link>
+  </model>
+  <model name="wall_3">
+    <static>1</static>
+    <pose frame="wall_3">332.0 239.5 0 0.0 0.0 0.0</pose>
+    <link name="wall_3">
+      <inertial>
+        <mass>0</mass>
+        <inertia>
+          <ixx>0.166667</ixx>
+          <ixy>0.</ixy>
+          <ixz>0.</ixz>
+          <iyy>0.166667</iyy>
+          <iyz>0.</iyz>
+          <izz>0.166667</izz>
+        </inertia>
+      </inertial>
+      <collision name="wall_3_collision">
+        <geometry>
+          <plane>
+            <normal>-1 0 0</normal>
+            <size>35 0.078125</size>
+          </plane>
+        </geometry>
+      </collision>
+    </link>
+  </model>
+  <model name="wall_4">
+    <static>1</static>
+    <pose frame="wall_4">208.0 171.0 0 0.0 0.0 0.0</pose>
+    <link name="wall_4">
+      <inertial>
+        <mass>0</mass>
+        <inertia>
+          <ixx>0.166667</ixx>
+          <ixy>0.</ixy>
+          <ixz>0.</ixz>
+          <iyy>0.166667</iyy>
+          <iyz>0.</iyz>
+          <izz>0.166667</izz>
+        </inertia>
+      </inertial>
+      <collision name="wall_4_collision">
+        <geometry>
+          <plane>
+            <normal>0 1 0</normal>
+            <size>126 0.078125</size>
+          </plane>
+        </geometry>
+      </collision>
+    </link>
+  </model>
+  <model name="wall_5">
+    <static>1</static>
+    <pose frame="wall_5">181.5 197.0 0 0.0 0.0 0.0</pose>
+    <link name="wall_5">
+      <inertial>
+        <mass>0</mass>
+        <inertia>
+          <ixx>0.166667</ixx>
+          <ixy>0.</ixy>
+          <ixz>0.</ixz>
+          <iyy>0.166667</iyy>
+          <iyz>0.</iyz>
+          <izz>0.166667</izz>
+        </inertia>
+      </inertial>
+      <collision name="wall_5_collision">
+        <geometry>
+          <plane>
+            <normal>0 -1 0</normal>
+            <size>73 0.078125</size>
+          </plane>
+        </geometry>
+      </collision>
+    </link>
+  </model>
+  <model name="wall_6">
+    <static>1</static>
+    <pose frame="wall_6">301.5 222.0 0 0.0 0.0 0.0</pose>
+    <link name="wall_6">
+      <inertial>
+        <mass>0</mass>
+        <inertia>
+          <ixx>0.166667</ixx>
+          <ixy>0.</ixy>
+          <ixz>0.</ixz>
+          <iyy>0.166667</iyy>
+          <iyz>0.</iyz>
+          <izz>0.166667</izz>
+        </inertia>
+      </inertial>
+      <collision name="wall_6_collision">
+        <geometry>
+          <plane>
+            <normal>0 1 0</normal>
+            <size>61 0.078125</size>
+          </plane>
+        </geometry>
+      </collision>
+    </link>
+  </model>
+  <model name="wall_7">
+    <static>1</static>
+    <pose frame="wall_7">275.0 257.0 0 0.0 0.0 0.0</pose>
+    <link name="wall_7">
+      <inertial>
+        <mass>0</mass>
+        <inertia>
+          <ixx>0.166667</ixx>
+          <ixy>0.</ixy>
+          <ixz>0.</ixz>
+          <iyy>0.166667</iyy>
+          <iyz>0.</iyz>
+          <izz>0.166667</izz>
+        </inertia>
+      </inertial>
+      <collision name="wall_7_collision">
+        <geometry>
+          <plane>
+            <normal>0 -1 0</normal>
+            <size>114 0.078125</size>
+          </plane>
+        </geometry>
+      </collision>
+    </link>
+  </model>
 </sdf>
