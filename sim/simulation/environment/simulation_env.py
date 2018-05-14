@@ -20,7 +20,7 @@ class SimRobotEnv(gym.Env):
         'video.frames_per_second': 50
     }
 
-    def __init__(self, urdfRoot="assets", actionRepeat=50, isEnableSelfCollision=True, isDiscrete=False, renders=False):
+    def __init__(self, urdfRoot="/Users/otgaard/Development/dbm/sim/assets", actionRepeat=50, isEnableSelfCollision=True, isDiscrete=False, renders=False):
         self.timeStep = .01
         self.urdfRoot = urdfRoot
         self.actionRepeat = actionRepeat
@@ -64,14 +64,14 @@ class SimRobotEnv(gym.Env):
         bally = dist * math.cos(ang)
         ballz = 1
 
-        self.ballUniqueId = self.physics.loadURDF(os.path.join(self.urdfRoot, "sphere2.urdf"), [ballx, bally, ballz])
+        self.ballUniqueId = self.physics.loadURDF(os.path.join(self.urdfRoot, "pybullet/models/sphere2.urdf"), [ballx, bally, ballz])
         self.physics.setGravity(0, 0, -10)
-        self.robot = SimRobot.SimRobot(self.physics, urdfRootPath=self._urdfRoot, timeStep=self._timeStep)
+        self.robot = SimRobot.SimRobot(self.physics, urdfRootPath=self.urdfRoot, timeStep=self.timeStep)
         self.envStepCounter = 0
         for i in range(100):
             self.physics.stepSimulation()
         self.observation = self.getExtendedObservation()
-        return np.array(self._observation)
+        return np.array(self.observation)
 
     def __del__(self):
         self.physics = 0
@@ -88,8 +88,8 @@ class SimRobotEnv(gym.Env):
         invCarPos, invCarOrn = self.physics.invertTransform(carpos, carorn)
         ballPosInCar, ballOrnInCar = self.physics.multiplyTransforms(invCarPos, invCarOrn, ballpos, ballorn)
 
-        self._observation.extend([ballPosInCar[0], ballPosInCar[1]])
-        return self._observation
+        self.observation.extend([ballPosInCar[0], ballPosInCar[1]])
+        return self.observation
 
     def step(self, action):
         if (self.renders):
