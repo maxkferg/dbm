@@ -39,7 +39,7 @@ class SDFGenerator:
     def add_walls(self, centre, walls_obj_file):
         self.walls_model.append(create_element("static", _text="1"))
         self.walls_model.append(create_element("pose", frame="walls_frame",
-                                               _text=pose_template.format(centre[0], centre[1], centre[2], 0., 0., 0.)))
+                                               _text=pose_template.format(centre[0]+350., centre[1]-200., centre[2], 0., 0., 0.)))
 
         # Write the visual link
         link = create_element("link", name="walls_link")
@@ -65,7 +65,7 @@ class SDFGenerator:
         visual.append(geometry)
         mesh = create_element("mesh")
         geometry.append(mesh)
-        scale = 1.
+        scale = 4000.
         mesh.append(create_element("scale", _text=vec3_template.format(scale, scale, scale)))
         mesh.append(create_element("uri", _text=walls_obj_file))
 
@@ -79,7 +79,7 @@ class SDFGenerator:
         collision.append(geometry)
         mesh = create_element("mesh")
         geometry.append(mesh)
-        scale = 1.
+        scale = 4000.
         mesh.append(create_element("scale", _text=vec3_template.format(scale, scale, scale)))
         mesh.append(create_element("uri", _text=walls_obj_file))
 

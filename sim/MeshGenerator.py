@@ -540,6 +540,8 @@ class Generator:
         """Export the plan file to an object file.  Call this only after the file has been processed."""
         # Normalise to the image size taking the longer axis as the dimension for the model
         dim = max(self.size[0], self.size[1])
+
+        # Note: The SDF provides limited ability to scale the model.  We do this here
         inv_dim = 1./dim
 
         # Note: The walls and floors require a repeat texture and are defined in world space with the repeat texture
