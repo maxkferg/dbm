@@ -5,13 +5,16 @@ from gym.utils import seeding
 import numpy as np
 import time
 import pybullet
-from . import sim_robot
+from . import SimRobot
 import random
 import pybullet_data
 from pkg_resources import parse_version
 
 class SimRobotEnv(gym.Env):
-    metadata = {'render.modes': ['human']}
+    metadata = {
+        'render.modes': ['human', 'rgb_array'],
+        'video.frames_per_second': 50
+    }
 
     def __init__(self):
         pass

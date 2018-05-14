@@ -38,11 +38,11 @@ that the input file is essentially a bitmap because it processes only two colour
 
 The simulation.py program is a single entry point for executing all related algorithms and processes for the system in 
 order to keep everything simple.  The building plan analysis algorithm extracts the walls from the model by using a
-greedy algorithm to "grow" the walls as long as possible and split them under certain conditions.  Note that input file
+greedy algorithm to "grow" the walls as long as possible and split them under certain conditions.  Note the input file
 has some restrictions.  The building must consist of an outside, connected wall consisting of only vertical or
-horizontal lines.  No holes are possible.  All internal inaccessible spaces should also be connected walls separating
-the traverseable inside from the inaccessible interior.  Most types of rectilinear plan will work and to create interior
-walls, simply ensure that the wall is two pixels wide so that a closed loop can be formed.
+horizontal lines.  No holes in the walls are possible.  All internal inaccessible spaces should also be connected walls 
+separating the traverseable inside from the inaccessible interior.  Most types of rectilinear plan will work and to 
+create interior walls, simply ensure that the wall is two pixels wide so that a closed loop can be formed.
 
 Finally, a single line should be placed at the bottom of the plan.  This line is the scale and may represent any scale
 desired, but will be used to calculate the appropriate scale for the building in the training model.
