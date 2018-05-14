@@ -64,5 +64,5 @@ dependencies:
   - urllib3==1.22
   - werkzeug==0.14.1
   - zmq==0.0.0
-prefix: /Users/otgaard/anaconda2/envs/sim
+prefix: /Users/otgaard/anaconda2/environment/sim
 
