@@ -43,7 +43,7 @@ class SimRobotEnv(gym.Env):
         # print(observationDim)
         # observation_high = np.array([np.finfo(np.float32).max] * observationDim)
         observation_high = np.ones(observationDim) * 1000  # np.inf
-        if (isDiscrete):
+        if isDiscrete:
             self.action_space = spaces.Discrete(9)
         else:
             action_dim = 2
@@ -93,11 +93,11 @@ class SimRobotEnv(gym.Env):
         return self.observation
 
     def step(self, action):
-        if (self.renders):
+        if self.renders:
             basePos, orn = self.physics.getBasePositionAndOrientation(self.robot.racecarUniqueId)
             # self.physics.resetDebugVisualizerCamera(1, 30, -40, basePos)
 
-        if (self.isDiscrete):
+        if self.isDiscrete:
             fwd = [-1, -1, -1, 0, 0, 0, 1, 1, 1]
             steerings = [-0.6, 0, 0.6, -0.6, 0, 0.6, -0.6, 0, 0.6]
             forward = fwd[action]
