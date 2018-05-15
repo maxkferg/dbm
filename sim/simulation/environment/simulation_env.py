@@ -20,7 +20,8 @@ class SimRobotEnv(gym.Env):
         'video.frames_per_second': 50
     }
 
-    def __init__(self, urdfRoot="/Users/otgaard/Development/dbm/sim/assets", actionRepeat=50, isEnableSelfCollision=True, isDiscrete=False, renders=False):
+    def __init__(self, urdfRoot="/Users/otgaard/Development/dbm/sim/assets", actionRepeat=50,
+                 isEnableSelfCollision=True, isDiscrete=False, renders=False):
         self.timeStep = .01
         self.urdfRoot = urdfRoot
         self.actionRepeat = actionRepeat

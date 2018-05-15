@@ -536,6 +536,180 @@ class Generator:
         else:
             return path
 
+    def export_to_object2(self, filename="assets/output.obj"):
+        """Note that there is a problem in pybullet with using grouped Wavefront OBJ files.  Therefore this
+        method is provided to allow writing each mesh (floor, walls) to a separate file and loaded into the
+        SDF as two separate meshes."""
+
+        walls_filename = self.strip_name(filename) + "_walls.obj"
+        floors_filename = self.strip_name(filename) + "_floors.obj"
+
+        dim = max(self.size[0], self.size[1])
+        inv_dim = 1./dim
+        scale = make_scale([inv_dim, -inv_dim, inv_dim])
+        rot_axis = [0, 0, 1]
+
+        vertices = []
+        walls_indices = []
+
+        line_height = 40.
+
+        # Add the walls
+        for i in range(len(self.lines)):
+            normal = self.normals[i]
+            if not normal: continue
+            line = self.lines[i]
+            rot = make_rotation(rot_axis, get_angle(normal))
+            ln = line_len(line)
+            hlen = ln/2.
+
+            positions = [
+                [+hlen, 0., 0., 1.],
+                [-hlen, 0., 0., 1.],
+                [-hlen, 0., line_height, 1.],
+                [+hlen, 0., line_height, 1.]]
+
+            texcoords = [
+                [ln/10., 0.],
+                [0.,     0.],
+                [0.,     line_height/10],
+                [ln/10., line_height/10]
+            ]
+
+            centre = centre_pos(line) + [0.]
+            trans = make_translation(centre)
+
+            model_mat = np.dot(scale, np.dot(trans, rot))
+            vidx = len(vertices)
+            for i in range(4):
+                vertices.append([np.dot(model_mat, positions[i]), texcoords[i], normal + [0.]])
+
+            walls_indices.append(vidx)
+            walls_indices.append(vidx+1)
+            walls_indices.append(vidx+2)
+
+            walls_indices.append(vidx)
+            walls_indices.append(vidx+2)
+            walls_indices.append(vidx+3)
+
+        # Centre the model in XY-plane
+        vertices = self.centre_model(vertices)
+
+        matpath = self.strip_name(walls_filename) + ".mtl"
+        matfile = self.strip_filename(matpath)
+
+        matlib_string = "mtllib {}\n"
+        material_string = "usemtl {}\n"
+        vertex_string = "v {} {} {}\n"
+        texcoord_string = "vt {} {}\n"
+        normal_string = "vn {} {} {}\n"
+        face_string = "f {}/{}/{} {}/{}/{} {}/{}/{}\n"
+
+        file = open(walls_filename, "w")
+        file.write(matlib_string.format(matfile))
+        file.write(material_string.format("walls_material"))
+
+        for v in vertices:
+            file.write(vertex_string.format(v[0][0], v[0][1], v[0][2]))
+
+        file.write("\n")
+
+        for v in vertices:
+            file.write(texcoord_string.format(v[1][0], v[1][1]))
+
+        file.write("\n")
+
+        for v in vertices:
+            file.write(normal_string.format(v[2][0], v[2][1], v[2][2]))
+
+        file.write("\n")
+
+        # Write Walls Group
+        for i in range(int(len(walls_indices)/3)):
+            idx = 3*i
+            file.write(face_string.format(walls_indices[idx]+1, walls_indices[idx]+1, walls_indices[idx]+1,
+                                          walls_indices[idx+1]+1, walls_indices[idx+1]+1, walls_indices[idx+1]+1,
+                                          walls_indices[idx+2]+1, walls_indices[idx+2]+1, walls_indices[idx+2]+1))
+
+        file.write("\n\n")
+        file.close()
+        self.write_mtl_file(matpath)
+
+        # Reset the vertices to write to separate mesh
+        vertices = []
+        floor_indices = []
+
+        # Add the floor planes
+        for rect in self.rects:
+            width = (rect[1][0] - rect[0][0])
+            height = (rect[1][1] - rect[0][1])
+
+            left, bottom = bottom_left(rect)
+
+            positions = [
+                [left - 1, bottom + height + 1, 0., 1.],
+                [left + width + 1, bottom + height + 1, 0., 1.],
+                [left + width + 1, bottom - 1, 0., 1.],
+                [left - 1, bottom - 1, 0., 1.]
+            ]
+
+            texcoords = [
+                [0., 0.],
+                [width/10, 0.],
+                [width/10, height/10],
+                [0.,       height/10]
+            ]
+
+            model_mat = scale
+
+            vidx = len(vertices)
+            for i in range(4):
+                vertices.append([np.dot(model_mat, positions[i]), texcoords[i], [0., 0., 1.]])
+
+            floor_indices.append(vidx)
+            floor_indices.append(vidx+1)
+            floor_indices.append(vidx+2)
+
+            floor_indices.append(vidx)
+            floor_indices.append(vidx+2)
+            floor_indices.append(vidx+3)
+
+        # Centre the model in XY-plane
+        vertices = self.centre_model(vertices)
+
+        matpath = self.strip_name(floors_filename) + ".mtl"
+        matfile = self.strip_filename(matpath)
+
+        file = open(floors_filename, "w")
+        file.write(matlib_string.format(matfile))
+        file.write(material_string.format("floors_material"))
+
+        for v in vertices:
+            file.write(vertex_string.format(v[0][0], v[0][1], v[0][2]))
+
+        file.write("\n")
+
+        for v in vertices:
+            file.write(texcoord_string.format(v[1][0], v[1][1]))
+
+        file.write("\n")
+
+        for v in vertices:
+            file.write(normal_string.format(v[2][0], v[2][1], v[2][2]))
+
+        file.write("\n")
+
+        for i in range(int(len(floor_indices)/3)):
+            idx = 3*i
+            file.write(face_string.format(floor_indices[idx]+1, floor_indices[idx]+1, floor_indices[idx]+1,
+                                          floor_indices[idx+1]+1, floor_indices[idx+1]+1, floor_indices[idx+1]+1,
+                                          floor_indices[idx+2]+1, floor_indices[idx+2]+1, floor_indices[idx+2]+1))
+
+        file.close()
+
+        # Add the matching material file
+        self.write_mtl_file(matpath)
+
     def export_to_object(self, filename="assets/output.obj"):
         """Export the plan file to an object file.  Call this only after the file has been processed."""
         # Normalise to the image size taking the longer axis as the dimension for the model
@@ -696,23 +870,6 @@ class Generator:
         sdf = SDFGenerator.SDFGenerator(filename)
         sdf.add_walls([0, 0, 0], self.strip_name(filename) + ".obj")
         sdf.add_floors([0, 0, 0], [0, 0, 1], [self.size[0], self.size[1]], self.strip_name(filename) + ".obj")
-
-
-        #dim = max(self.size[0], self.size[1])
-        #inv_dim = 1./dim
-        #wall_height = inv_dim * 40.
-
-        # Export Walls
-        #for i in range(len(self.lines)):
-        #    line = self.lines[i]
-        #    pos = centre_pos(line) + [0]
-        #    dim = [line_len(line), wall_height]
-        #    nor = self.normals[i] + [0]
-        #    if not len(nor) == 3: continue
-        #    sdf.add_wall(pos, dim, nor)
-
-        # Export Floors
-        #sdf.add_floors([0, 0, 0], [0, 0, 1], [self.size[0], self.size[1]], self.strip_name(filename) + ".obj")
-        #sdf.add_extra()         # This is possibly only required for gazebo
+        sdf.add_extra()         # This is possibly only required for gazebo
 
         sdf.write_file()
