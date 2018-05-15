@@ -695,10 +695,12 @@ class Generator:
     def export_to_sdf(self, filename="assets/output.sdf"):
         sdf = SDFGenerator.SDFGenerator(filename)
         sdf.add_walls([0, 0, 0], self.strip_name(filename) + ".obj")
+        sdf.add_floors([0, 0, 0], [0, 0, 1], [self.size[0], self.size[1]], self.strip_name(filename) + ".obj")
 
-        dim = max(self.size[0], self.size[1])
-        inv_dim = 1./dim
-        wall_height = inv_dim * 40.
+
+        #dim = max(self.size[0], self.size[1])
+        #inv_dim = 1./dim
+        #wall_height = inv_dim * 40.
 
         # Export Walls
         #for i in range(len(self.lines)):
@@ -711,6 +713,6 @@ class Generator:
 
         # Export Floors
         #sdf.add_floors([0, 0, 0], [0, 0, 1], [self.size[0], self.size[1]], self.strip_name(filename) + ".obj")
-        sdf.add_extra()         # This is possibly only required for gazebo
+        #sdf.add_extra()         # This is possibly only required for gazebo
 
         sdf.write_file()

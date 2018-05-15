@@ -3,8 +3,6 @@ from lxml import etree
 
 # Splitting up the responsibilities for the MeshGenerator.Generator so it doesn't become a God object anti-pattern
 pose_template = "{} {} {} {} {} {}"
-normal_template = "{} {} {}"
-size_template = "{} {}"
 wall_template = "wall_{}"
 vec2_template = "{} {}"
 vec3_template = "{} {} {}"
@@ -27,8 +25,10 @@ class SDFGenerator:
         self.sdf = etree.Element("sdf", version="1.6")
         self.world = etree.Element("world", name="building_model")
         self.walls_model = etree.Element("model", name="walls")
+        self.floor_model = etree.Element("model", name="floors")
         self.sdf.append(self.world)
         self.world.append(self.walls_model)
+        self.world.append(self.floor_model)
         self.wall_count = 0
 
     def write_file(self):
@@ -39,7 +39,7 @@ class SDFGenerator:
     def add_walls(self, centre, walls_obj_file):
         self.walls_model.append(create_element("static", _text="1"))
         self.walls_model.append(create_element("pose", frame="walls_frame",
-                                               _text=pose_template.format(centre[0]+350., centre[1]-200., centre[2], 0., 0., 0.)))
+                                               _text=pose_template.format(centre[0]+350./32, centre[1]-200./32, centre[2], 0., 0., 0.)))
 
         # Write the visual link
         link = create_element("link", name="walls_link")
@@ -52,12 +52,12 @@ class SDFGenerator:
         # Add the inertia tensor
         inertia = create_element("inertia")
         inertial.append(inertia)
-        inertia.append(create_element("ixx", _text="0.166667"))
+        inertia.append(create_element("ixx", _text="1."))
         inertia.append(create_element("ixy", _text="0."))
         inertia.append(create_element("ixz", _text="0."))
-        inertia.append(create_element("iyy", _text="0.166667"))
+        inertia.append(create_element("iyy", _text="1."))
         inertia.append(create_element("iyz", _text="0."))
-        inertia.append(create_element("izz", _text="0.166667"))
+        inertia.append(create_element("izz", _text="1."))
 
         visual = create_element("visual", name="walls_mesh")
         link.append(visual)
@@ -65,7 +65,7 @@ class SDFGenerator:
         visual.append(geometry)
         mesh = create_element("mesh")
         geometry.append(mesh)
-        scale = 4000.
+        scale = 125.
         mesh.append(create_element("scale", _text=vec3_template.format(scale, scale, scale)))
         mesh.append(create_element("uri", _text=walls_obj_file))
 
@@ -79,7 +79,7 @@ class SDFGenerator:
         collision.append(geometry)
         mesh = create_element("mesh")
         geometry.append(mesh)
-        scale = 4000.
+        scale = 125.
         mesh.append(create_element("scale", _text=vec3_template.format(scale, scale, scale)))
         mesh.append(create_element("uri", _text=walls_obj_file))
 
@@ -105,12 +105,12 @@ class SDFGenerator:
 
         inertia = create_element("inertia")
         inertial.append(inertia)
-        inertia.append(create_element("ixx", _text="0.166667"))
+        inertia.append(create_element("ixx", _text="1."))
         inertia.append(create_element("ixy", _text="0."))
         inertia.append(create_element("ixz", _text="0."))
-        inertia.append(create_element("iyy", _text="0.166667"))
+        inertia.append(create_element("iyy", _text="1."))
         inertia.append(create_element("iyz", _text="0."))
-        inertia.append(create_element("izz", _text="0.166667"))
+        inertia.append(create_element("izz", _text="1."))
 
         collision = create_element("collision", name=name+"_collision")
         link.append(collision)
@@ -118,18 +118,18 @@ class SDFGenerator:
         collision.append(geometry)
         plane = create_element("plane")
         geometry.append(plane)
-        plane.append(create_element("normal", _text=normal_template.format(normal[0], normal[1], 0)))
-        plane.append(create_element("size", _text=size_template.format(dim[0], dim[1])))
+        plane.append(create_element("normal", _text=vec3_template.format(normal[0], normal[1], 0)))
+        plane.append(create_element("size", _text=vec2_template.format(dim[0], dim[1])))
         self.wall_count += 1
 
     def add_floors(self, centre, normal, dim, floor_obj_file):
-        self.floors_model.append(create_element("static", _text="1"))
-        self.floors_model.append(create_element("pose", frame="floors_frame",
+        self.floor_model.append(create_element("static", _text="1"))
+        self.floor_model.append(create_element("pose", frame="floors_frame",
                                                 _text=pose_template.format(centre[0], centre[1], centre[2], 0., 0., 0.)))
 
         # Write the visual link
         link = create_element("link", name="floors_link")
-        self.floors_model.append(link)
+        self.floor_model.append(link)
         inertial = create_element("inertial")
         link.append(inertial)
 
@@ -138,22 +138,31 @@ class SDFGenerator:
         # Add the inertia tensor
         inertia = create_element("inertia")
         inertial.append(inertia)
-        inertia.append(create_element("ixx", _text="0.166667"))
+        inertia.append(create_element("ixx", _text="1."))
         inertia.append(create_element("ixy", _text="0."))
         inertia.append(create_element("ixz", _text="0."))
-        inertia.append(create_element("iyy", _text="0.166667"))
+        inertia.append(create_element("iyy", _text="1."))
         inertia.append(create_element("iyz", _text="0."))
-        inertia.append(create_element("izz", _text="0.166667"))
+        inertia.append(create_element("izz", _text="1."))
 
-        visual = create_element("visual", name="floors_mesh")
+        #visual = create_element("visual", name="floors_mesh")
+        #link.append(visual)
+        #geometry = create_element("geometry")
+        #visual.append(geometry)
+        #mesh = create_element("mesh")
+        #geometry.append(mesh)
+        #scale = 1.
+        #mesh.append(create_element("scale", _text=vec3_template.format(scale, scale, scale)))
+        #mesh.append(create_element("uri", _text=floor_obj_file))
+
+        visual = create_element("visual", name="floor")
         link.append(visual)
         geometry = create_element("geometry")
         visual.append(geometry)
-        mesh = create_element("mesh")
-        geometry.append(mesh)
-        scale = 1.
-        mesh.append(create_element("scale", _text=vec3_template.format(scale, scale, scale)))
-        mesh.append(create_element("uri", _text=floor_obj_file))
+        plane = create_element("plane")
+        geometry.append(plane)
+        plane.append(create_element("normal", _text=vec3_template.format(normal[0], normal[1], normal[2])))
+        plane.append(create_element("size", _text=vec2_template.format(dim[0], dim[1])))
 
         collision = create_element("collision", name="floors_collision")
         link.append(collision)
@@ -161,8 +170,8 @@ class SDFGenerator:
         collision.append(geometry)
         plane = create_element("plane")
         geometry.append(plane)
-        plane.append(create_element("normal", _text=normal_template.format(normal[0], normal[1], normal[2])))
-        plane.append(create_element("size", _text=size_template.format(dim[0], dim[1])))
+        plane.append(create_element("normal", _text=vec3_template.format(normal[0], normal[1], normal[2])))
+        plane.append(create_element("size", _text=vec2_template.format(dim[0], dim[1])))
 
     def add_extra(self):
         """This extra stuff is required to load the SDF into Gazebo for testing"""
