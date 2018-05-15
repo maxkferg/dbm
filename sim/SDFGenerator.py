@@ -19,6 +19,10 @@ def create_plane():
     pass
 
 
+# This is a scale variable for tweaking the mesh scale
+mesh_scale = 50.
+
+
 class SDFGenerator:
     def __init__(self, filename="assets/output.sdf"):
         self.filename = filename
@@ -65,7 +69,7 @@ class SDFGenerator:
         visual.append(geometry)
         mesh = create_element("mesh")
         geometry.append(mesh)
-        scale = 125.
+        scale = mesh_scale
         mesh.append(create_element("scale", _text=vec3_template.format(scale, scale, scale)))
         mesh.append(create_element("uri", _text=walls_obj_file))
 
@@ -79,12 +83,12 @@ class SDFGenerator:
         collision.append(geometry)
         mesh = create_element("mesh")
         geometry.append(mesh)
-        scale = 125.
+        scale = mesh_scale
         mesh.append(create_element("scale", _text=vec3_template.format(scale, scale, scale)))
         mesh.append(create_element("uri", _text=walls_obj_file))
 
         # Is this section necessary if loading from OBJ (test on gazebo)
-        # materia* = create_element("material")
+        # material = create_element("material")
 
     # Note: Must be in the same space as the OBJ model
     # Each wall is a link within the walls model.  A single 'parent' link will import the obj model for the walls into
@@ -125,7 +129,8 @@ class SDFGenerator:
     def add_floors(self, centre, normal, dim, floor_obj_file):
         self.floor_model.append(create_element("static", _text="1"))
         self.floor_model.append(create_element("pose", frame="floors_frame",
-                                                _text=pose_template.format(centre[0], centre[1], centre[2], 0., 0., 0.)))
+                                               _text=pose_template.format(centre[0] + 350. / 32, centre[1] - 200. / 32,
+                                                                          centre[2], 0., 0., 0.)))
 
         # Write the visual link
         link = create_element("link", name="floors_link")
@@ -145,33 +150,50 @@ class SDFGenerator:
         inertia.append(create_element("iyz", _text="0."))
         inertia.append(create_element("izz", _text="1."))
 
-        #visual = create_element("visual", name="floors_mesh")
-        #link.append(visual)
-        #geometry = create_element("geometry")
-        #visual.append(geometry)
-        #mesh = create_element("mesh")
-        #geometry.append(mesh)
-        #scale = 1.
-        #mesh.append(create_element("scale", _text=vec3_template.format(scale, scale, scale)))
-        #mesh.append(create_element("uri", _text=floor_obj_file))
+        floor_mesh = False
 
-        visual = create_element("visual", name="floor")
-        link.append(visual)
-        geometry = create_element("geometry")
-        visual.append(geometry)
-        plane = create_element("plane")
-        geometry.append(plane)
-        plane.append(create_element("normal", _text=vec3_template.format(normal[0], normal[1], normal[2])))
-        plane.append(create_element("size", _text=vec2_template.format(dim[0], dim[1])))
+        if floor_mesh:
+            visual = create_element("visual", name="floors_mesh")
+            link.append(visual)
+            geometry = create_element("geometry")
+            visual.append(geometry)
+            mesh = create_element("mesh")
+            geometry.append(mesh)
+            scale = mesh_scale
+            mesh.append(create_element("scale", _text=vec3_template.format(scale, scale, scale)))
+            mesh.append(create_element("uri", _text=floor_obj_file))
 
-        collision = create_element("collision", name="floors_collision")
-        link.append(collision)
-        geometry = create_element("geometry")
-        collision.append(geometry)
-        plane = create_element("plane")
-        geometry.append(plane)
-        plane.append(create_element("normal", _text=vec3_template.format(normal[0], normal[1], normal[2])))
-        plane.append(create_element("size", _text=vec2_template.format(dim[0], dim[1])))
+            material = create_element("material")
+            visual.append(material)
+            material.append(create_element("lighting", _text=str(1)))
+
+            collision = create_element("collision", name="floors_collision")
+            link.append(collision)
+            geometry = create_element("geometry")
+            collision.append(geometry)
+            mesh = create_element("mesh")
+            geometry.append(mesh)
+            scale = mesh_scale
+            mesh.append(create_element("scale", _text=vec3_template.format(scale, scale, scale)))
+            mesh.append(create_element("uri", _text=floor_obj_file))
+        else:
+            visual = create_element("visual", name="floor")
+            link.append(visual)
+            geometry = create_element("geometry")
+            visual.append(geometry)
+            plane = create_element("plane")
+            geometry.append(plane)
+            plane.append(create_element("normal", _text=vec3_template.format(normal[0], normal[1], normal[2])))
+            plane.append(create_element("size", _text=vec2_template.format(dim[0], dim[1])))
+
+            collision = create_element("collision", name="floors_collision")
+            link.append(collision)
+            geometry = create_element("geometry")
+            collision.append(geometry)
+            plane = create_element("plane")
+            geometry.append(plane)
+            plane.append(create_element("normal", _text=vec3_template.format(normal[0], normal[1], normal[2])))
+            plane.append(create_element("size", _text=vec2_template.format(dim[0], dim[1])))
 
     def add_extra(self):
         """This extra stuff is required to load the SDF into Gazebo for testing"""

@@ -488,7 +488,8 @@ class Generator:
 
         return list(map(lambda x: [[x[0][0] - centre[0], x[0][1] - centre[1], x[0][2]], x[1], x[2]], vertices))
 
-    def write_mtl_file(self, filename="assets/output.mtl"):
+    def write_mtl_file(self, type="walls", filename="assets/output.mtl"):
+        """type must be 'walls' or 'floors'"""
         mat_def = "newmtl {}\n"
         amb_def = "Ka {} {} {}\n"
         diff_def = "Kd {} {} {}\n"
@@ -500,24 +501,25 @@ class Generator:
         file = open(filename, "w")
 
         # Walls Material
-        file.write(mat_def.format("walls_material"))
-        file.write(amb_def.format(.5, .5, .5))
-        file.write(diff_def.format(.9, .9, .9))
-        file.write(spec_def.format(.3, .3, .3))
-        file.write(exp_def.format(50))
-        file.write(amb_map.format("wall.jpg"))
-        file.write(diff_map.format("wall.jpg"))
+        if type == "walls":
+            file.write(mat_def.format("walls_material"))
+            file.write(amb_def.format(.5, .5, .5))
+            file.write(diff_def.format(.9, .9, .9))
+            file.write(spec_def.format(.3, .3, .3))
+            file.write(exp_def.format(50))
+            file.write(amb_map.format("wall.jpg"))
+            file.write(diff_map.format("wall.jpg"))
 
-        file.write("\n\n")
 
         # Floors Material
-        file.write(mat_def.format("floors_material"))
-        file.write(amb_def.format(.5, .5, .5))
-        file.write(diff_def.format(.9, .9, .9))
-        file.write(spec_def.format(.3, .3, .3))
-        file.write(exp_def.format(50))
-        file.write(amb_map.format("floor.jpg"))
-        file.write(diff_map.format("floor.jpg"))
+        if type == "floors":
+            file.write(mat_def.format("floors_material"))
+            file.write(amb_def.format(.5, .5, .5))
+            file.write(diff_def.format(.9, .9, .9))
+            file.write(spec_def.format(.3, .3, .3))
+            file.write(exp_def.format(50))
+            file.write(amb_map.format("floor.jpg"))
+            file.write(diff_map.format("floor.jpg"))
 
         file.close()
 
@@ -633,7 +635,7 @@ class Generator:
 
         file.write("\n\n")
         file.close()
-        self.write_mtl_file(matpath)
+        self.write_mtl_file(type="walls", filename=matpath)
 
         # Reset the vertices to write to separate mesh
         vertices = []
@@ -708,7 +710,7 @@ class Generator:
         file.close()
 
         # Add the matching material file
-        self.write_mtl_file(matpath)
+        self.write_mtl_file(type="floors", filename=matpath)
 
     def export_to_object(self, filename="assets/output.obj"):
         """Export the plan file to an object file.  Call this only after the file has been processed."""
@@ -868,8 +870,13 @@ class Generator:
 
     def export_to_sdf(self, filename="assets/output.sdf"):
         sdf = SDFGenerator.SDFGenerator(filename)
-        sdf.add_walls([0, 0, 0], self.strip_name(filename) + ".obj")
-        sdf.add_floors([0, 0, 0], [0, 0, 1], [self.size[0], self.size[1]], self.strip_name(filename) + ".obj")
+
+        walls_filename = self.strip_name(filename) + "_walls.obj"
+        floors_filename = self.strip_name(filename) + "_floors.obj"
+
+        sdf.add_walls([0, 0, 0], walls_filename)
+        #sdf.add_floors([0, 0, 0], [0, 0, 1], [self.size[0], self.size[1]], floors_filename)
+        sdf.add_floors([0, 0, 0], [0, 0, 1], [125, 125], floors_filename)
         sdf.add_extra()         # This is possibly only required for gazebo
 
         sdf.write_file()
