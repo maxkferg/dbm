@@ -20,18 +20,60 @@
           <geometry>
             <mesh>
               <scale>125.0 125.0 125.0</scale>
-              <uri>assets/output.obj</uri>
+              <uri>assets/output_walls.obj</uri>
             </mesh>
           </geometry>
           <material>
             <lighting>1</lighting>
+            <ambient>0.3 0.3 0.3 1.0</ambient>
+            <diffuse>0.6 0.6 0.6 1.0</diffuse>
+            <specular>0.3 0.3 0.3 1.0</specular>
           </material>
         </visual>
         <collision name="walls_collision">
           <geometry>
             <mesh>
               <scale>125.0 125.0 125.0</scale>
-              <uri>assets/output.obj</uri>
+              <uri>assets/output_walls.obj</uri>
+            </mesh>
+          </geometry>
+        </collision>
+      </link>
+    </model>
+    <model name="floors">
+      <static>1</static>
+      <pose frame="floors_frame">12.5 0 0 0.0 0.0 0.0</pose>
+      <link name="floors_link">
+        <inertial>
+          <mass>0</mass>
+          <inertia>
+            <ixx>1.</ixx>
+            <ixy>0.</ixy>
+            <ixz>0.</ixz>
+            <iyy>1.</iyy>
+            <iyz>0.</iyz>
+            <izz>1.</izz>
+          </inertia>
+        </inertial>
+        <visual name="floors_mesh">
+          <geometry>
+            <mesh>
+              <scale>125.0 125.0 125.0</scale>
+              <uri>assets/output_floors.obj</uri>
+            </mesh>
+          </geometry>
+          <material>
+            <lighting>1</lighting>
+            <ambient>0.3 0.3 0.3 1.0</ambient>
+            <diffuse>0.6 0.6 0.6 1.0</diffuse>
+            <specular>0.3 0.3 0.3 1.0</specular>
+          </material>
+        </visual>
+        <collision name="floors_collision">
+          <geometry>
+            <mesh>
+              <scale>125.0 125.0 125.0</scale>
+              <uri>assets/output_floors.obj</uri>
             </mesh>
           </geometry>
         </collision>

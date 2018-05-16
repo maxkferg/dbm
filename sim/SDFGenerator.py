@@ -32,7 +32,7 @@ class SDFGenerator:
         self.floor_model = etree.Element("model", name="floors")
         self.sdf.append(self.world)
         self.world.append(self.walls_model)
-        #self.world.append(self.floor_model)
+        self.world.append(self.floor_model)
         self.wall_count = 0
 
     def write_file(self):
@@ -40,7 +40,7 @@ class SDFGenerator:
         file.write(etree.tostring(self.sdf, xml_declaration=True, pretty_print=True).decode('utf-8'))
         file.close()
 
-    def add_walls(self, centre, walls_obj_file):
+    def add_walls(self, walls_obj_file):
         self.walls_model.append(create_element("static", _text="1"))
         self.walls_model.append(create_element("pose", frame="walls_frame",
                                                _text=pose_template.format(12.5, 0, 0, 0., 0., 0.)))
@@ -76,6 +76,9 @@ class SDFGenerator:
         material = create_element("material")
         visual.append(material)
         material.append(create_element("lighting", _text=str(1)))
+        material.append(create_element("ambient", _text=vec4_template.format(.3, .3, .3, 1.)))
+        material.append(create_element("diffuse", _text=vec4_template.format(.6, .6, .6, 1.)))
+        material.append(create_element("specular", _text=vec4_template.format(.3, .3, .3, 1.)))
 
         collision = create_element("collision", name="walls_collision")
         link.append(collision)
@@ -184,10 +187,10 @@ class SDFGenerator:
 
         self.wall_count += 1
 
-    def add_floors(self, centre, normal, dim, floor_obj_file):
+    def add_floors(self, floor_obj_file):
         self.floor_model.append(create_element("static", _text="1"))
         self.floor_model.append(create_element("pose", frame="floors_frame",
-                                               _text=pose_template.format(0., 0., 0., 0., 0., 0.)))
+                                               _text=pose_template.format(12.5, 0, 0, 0., 0., 0.)))
 
         # Write the visual link
         link = create_element("link", name="floors_link")
@@ -207,51 +210,32 @@ class SDFGenerator:
         inertia.append(create_element("iyz", _text="0."))
         inertia.append(create_element("izz", _text="1."))
 
-        floor_mesh = True
+        visual = create_element("visual", name="floors_mesh")
+        link.append(visual)
+        geometry = create_element("geometry")
+        visual.append(geometry)
+        mesh = create_element("mesh")
+        geometry.append(mesh)
+        scale = mesh_scale
+        mesh.append(create_element("scale", _text=vec3_template.format(scale, scale, scale)))
+        mesh.append(create_element("uri", _text=floor_obj_file))
 
-        if floor_mesh:
-            visual = create_element("visual", name="floors_mesh")
-            link.append(visual)
-            geometry = create_element("geometry")
-            visual.append(geometry)
-            mesh = create_element("mesh")
-            geometry.append(mesh)
-            scale = mesh_scale
-            mesh.append(create_element("scale", _text=vec3_template.format(scale, scale, scale)))
-            mesh.append(create_element("uri", _text=floor_obj_file))
+        material = create_element("material")
+        visual.append(material)
+        material.append(create_element("lighting", _text=str(1)))
+        material.append(create_element("ambient", _text=vec4_template.format(.3, .3, .3, 1.)))
+        material.append(create_element("diffuse", _text=vec4_template.format(.6, .6, .6, 1.)))
+        material.append(create_element("specular", _text=vec4_template.format(.3, .3, .3, 1.)))
 
-            material = create_element("material")
-            visual.append(material)
-            material.append(create_element("lighting", _text=str(1)))
-
-            collision = create_element("collision", name="floors_collision")
-            link.append(collision)
-            geometry = create_element("geometry")
-            collision.append(geometry)
-            mesh = create_element("mesh")
-            geometry.append(mesh)
-            scale = mesh_scale
-            mesh.append(create_element("scale", _text=vec3_template.format(scale, scale, scale)))
-            mesh.append(create_element("uri", _text=floor_obj_file))
-        else:
-            # The plane doesn't accept plane sizes in pybullet, this does work in Gazebo though
-            visual = create_element("visual", name="floor")
-            link.append(visual)
-            geometry = create_element("geometry")
-            visual.append(geometry)
-            plane = create_element("plane")
-            geometry.append(plane)
-            plane.append(create_element("normal", _text=vec3_template.format(normal[0], normal[1], normal[2])))
-            plane.append(create_element("size", _text=vec2_template.format(dim[0], dim[1])))
-
-            collision = create_element("collision", name="floors_collision")
-            link.append(collision)
-            geometry = create_element("geometry")
-            collision.append(geometry)
-            plane = create_element("plane")
-            geometry.append(plane)
-            plane.append(create_element("normal", _text=vec3_template.format(normal[0], normal[1], normal[2])))
-            plane.append(create_element("size", _text=vec2_template.format(dim[0], dim[1])))
+        collision = create_element("collision", name="floors_collision")
+        link.append(collision)
+        geometry = create_element("geometry")
+        collision.append(geometry)
+        mesh = create_element("mesh")
+        geometry.append(mesh)
+        scale = mesh_scale
+        mesh.append(create_element("scale", _text=vec3_template.format(scale, scale, scale)))
+        mesh.append(create_element("uri", _text=floor_obj_file))
 
     def add_extra(self):
         """This extra stuff is required to load the SDF into Gazebo for testing"""
@@ -297,19 +281,6 @@ class SDFGenerator:
         state.append(create_element("real_time", vec2_template.format(0, 0)))
         state.append(create_element("wall_time", vec2_template.format(0, 0)))
         state.append(create_element("iterations", _text="0"))
-
-        #model = create_element("model", name="ground_plane")
-        #state.append(model)
-        #model.append(create_element("pose", frame="", _text=pose_template.format(0, 0, 0, 0, 0, 0)))
-        #scale = 1.
-        #model.append(create_element("scale", _text=vec3_template.format(scale, scale, scale)))
-        #link = create_element("link", name="link")
-        #model.append(link)
-
-        #link.append(create_element("pose", frame="", _text=pose_template.format(0, 0, 0, 0, 0, 0)))
-        #link.append(create_element("velocity", _text=vec3_template.format(0, 0, 0)))
-        #link.append(create_element("acceleration", _text=pose_template.format(0, 0, 0, 0, 0, 0)))
-        #link.append(create_element("wrench", _text=pose_template.format(0, 0, 0, 0, 0, 0)))
 
         light = create_element("light", name="sun")
         state.append(light)

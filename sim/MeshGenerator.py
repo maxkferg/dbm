@@ -480,6 +480,25 @@ class Generator:
 
         img.save(filename, "PNG")
 
+    def find_centre(self, vertices):
+        vtx_count = len(vertices)
+        inv_vtx_count = 1./vtx_count
+
+        if vtx_count == 0: return []
+
+        centre = [0., 0., 0]
+        for v in vertices:
+            centre[0] += v[0][0]
+            centre[1] += v[0][1]
+
+        centre[0] *= inv_vtx_count
+        centre[1] *= inv_vtx_count
+
+        return centre
+
+    def centre_vertices(self, vertices, centre):
+        return list(map(lambda x: [[x[0][0] - centre[0], x[0][1] - centre[1], x[0][2]], x[1], x[2]], vertices))
+
     def centre_model(self, vertices):
         """This method will centre the model in the XY-plane and place the floor at z == 0"""
 
@@ -511,7 +530,7 @@ class Generator:
         file = open(filename, "w")
 
         # Walls Material
-        if type == "walls" or type == "":
+        if type == "walls":
             file.write(mat_def.format("walls_material"))
             file.write(amb_def.format(.5, .5, .5))
             file.write(diff_def.format(.9, .9, .9))
@@ -522,7 +541,7 @@ class Generator:
 
 
         # Floors Material
-        if type == "floors" or type == "":
+        if type == "floors":
             file.write(mat_def.format("floors_material"))
             file.write(amb_def.format(.5, .5, .5))
             file.write(diff_def.format(.9, .9, .9))
@@ -565,11 +584,10 @@ class Generator:
         # Turn a generic plane into a plane centered at the midpoint, with the normal in the correct position
         rot_axis = [0, 0, 1]
 
-        vertices = []
-        walls_indices = []
-        floor_indices = []
+        wall_vertices = []
+        wall_indices = []
 
-        line_height = 5.
+        line_height = 10.
 
         # Add the walls
         for i in range(len(self.lines)):
@@ -597,17 +615,20 @@ class Generator:
             trans = make_translation(centre)
 
             model_mat = np.dot(scale, np.dot(trans, rot))
-            vidx = len(vertices)
+            vidx = len(wall_vertices)
             for i in range(4):
-                vertices.append([np.dot(model_mat, positions[i]), texcoords[i], normal + [0.]])
+                wall_vertices.append([np.dot(model_mat, positions[i]), texcoords[i], normal + [0.]])
 
-            walls_indices.append(vidx)
-            walls_indices.append(vidx+1)
-            walls_indices.append(vidx+2)
+            wall_indices.append(vidx)
+            wall_indices.append(vidx+1)
+            wall_indices.append(vidx+2)
 
-            walls_indices.append(vidx)
-            walls_indices.append(vidx+2)
-            walls_indices.append(vidx+3)
+            wall_indices.append(vidx)
+            wall_indices.append(vidx+2)
+            wall_indices.append(vidx+3)
+
+        floor_vertices = []
+        floor_indices = []
 
         # Add the floor planes
         for rect in self.rects:
@@ -632,9 +653,9 @@ class Generator:
 
             model_mat = scale
 
-            vidx = len(vertices)
+            vidx = len(floor_vertices)
             for i in range(4):
-                vertices.append([np.dot(model_mat, positions[i]), texcoords[i], [0., 0., 1.]])
+                floor_vertices.append([np.dot(model_mat, positions[i]), texcoords[i], [0., 0., 1.]])
 
             floor_indices.append(vidx)
             floor_indices.append(vidx+1)
@@ -644,42 +665,70 @@ class Generator:
             floor_indices.append(vidx+2)
             floor_indices.append(vidx+3)
 
-        # Centre the model in XY-plane
-        vertices = self.centre_model(vertices)
+        # Centre the model in XY-plane (We need to find it for all walls and floors)
+        centre = self.find_centre(wall_vertices + floor_vertices)
 
-        matpath = self.strip_name(filename) + ".mtl"
+        wall_vertices = self.centre_vertices(wall_vertices, centre)
+        floor_vertices = self.centre_vertices(floor_vertices, centre)
+
+        walls_filename = self.strip_name(filename) + "_walls.obj"
+        matpath = self.strip_name(filename) + "_walls.mtl"
         matfile = self.strip_filename(matpath)
 
+        file = open(walls_filename, "w")
 
-        file = open(filename, "w")
-
-        for v in vertices:
+        for v in wall_vertices:
             file.write(vertex_string.format(v[0][0], v[0][1], v[0][2]))
 
         file.write("\n")
 
-        for v in vertices:
+        for v in wall_vertices:
             file.write(texcoord_string.format(v[1][0], v[1][1]))
 
         file.write("\n")
 
-        for v in vertices:
+        for v in wall_vertices:
             file.write(normal_string.format(v[2][0], v[2][1], v[2][2]))
 
         file.write("\n")
 
         # Write Walls Group
-        for i in range(int(len(walls_indices)/3)):
+        for i in range(int(len(wall_indices)/3)):
             file.write(group_string.format("wall_" + str(i)))
             file.write(matlib_string.format(matfile))
             file.write(material_string.format("walls_material"))
 
             idx = 3*i
-            file.write(face_string.format(walls_indices[idx]+1, walls_indices[idx]+1, walls_indices[idx]+1,
-                                          walls_indices[idx+1]+1, walls_indices[idx+1]+1, walls_indices[idx+1]+1,
-                                          walls_indices[idx+2]+1, walls_indices[idx+2]+1, walls_indices[idx+2]+1))
+            # Note: Add one to each index because OBJ indexing starts at 1 not 0
+            file.write(face_string.format(wall_indices[idx]+1, wall_indices[idx]+1, wall_indices[idx]+1,
+                                          wall_indices[idx+1]+1, wall_indices[idx+1]+1, wall_indices[idx+1]+1,
+                                          wall_indices[idx+2]+1, wall_indices[idx+2]+1, wall_indices[idx+2]+1))
 
-        file.write("\n\n")
+        file.close()
+
+        # Add the matching material file
+        self.write_mtl_file(type="walls", filename=matpath)
+
+        floors_filename = self.strip_name(filename) + "_floors.obj"
+        matpath = self.strip_name(filename) + "_floors.mtl"
+        matfile = self.strip_filename(matpath)
+
+        file = open(floors_filename, "w")
+
+        for v in floor_vertices:
+            file.write(vertex_string.format(v[0][0], v[0][1], v[0][2]))
+
+        file.write("\n")
+
+        for v in floor_vertices:
+            file.write(texcoord_string.format(v[1][0], v[1][1]))
+
+        file.write("\n")
+
+        for v in floor_vertices:
+            file.write(normal_string.format(v[2][0], v[2][1], v[2][2]))
+
+        file.write("\n")
 
         # Write Floor Group
         for i in range(int(len(floor_indices)/3)):
@@ -695,11 +744,12 @@ class Generator:
         file.close()
 
         # Add the matching material file
-        self.write_mtl_file(type="", filename=matpath)
+        self.write_mtl_file(type="floors", filename=matpath)
 
     def export_to_sdf(self, filename="assets/output.sdf"):
         sdf = SDFGenerator.SDFGenerator(filename)
-        sdf.add_walls([0, 0, 0], self.strip_name(filename) + ".obj")
+        sdf.add_walls(self.strip_name(filename) + "_walls.obj")
+        sdf.add_floors(self.strip_name(filename) + "_floors.obj")
         sdf.add_extra()         # This is possibly only required for gazebo
 
         sdf.write_file()
