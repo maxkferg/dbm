@@ -20,7 +20,7 @@ def create_plane():
 
 
 # This is a scale variable for tweaking the mesh scale
-mesh_scale = 15.
+mesh_scale = 125.
 
 
 class SDFGenerator:
@@ -43,7 +43,7 @@ class SDFGenerator:
     def add_walls(self, centre, walls_obj_file):
         self.walls_model.append(create_element("static", _text="1"))
         self.walls_model.append(create_element("pose", frame="walls_frame",
-                                               _text=pose_template.format(0, 0, 0, 0., 0., 0.)))
+                                               _text=pose_template.format(12.5, 0, 0, 0., 0., 0.)))
 
         # Write the visual link
         link = create_element("link", name="walls_link")
