@@ -28,6 +28,7 @@ class SimRobotEnv(gym.Env):
         self.isEnableSelfCollision = isEnableSelfCollision
         self.observation = []
         self.ballUniqueId = -1
+        self.robot = None               # The controlled robot
         self.buildingIds = []           # Each plane is given an id
         self.width = 320
         self.height = 240
@@ -63,14 +64,14 @@ class SimRobotEnv(gym.Env):
 
         print("BUILDING IDS:", self.buildingIds)
 
-        dist = 5 + 2. * random.random()
-        ang = 2. * 3.1415925438 * random.random()
+        #dist = 5 + 2. * random.random()
+        #ang = 2. * 3.1415925438 * random.random()
 
-        ballx = dist * math.sin(ang)
-        bally = dist * math.cos(ang)
-        ballz = 1
+        ballx = 0       #dist * math.sin(ang)
+        bally = 0       #dist * math.cos(ang)
+        ballz = .5      #1
 
-        self.ballUniqueId = self.physics.loadURDF(os.path.join(self.urdfRoot, "pybullet/models/sphere2.urdf"), [ballx, bally, ballz])
+        self.ballUniqueId = self.physics.loadURDF(os.path.join(self.urdfRoot, "target.urdf"), [ballx, bally, ballz])
         self.physics.setGravity(0, 0, -10)
         self.robot = SimRobot.SimRobot(self.physics, urdfRootPath=self.urdfRoot, timeStep=self.timeStep)
         self.envStepCounter = 0
@@ -155,7 +156,10 @@ class SimRobotEnv(gym.Env):
     def render(self, mode='human', close=False):
         if mode != "rgb_array":
             return np.array([])
+
+        # Move the camera with the base_pos
         base_pos, orn = self.physics.getBasePositionAndOrientation(self.robot.racecarUniqueId)
+
         view_matrix = self.physics.computeViewMatrixFromYawPitchRoll(
             cameraTargetPosition=base_pos,
             distance=self.cam_dist,
