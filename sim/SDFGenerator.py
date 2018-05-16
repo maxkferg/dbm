@@ -31,8 +31,8 @@ class SDFGenerator:
         self.walls_model = etree.Element("model", name="walls")
         self.floor_model = etree.Element("model", name="floors")
         self.sdf.append(self.world)
-        #self.world.append(self.walls_model)
-        self.world.append(self.floor_model)
+        self.world.append(self.walls_model)
+        #self.world.append(self.floor_model)
         self.wall_count = 0
 
     def write_file(self):
