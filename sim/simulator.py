@@ -22,7 +22,7 @@ if args.render_image:
     generator.render_to_image(args.render_image)
 
 if args.export_object:
-    generator.export_to_object2(args.export_object)
+    generator.export_to_object3(args.export_object)
 
 if args.export_sdf:
     generator.export_to_sdf(args.export_sdf)

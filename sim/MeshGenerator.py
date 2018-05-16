@@ -154,6 +154,16 @@ def top_right(rect): return rect[1]
 # a vertical line (lines = verticals + horizontals) and due to the scan order, must be a wall facing the left because
 # it must be an internal wall
 
+
+group_string = "g {}\n"
+matlib_string = "mtllib {}\n"
+material_string = "usemtl {}\n"
+vertex_string = "v {} {} {}\n"
+texcoord_string = "vt {} {}\n"
+normal_string = "vn {} {} {}\n"
+face_string = "f {}/{}/{} {}/{}/{} {}/{}/{}\n"
+
+
 class Generator:
     def __init__(self):
         self.horizontals = []
@@ -538,6 +548,83 @@ class Generator:
         else:
             return path
 
+    def export_to_object3(self, filename="assets/output.obj"):
+        dim = max(self.size[0], self.size[1])
+        inv_dim = 1./dim
+        scale = make_scale([inv_dim, -inv_dim, inv_dim])
+        rot_axis = [0, 0, 1]
+
+        vertices = []
+        walls_indices = []
+
+        line_height = 40.
+
+        # Add the walls
+        for i in range(len(self.lines)):
+            normal = self.normals[i]
+            if not normal: continue
+            line = self.lines[i]
+            rot = make_rotation(rot_axis, get_angle(normal))
+            ln = line_len(line)
+            hlen = ln/2.
+
+            positions = [
+                [+hlen, 0., 0., 1.],
+                [-hlen, 0., 0., 1.],
+                [-hlen, 0., line_height, 1.],
+                [+hlen, 0., line_height, 1.]]
+
+            texcoords = [
+                [ln/10., 0.],
+                [0.,     0.],
+                [0.,     line_height/10],
+                [ln/10., line_height/10]
+            ]
+
+            centre = centre_pos(line) + [0.]
+            trans = make_translation(centre)
+
+            model_mat = np.dot(scale, np.dot(trans, rot))
+            for i in range(4):
+                vertices.append([np.dot(model_mat, positions[i]), texcoords[i], normal + [0.]])
+
+        # Centre the model in XY-plane
+        vertices = self.centre_model(vertices)
+
+        # Note: All walls must be relative to each other, therefore the model is centred and written as
+        # walls placed at the correct location.
+
+        matpath = self.strip_name(filename) + "_walls.mtl"
+        matfile = self.strip_filename(matpath)
+        self.write_mtl_file(type="walls", filename=matpath)
+
+        for i in range(int(len(vertices) / 4)):
+            wall_filename = self.strip_name(filename) + "_wall_" + str(i) + ".obj"
+            file = open(wall_filename, "w")
+            file.write(matlib_string.format(matfile))
+            file.write(material_string.format("walls_material"))
+            vidx = 4 * i
+
+            for j in range(4):
+                file.write(vertex_string.format(vertices[vidx+j][0][0], vertices[vidx+j][0][1], vertices[vidx+j][0][2]))
+
+            file.write("\n")
+
+            for j in range(4):
+                file.write(texcoord_string.format(vertices[vidx+j][1][0], vertices[vidx+j][1][1]))
+
+            file.write("\n")
+
+            for j in range(4):
+                file.write(normal_string.format(vertices[vidx+j][2][0], vertices[vidx+j][2][1], vertices[vidx+j][2][2]))
+
+            file.write("\n")
+
+            file.write(face_string.format(1, 1, 1, 2, 2, 2, 3, 3, 3))
+            file.write(face_string.format(1, 1, 1, 3, 3, 3, 4, 4, 4))
+            file.write("\n\n")
+            file.close()
+
     def export_to_object2(self, filename="assets/output.obj"):
         """Note that there is a problem in pybullet with using grouped Wavefront OBJ files.  Therefore this
         method is provided to allow writing each mesh (floor, walls) to a separate file and loaded into the
@@ -814,13 +901,6 @@ class Generator:
         matpath = self.strip_name(filename) + ".mtl"
         matfile = self.strip_filename(matpath)
 
-        group_string = "g {}\n"
-        matlib_string = "mtllib {}\n"
-        material_string = "usemtl {}\n"
-        vertex_string = "v {} {} {}\n"
-        texcoord_string = "vt {} {}\n"
-        normal_string = "vn {} {} {}\n"
-        face_string = "f {}/{}/{} {}/{}/{} {}/{}/{}\n"
 
         file = open(filename, "w")
 
@@ -882,6 +962,7 @@ class Generator:
 
         # Export Walls
         for i in range(len(self.lines)):
+
             line = self.lines[i]
             pos = centre_pos(line) + [0]
             dim = [inv_dim*line_len(line), wall_height]
