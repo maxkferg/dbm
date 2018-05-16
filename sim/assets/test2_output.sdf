@@ -3,35 +3,77 @@
   <world name="building_model">
     <model name="walls">
       <static>1</static>
-      <pose frame="walls_frame">0 0 0 0.0 0.0 0.0</pose>
+      <pose frame="walls_frame">-1 0 0 0.0 0.0 0.0</pose>
       <link name="walls_link">
         <inertial>
           <mass>0</mass>
           <inertia>
-            <ixx>0.166667</ixx>
+            <ixx>1.</ixx>
             <ixy>0.</ixy>
             <ixz>0.</ixz>
-            <iyy>0.166667</iyy>
+            <iyy>1.</iyy>
             <iyz>0.</iyz>
-            <izz>0.166667</izz>
+            <izz>1.</izz>
           </inertia>
         </inertial>
         <visual name="walls_mesh">
           <geometry>
             <mesh>
-              <scale>1.0 1.0 1.0</scale>
-              <uri>assets/test2_output.obj</uri>
+              <scale>12.5 12.5 12.5</scale>
+              <uri>assets/test2_output_walls.obj</uri>
             </mesh>
           </geometry>
           <material>
             <lighting>1</lighting>
+            <ambient>0.3 0.3 0.3 1.0</ambient>
+            <diffuse>0.6 0.6 0.6 1.0</diffuse>
+            <specular>0.3 0.3 0.3 1.0</specular>
           </material>
         </visual>
         <collision name="walls_collision">
           <geometry>
             <mesh>
-              <scale>1.0 1.0 1.0</scale>
-              <uri>assets/test2_output.obj</uri>
+              <scale>12.5 12.5 12.5</scale>
+              <uri>assets/test2_output_walls.obj</uri>
+            </mesh>
+          </geometry>
+        </collision>
+      </link>
+    </model>
+    <model name="floors">
+      <static>1</static>
+      <pose frame="floors_frame">-1 0 0 0.0 0.0 0.0</pose>
+      <link name="floors_link">
+        <inertial>
+          <mass>0</mass>
+          <inertia>
+            <ixx>1.</ixx>
+            <ixy>0.</ixy>
+            <ixz>0.</ixz>
+            <iyy>1.</iyy>
+            <iyz>0.</iyz>
+            <izz>1.</izz>
+          </inertia>
+        </inertial>
+        <visual name="floors_mesh">
+          <geometry>
+            <mesh>
+              <scale>12.5 12.5 12.5</scale>
+              <uri>assets/test2_output_floors.obj</uri>
+            </mesh>
+          </geometry>
+          <material>
+            <lighting>1</lighting>
+            <ambient>0.3 0.3 0.3 1.0</ambient>
+            <diffuse>0.6 0.6 0.6 1.0</diffuse>
+            <specular>0.3 0.3 0.3 1.0</specular>
+          </material>
+        </visual>
+        <collision name="floors_collision">
+          <geometry>
+            <mesh>
+              <scale>12.5 12.5 12.5</scale>
+              <uri>assets/test2_output_floors.obj</uri>
             </mesh>
           </geometry>
         </collision>
@@ -71,20 +113,10 @@
       <heading_deg>0</heading_deg>
     </spherical_coordinates>
     <state world_name="default">
-      <sim_time>91 335000000</sim_time>
-      <real_time>91 597715616</real_time>
-      <wall_time>1525882902 618151986</wall_time>
-      <iterations>91335</iterations>
-      <model name="ground_plane">
-        <pose frame="">0 0 0 0 0 0</pose>
-        <scale>1.0 1.0 1.0</scale>
-        <link name="link">
-          <pose frame="">0 0 0 0 0 0</pose>
-          <velocity>0 0 0</velocity>
-          <acceleration>0 0 0 0 0 0</acceleration>
-          <wrench>0 0 0 0 0 0</wrench>
-        </link>
-      </model>
+      <sim_time>0 0</sim_time>
+      <real_time>0 0</real_time>
+      <wall_time>0 0</wall_time>
+      <iterations>0</iterations>
       <light name="sun">
         <pose frame="">0 0 0 0 0 0</pose>
       </light>

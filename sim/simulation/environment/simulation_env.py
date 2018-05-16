@@ -67,7 +67,7 @@ class SimRobotEnv(gym.Env):
         #dist = 5 + 2. * random.random()
         #ang = 2. * 3.1415925438 * random.random()
 
-        ballx = 0       #dist * math.sin(ang)
+        ballx = 1       #dist * math.sin(ang)
         bally = 0       #dist * math.cos(ang)
         ballz = .5      #1
 

@@ -187,7 +187,7 @@ class Generator:
         self.rects = []
         self.bounds = [[10000000, 10000000], [0, 0]]
 
-    def process_image(self, image_path="assets/Level 2 floor plan walls.png"):
+    def process_image(self, image_path="assets/building.png"):
         self.clear()
 
         image = Image.open(image_path)
@@ -539,7 +539,6 @@ class Generator:
             file.write(amb_map.format("wall.jpg"))
             file.write(diff_map.format("wall.jpg"))
 
-
         # Floors Material
         if type == "floors":
             file.write(mat_def.format("floors_material"))
@@ -746,10 +745,9 @@ class Generator:
         # Add the matching material file
         self.write_mtl_file(type="floors", filename=matpath)
 
-    def export_to_sdf(self, filename="assets/output.sdf"):
-        sdf = SDFGenerator.SDFGenerator(filename)
-        sdf.add_walls(self.strip_name(filename) + "_walls.obj")
-        sdf.add_floors(self.strip_name(filename) + "_floors.obj")
+    def export_to_sdf(self, offset, scale, filename="assets/output.sdf"):
+        sdf = SDFGenerator.SDFGenerator(filename, scale)
+        sdf.add_walls(offset, self.strip_name(filename) + "_walls.obj")
+        sdf.add_floors(offset, self.strip_name(filename) + "_floors.obj")
         sdf.add_extra()         # This is possibly only required for gazebo
-
         sdf.write_file()

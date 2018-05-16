@@ -14,7 +14,7 @@ class SimRobot:
 
     def reset(self):
         car = self.physics.loadURDF(os.path.join(self.urdfRootPath, "pybullet/models/racecar_differential.urdf"),
-                                    [1.2, +1.5, .5], useFixedBase=False)
+                                    [1.2, +1.5, .2], useFixedBase=False)
         self.racecarUniqueId = car
         for wheel in range(self.physics.getNumJoints(car)):
             self.physics.setJointMotorControl2(car, wheel, self.physics.VELOCITY_CONTROL, targetVelocity=0, force=0)

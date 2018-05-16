@@ -19,13 +19,10 @@ def create_plane():
     pass
 
 
-# This is a scale variable for tweaking the mesh scale
-mesh_scale = 125.
-
-
 class SDFGenerator:
-    def __init__(self, filename="assets/output.sdf"):
+    def __init__(self, filename="assets/output.sdf", scale=1.):
         self.filename = filename
+        self.scale = scale
         self.sdf = etree.Element("sdf", version="1.6")
         self.world = etree.Element("world", name="building_model")
         self.walls_model = etree.Element("model", name="walls")
@@ -33,17 +30,17 @@ class SDFGenerator:
         self.sdf.append(self.world)
         self.world.append(self.walls_model)
         self.world.append(self.floor_model)
-        self.wall_count = 0
+        print("Scale set to:", scale)
 
     def write_file(self):
         file = open(self.filename, 'w')
         file.write(etree.tostring(self.sdf, xml_declaration=True, pretty_print=True).decode('utf-8'))
         file.close()
 
-    def add_walls(self, walls_obj_file):
+    def add_walls(self, pos, walls_obj_file):
         self.walls_model.append(create_element("static", _text="1"))
         self.walls_model.append(create_element("pose", frame="walls_frame",
-                                               _text=pose_template.format(12.5, 0, 0, 0., 0., 0.)))
+                                               _text=pose_template.format(pos[0], pos[1], pos[2], 0., 0., 0.)))
 
         # Write the visual link
         link = create_element("link", name="walls_link")
@@ -69,7 +66,7 @@ class SDFGenerator:
         visual.append(geometry)
         mesh = create_element("mesh")
         geometry.append(mesh)
-        scale = mesh_scale
+        scale = self.scale
         mesh.append(create_element("scale", _text=vec3_template.format(scale, scale, scale)))
         mesh.append(create_element("uri", _text=walls_obj_file))
 
@@ -86,111 +83,14 @@ class SDFGenerator:
         collision.append(geometry)
         mesh = create_element("mesh")
         geometry.append(mesh)
-        scale = mesh_scale
+        scale = self.scale
         mesh.append(create_element("scale", _text=vec3_template.format(scale, scale, scale)))
         mesh.append(create_element("uri", _text=walls_obj_file))
 
-        # Is this section necessary if loading from OBJ (test on gazebo)
-        # material = create_element("material")
-
-    # Each wall is exported as a separate, sized plane.  The mesh_scale must be applied.  Pose should = origin
-    def add_wall2(self, filename):
-        name = wall_template.format(self.wall_count)
-        model = create_element("model", name=name)
-        self.world.append(model)
-        model.append(create_element("static", _text="1"))
-        model.append(create_element("pose", frame=name,
-                                    _text=pose_template.format(0, 0, 0, 0., 0., 0.)))
-        link = create_element("link", name=name)
-        model.append(link)
-        inertial = create_element("inertial")
-        link.append(inertial)
-
-        inertial.append(create_element("mass", _text="0"))
-
-        inertia = create_element("inertia")
-        inertial.append(inertia)
-        inertia.append(create_element("ixx", _text="1."))
-        inertia.append(create_element("ixy", _text="0."))
-        inertia.append(create_element("ixz", _text="0."))
-        inertia.append(create_element("iyy", _text="1."))
-        inertia.append(create_element("iyz", _text="0."))
-        inertia.append(create_element("izz", _text="1."))
-
-        visual = create_element("visual", name=name+"_collision")
-        link.append(visual)
-        geometry = create_element("geometry")
-        visual.append(geometry)
-        mesh = create_element("mesh")
-        geometry.append(mesh)
-        scale = mesh_scale
-        mesh.append(create_element("scale", _text=vec3_template.format(scale, scale, scale)))
-        mesh.append(create_element("uri", _text=filename))
-
-        collision = create_element("collision", name=name+"_collision")
-        link.append(collision)
-        geometry = create_element("geometry")
-        collision.append(geometry)
-        mesh = create_element("mesh")
-        geometry.append(mesh)
-        scale = mesh_scale
-        mesh.append(create_element("scale", _text=vec3_template.format(scale, scale, scale)))
-        mesh.append(create_element("uri", _text=filename))
-
-        self.wall_count += 1
-
-    # Note: Must be in the same space as the OBJ model
-    # Each wall is a link within the walls model.  A single 'parent' link will import the obj model for the walls into
-    # the model so that all links are planes in a one-to-one correspondence with the walls and
-    def add_wall(self, pos, dim, normal):
-        name = wall_template.format(self.wall_count)
-        model = create_element("model", name=name)
-        self.world.append(model)
-        model.append(create_element("static", _text="1"))
-        model.append(create_element("pose", frame=name,
-                                    _text=pose_template.format(mesh_scale*pos[0], mesh_scale*pos[1], mesh_scale*pos[2],
-                                                               0., 0., 0.)))
-
-        link = create_element("link", name=name)
-        model.append(link)
-        inertial = create_element("inertial")
-        link.append(inertial)
-
-        inertial.append(create_element("mass", _text="0"))
-
-        inertia = create_element("inertia")
-        inertial.append(inertia)
-        inertia.append(create_element("ixx", _text="1."))
-        inertia.append(create_element("ixy", _text="0."))
-        inertia.append(create_element("ixz", _text="0."))
-        inertia.append(create_element("iyy", _text="1."))
-        inertia.append(create_element("iyz", _text="0."))
-        inertia.append(create_element("izz", _text="1."))
-
-        visual = create_element("visual", name=name+"_collision")
-        link.append(visual)
-        geometry = create_element("geometry")
-        visual.append(geometry)
-        plane = create_element("plane")
-        geometry.append(plane)
-        plane.append(create_element("normal", _text=vec3_template.format(normal[0], normal[1], 0)))
-        plane.append(create_element("size", _text=vec2_template.format(dim[0], dim[1])))
-
-        collision = create_element("collision", name=name+"_collision")
-        link.append(collision)
-        geometry = create_element("geometry")
-        collision.append(geometry)
-        plane = create_element("plane")
-        geometry.append(plane)
-        plane.append(create_element("normal", _text=vec3_template.format(normal[0], normal[1], 0)))
-        plane.append(create_element("size", _text=vec2_template.format(dim[0], dim[1])))
-
-        self.wall_count += 1
-
-    def add_floors(self, floor_obj_file):
+    def add_floors(self, pos, floor_obj_file):
         self.floor_model.append(create_element("static", _text="1"))
         self.floor_model.append(create_element("pose", frame="floors_frame",
-                                               _text=pose_template.format(12.5, 0, 0, 0., 0., 0.)))
+                                               _text=pose_template.format(pos[0], pos[1], pos[2], 0., 0., 0.)))
 
         # Write the visual link
         link = create_element("link", name="floors_link")
@@ -216,7 +116,7 @@ class SDFGenerator:
         visual.append(geometry)
         mesh = create_element("mesh")
         geometry.append(mesh)
-        scale = mesh_scale
+        scale = self.scale
         mesh.append(create_element("scale", _text=vec3_template.format(scale, scale, scale)))
         mesh.append(create_element("uri", _text=floor_obj_file))
 
@@ -233,7 +133,7 @@ class SDFGenerator:
         collision.append(geometry)
         mesh = create_element("mesh")
         geometry.append(mesh)
-        scale = mesh_scale
+        scale = self.scale
         mesh.append(create_element("scale", _text=vec3_template.format(scale, scale, scale)))
         mesh.append(create_element("uri", _text=floor_obj_file))
 
