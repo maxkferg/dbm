@@ -90,6 +90,52 @@ class SDFGenerator:
         # Is this section necessary if loading from OBJ (test on gazebo)
         # material = create_element("material")
 
+    # Each wall is exported as a separate, sized plane.  The mesh_scale must be applied.  Pose should = origin
+    def add_wall2(self, filename):
+        name = wall_template.format(self.wall_count)
+        model = create_element("model", name=name)
+        self.world.append(model)
+        model.append(create_element("static", _text="1"))
+        model.append(create_element("pose", frame=name,
+                                    _text=pose_template.format(0, 0, 0, 0., 0., 0.)))
+        link = create_element("link", name=name)
+        model.append(link)
+        inertial = create_element("inertial")
+        link.append(inertial)
+
+        inertial.append(create_element("mass", _text="0"))
+
+        inertia = create_element("inertia")
+        inertial.append(inertia)
+        inertia.append(create_element("ixx", _text="1."))
+        inertia.append(create_element("ixy", _text="0."))
+        inertia.append(create_element("ixz", _text="0."))
+        inertia.append(create_element("iyy", _text="1."))
+        inertia.append(create_element("iyz", _text="0."))
+        inertia.append(create_element("izz", _text="1."))
+
+        visual = create_element("visual", name=name+"_collision")
+        link.append(visual)
+        geometry = create_element("geometry")
+        visual.append(geometry)
+        mesh = create_element("mesh")
+        geometry.append(mesh)
+        scale = mesh_scale
+        mesh.append(create_element("scale", _text=vec3_template.format(scale, scale, scale)))
+        mesh.append(create_element("uri", _text=filename))
+
+        collision = create_element("collision", name=name+"_collision")
+        link.append(collision)
+        geometry = create_element("geometry")
+        collision.append(geometry)
+        mesh = create_element("mesh")
+        geometry.append(mesh)
+        scale = mesh_scale
+        mesh.append(create_element("scale", _text=vec3_template.format(scale, scale, scale)))
+        mesh.append(create_element("uri", _text=filename))
+
+        self.wall_count += 1
+
     # Note: Must be in the same space as the OBJ model
     # Each wall is a link within the walls model.  A single 'parent' link will import the obj model for the walls into
     # the model so that all links are planes in a one-to-one correspondence with the walls and

@@ -557,7 +557,7 @@ class Generator:
         vertices = []
         walls_indices = []
 
-        line_height = 40.
+        line_height = 5.
 
         # Add the walls
         for i in range(len(self.lines)):
@@ -951,7 +951,6 @@ class Generator:
     def export_to_sdf(self, filename="assets/output.sdf"):
         sdf = SDFGenerator.SDFGenerator(filename)
 
-        walls_filename = self.strip_name(filename) + "_walls.obj"
         floors_filename = self.strip_name(filename) + "_floors.obj"
 
         #sdf.add_walls([0, 0, 0], walls_filename)
@@ -961,15 +960,15 @@ class Generator:
         wall_height = inv_dim * 40.
 
         # Export Walls
-        for i in range(len(self.lines)):
-
-            line = self.lines[i]
-            pos = centre_pos(line) + [0]
-            dim = [inv_dim*line_len(line), wall_height]
-            nor = self.normals[i] + [0]
-            pos = list(map(lambda x: x * inv_dim, pos))
-            if not len(nor) == 3: continue
-            sdf.add_wall(pos, dim, nor)
+        for i in range(len(self.lines)-1):
+            wall_filename = self.strip_name(filename) + "_wall_" + str(i) + ".obj"
+            #line = self.lines[i]
+            #pos = centre_pos(line) + [0]
+            #dim = [inv_dim*line_len(line), wall_height]
+            #nor = self.normals[i] + [0]
+            #pos = list(map(lambda x: x * inv_dim, pos))
+            #if not len(nor) == 3: continue
+            sdf.add_wall2(wall_filename) #pos, dim, nor)
 
         sdf.add_floors([0, 0, 0], [0, 0, 1], [1., 1.], floors_filename)
         sdf.add_extra()         # This is possibly only required for gazebo
