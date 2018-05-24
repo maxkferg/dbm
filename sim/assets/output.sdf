@@ -3,7 +3,7 @@
   <world name="building_model">
     <model name="walls">
       <static>1</static>
-      <pose frame="walls_frame">12.5 0 0 0.0 0.0 0.0</pose>
+      <pose frame="walls_frame">-1 0 0 0.0 0.0 0.0</pose>
       <link name="walls_link">
         <inertial>
           <mass>0</mass>
@@ -19,7 +19,7 @@
         <visual name="walls_mesh">
           <geometry>
             <mesh>
-              <scale>125.0 125.0 125.0</scale>
+              <scale>12.5 12.5 12.5</scale>
               <uri>assets/output_walls.obj</uri>
             </mesh>
           </geometry>
@@ -33,7 +33,7 @@
         <collision name="walls_collision">
           <geometry>
             <mesh>
-              <scale>125.0 125.0 125.0</scale>
+              <scale>12.5 12.5 12.5</scale>
               <uri>assets/output_walls.obj</uri>
             </mesh>
           </geometry>
@@ -42,7 +42,7 @@
     </model>
     <model name="floors">
       <static>1</static>
-      <pose frame="floors_frame">12.5 0 0 0.0 0.0 0.0</pose>
+      <pose frame="floors_frame">-1 0 0 0.0 0.0 0.0</pose>
       <link name="floors_link">
         <inertial>
           <mass>0</mass>
@@ -58,7 +58,7 @@
         <visual name="floors_mesh">
           <geometry>
             <mesh>
-              <scale>125.0 125.0 125.0</scale>
+              <scale>12.5 12.5 12.5</scale>
               <uri>assets/output_floors.obj</uri>
             </mesh>
           </geometry>
@@ -72,7 +72,7 @@
         <collision name="floors_collision">
           <geometry>
             <mesh>
-              <scale>125.0 125.0 125.0</scale>
+              <scale>12.5 12.5 12.5</scale>
               <uri>assets/output_floors.obj</uri>
             </mesh>
           </geometry>
