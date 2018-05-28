@@ -14,6 +14,26 @@ RENDER_WIDTH = 960
 RENDER_HEIGHT = 720
 
 
+def rotate_vector(quat, vec):
+    n1 = quat[0] * 2.
+    n2 = quat[1] * 2.
+    n3 = quat[2] * 2.
+    n4 = quat[0] * n1
+    n5 = quat[1] * n2
+    n6 = quat[2] * n3
+    n7 = quat[0] * n2
+    n8 = quat[0] * n3
+    n9 = quat[1] * n3
+    n10 = quat[3] * n1
+    n11 = quat[3] * n2
+    n12 = quat[3] * n3
+    result = [0, 0, 0]
+    result[0] = (1. - (n5 + n6)) * vec[0] + (n7 - n12) * vec[1] + (n8 + n11) * vec[2]
+    result[1] = (n7 + n12) * vec[0] + (1. - (n4 + n6)) * vec[1] + (n9 - n10) * vec[2]
+    result[2] = (n8 - n11) * vec[0] + (n9 + n10) * vec[1] + (1. - (n4 + n5)) * vec[2]
+    return result
+
+
 class SeekerSimEnv(gym.Env):
     metadata = {
         'render.modes': ['human', 'rgb_array'],
@@ -96,8 +116,12 @@ class SeekerSimEnv(gym.Env):
         invCarPos, invCarOrn = self.physics.invertTransform(carpos, carorn)
         tarPosInCar, tarOrnInCar = self.physics.multiplyTransforms(invCarPos, invCarOrn, tarpos, tarorn)
 
-        print("CarPos:", carpos, "CarOrn:", carorn)
-        print("TarPos:", tarpos, "TarOrn:", tarorn)
+        # Get the car's direction in Euler angles
+        dir_vec = rotate_vector(carorn, [1, 0, 0])
+        print("Dir:", dir_vec)
+
+        #print("CarPos:", carpos, "CarOrn:", carorn)
+        #print("TarPos:", tarpos, "TarOrn:", tarorn)
 
         self.observation.extend([tarPosInCar[0], tarPosInCar[1]])
 
@@ -209,8 +233,7 @@ class SeekerSimEnv(gym.Env):
         reward = -1000
         print(numPt)
         if (numPt > 0):
-            print("reward:")
             reward = -closestPoints[0][8]       # (contactFlag, bodyUniqueIdA, bodyUniqueIdB, linkIndexA, linkIndexB, positionOnA, positionOnB, contactNormalOnB, contactDistance, normalForce)
-            print(reward)
+            print("Reward:", reward)
         return reward
 
