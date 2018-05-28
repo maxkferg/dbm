@@ -30,7 +30,7 @@ class SeekerSimEnv(gym.Env):
         self.targetUniqueId = -1
         self.robot = None               # The controlled robot
         self.buildingIds = []           # Each plane is given an id
-        self.width = 320
+        self.width = 320                # The resolution of the sensor image (320x240)
         self.height = 240
 
         self.envStepCounter = 0
@@ -62,11 +62,7 @@ class SeekerSimEnv(gym.Env):
         self.physics.setTimeStep(self.timeStep)
         self.buildingIds = self.physics.loadSDF(os.path.join(self.urdfRoot, "output.sdf"))
 
-        print("BUILDING IDS:", self.buildingIds)
-
         # TODO: Determine location to spawn ball!
-
-
         #dist = 5 + 2. * random.random()
         #ang = 2. * 3.1415925438 * random.random()
 
@@ -91,15 +87,32 @@ class SeekerSimEnv(gym.Env):
         return [seed]
 
     def getExtendedObservation(self):
-        # TODO:  Add 12 angle ray-collision test (verify details)
-        self.observation = []  # self._racecar.getObservation()
-        carpos, carorn = self.physics.getBasePositionAndOrientation(self.robot.racecarUniqueId)
-        ballpos, ballorn = self.physics.getBasePositionAndOrientation(self.targetUniqueId)
-        invCarPos, invCarOrn = self.physics.invertTransform(carpos, carorn)
-        ballPosInCar, ballOrnInCar = self.physics.multiplyTransforms(invCarPos, invCarOrn, ballpos, ballorn)
+        self.observation = []
 
-        self.observation.extend([ballPosInCar[0], ballPosInCar[1]])
+        ray_count = 12          # 12 rays of 30 degrees each
+        ray_degree = 360 / ray_count
+        carpos, carorn = self.physics.getBasePositionAndOrientation(self.robot.racecarUniqueId)
+        tarpos, tarorn = self.physics.getBasePositionAndOrientation(self.targetUniqueId)
+        invCarPos, invCarOrn = self.physics.invertTransform(carpos, carorn)
+        tarPosInCar, tarOrnInCar = self.physics.multiplyTransforms(invCarPos, invCarOrn, tarpos, tarorn)
+
+        print("CarPos:", carpos, "CarOrn:", carorn)
+        print("TarPos:", tarpos, "TarOrn:", tarorn)
+
+        self.observation.extend([tarPosInCar[0], tarPosInCar[1]])
+
         return self.observation
+
+    #def getExtendedObservation(self):
+    #    # TODO:  Add 12 angle ray-collision test (verify details)
+    #    self.observation = []  # self._racecar.getObservation()
+    #    carpos, carorn = self.physics.getBasePositionAndOrientation(self.robot.racecarUniqueId)
+    #    ballpos, ballorn = self.physics.getBasePositionAndOrientation(self.targetUniqueId)
+    #    invCarPos, invCarOrn = self.physics.invertTransform(carpos, carorn)
+    #    ballPosInCar, ballOrnInCar = self.physics.multiplyTransforms(invCarPos, invCarOrn, ballpos, ballorn)
+
+    #    self.observation.extend([ballPosInCar[0], ballPosInCar[1]])
+    #    return self.observation
 
     #def getExtendedObservation(self):
     #    carpos, carorn = self.physics.getBasePositionAndOrientation(self.robot.racecarUniqueId)
@@ -152,7 +165,7 @@ class SeekerSimEnv(gym.Env):
             self.envStepCounter += 1
         reward = self.reward()
         done = self.termination()
-        # print("len=%r" % len(self._observation))
+        print("len=%r" % len(self.observation))
 
         return np.array(self.observation), reward, done, {}
 
@@ -190,12 +203,14 @@ class SeekerSimEnv(gym.Env):
         # -1 if wall collision
         closestPoints = self.physics.getClosestPoints(self.robot.racecarUniqueId, self.targetUniqueId, 10000)
 
+        print("Closest Points:", closestPoints)
+
         numPt = len(closestPoints)
         reward = -1000
-        # print(numPt)
+        print(numPt)
         if (numPt > 0):
-            # print("reward:")
-            reward = -closestPoints[0][8]
-            # print(reward)
+            print("reward:")
+            reward = -closestPoints[0][8]       # (contactFlag, bodyUniqueIdA, bodyUniqueIdB, linkIndexA, linkIndexB, positionOnA, positionOnB, contactNormalOnB, contactDistance, normalForce)
+            print(reward)
         return reward
 

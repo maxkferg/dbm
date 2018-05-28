@@ -39,7 +39,7 @@ def run_test():
             action = [targetVelocity, steeringAngle]
         state, reward, done, info = environment.step(action)
         obs = environment.getExtendedObservation()
-        print("obs:", obs)
+        #print("obs:", obs)
 
 if __name__ == "__main__":
     run_test()
