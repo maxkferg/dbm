@@ -34,6 +34,15 @@ def rotate_vector(quat, vec):
     return result
 
 
+def make_quaternion(axis, angle_in_radians):
+    n = (axis[0]*axis[0] + axis[1]*axis[1] + axis[2]*axis[2])
+    rad = angle_in_radians * .5
+    sin_theta = np.sin(rad)
+    cos_theta = np.cos(rad)
+    s = sin_theta / np.sqrt(n)
+    return [s*axis[0], s*axis[1], s*axis[2], cos_theta]
+
+
 class SeekerSimEnv(gym.Env):
     metadata = {
         'render.modes': ['human', 'rgb_array'],
@@ -110,7 +119,8 @@ class SeekerSimEnv(gym.Env):
         self.observation = []
 
         ray_count = 12          # 12 rays of 30 degrees each
-        ray_degree = 360 / ray_count
+        ray_angle = 2. * np.pi / ray_count
+        print("ray_angle:", ray_angle)
         carpos, carorn = self.physics.getBasePositionAndOrientation(self.robot.racecarUniqueId)
         tarpos, tarorn = self.physics.getBasePositionAndOrientation(self.targetUniqueId)
         invCarPos, invCarOrn = self.physics.invertTransform(carpos, carorn)
@@ -120,8 +130,12 @@ class SeekerSimEnv(gym.Env):
         dir_vec = rotate_vector(carorn, [1, 0, 0])
         print("Dir:", dir_vec)
 
-        #print("CarPos:", carpos, "CarOrn:", carorn)
-        #print("TarPos:", tarpos, "TarOrn:", tarorn)
+        # Test rotation by quaternion
+        for i in range(ray_count):
+            q = make_quaternion([0, 0, 1], i*ray_angle)
+            print("q:", i, q)
+            dir_vec = rotate_vector(q, [1, 0, 0])
+            print("Dir:", i, dir_vec)
 
         self.observation.extend([tarPosInCar[0], tarPosInCar[1]])
 
@@ -227,11 +241,11 @@ class SeekerSimEnv(gym.Env):
         # -1 if wall collision
         closestPoints = self.physics.getClosestPoints(self.robot.racecarUniqueId, self.targetUniqueId, 10000)
 
-        print("Closest Points:", closestPoints)
+        #print("Closest Points:", closestPoints)
 
         numPt = len(closestPoints)
         reward = -1000
-        print(numPt)
+        #print(numPt)
         if (numPt > 0):
             reward = -closestPoints[0][8]       # (contactFlag, bodyUniqueIdA, bodyUniqueIdB, linkIndexA, linkIndexB, positionOnA, positionOnB, contactNormalOnB, contactDistance, normalForce)
             print("Reward:", reward)
