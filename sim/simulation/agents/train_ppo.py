@@ -141,6 +141,25 @@ def main(_):
   for score in train(config, FLAGS.env_processes):
     tf.logging.info('Score {}.'.format(score))
 
+FLAGS = None
+
+def setup_training_env():
+    global FLAGS
+    FLAGS = tf.app.flags.FLAGS
+    tf.app.flags.DEFINE_string(
+        'logdir', 'logdir',
+        'Base directory to store logs.')
+    tf.app.flags.DEFINE_string(
+        'timestamp', datetime.datetime.now().strftime('%Y%m%dT%H%M%S'),
+        'Sub directory to store logs.')
+    tf.app.flags.DEFINE_string(
+        'config', 'pybullet_seekersim',
+        'Configuration to execute.')
+    tf.app.flags.DEFINE_boolean(
+        'env_processes', True,
+        'Step environments in separate processes to circumvent the GIL.')
+    tf.app.run(main)
+
 
 if __name__ == '__main__':
   FLAGS = tf.app.flags.FLAGS

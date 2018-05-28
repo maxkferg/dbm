@@ -1,2 +1,2 @@
-from simulation.environment.simulation_env import SimRobotEnv
+from simulation.environment.simulation_env import SeekerSimEnv
 

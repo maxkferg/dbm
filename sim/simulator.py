@@ -1,8 +1,11 @@
 import argparse
 import gym
+import datetime
 from MeshGenerator import Generator
 from simulation.environment.simulationTest import run_test
 from gym.envs.registration import registry, make, spec
+from simulation.agents.train_ppo import setup_training_env
+import tensorflow as tf
 
 
 def register(id, *args, **kvargs):
@@ -12,8 +15,9 @@ def register(id, *args, **kvargs):
         return gym.envs.registration.register(id, *args, **kvargs)
 
 # Example:
+# python -m pybullet_envs.agents.train_ppo --config=pybullet_racecar --logdir=racecar
 # python simulator.py
-#       assets/Level\ 2\ floor\ plan\ walls.png
+#       assets/building.png
 #       --render-image assets/output.png
 #       --export-obj assets/output.obj
 #       --export-sdf assets/output.sdf
@@ -56,9 +60,9 @@ if args.run_test:
 if args.train:
     register(id='SeekerSimEnv-v0',
              entry_point='simulation.environment:SeekerSimEnv',
-             timestep_limit = 1000,
-             reward_threshold = 5.0)
-
+             timestep_limit=1000,
+             reward_threshold=5.0)
+    setup_training_env()
 
 
 print("Done.")
