@@ -89,41 +89,41 @@ class SeekerSimEnv(gym.Env):
         self.np_random, seed = seeding.np_random(seed)
         return [seed]
 
-    #def getExtendedObservation(self):
-        # TODO:  Add 12 angle ray-collision test (verify details)
-        #self.observation = []  # self._racecar.getObservation()
-        #carpos, carorn = self.physics.getBasePositionAndOrientation(self.robot.racecarUniqueId)
-        #ballpos, ballorn = self.physics.getBasePositionAndOrientation(self.ballUniqueId)
-        #invCarPos, invCarOrn = self.physics.invertTransform(carpos, carorn)
-        #ballPosInCar, ballOrnInCar = self.physics.multiplyTransforms(invCarPos, invCarOrn, ballpos, ballorn)
-
-        #self.observation.extend([ballPosInCar[0], ballPosInCar[1]])
-        #return self.observation
-
     def getExtendedObservation(self):
+        # TODO:  Add 12 angle ray-collision test (verify details)
+        self.observation = []  # self._racecar.getObservation()
         carpos, carorn = self.physics.getBasePositionAndOrientation(self.robot.racecarUniqueId)
-        carmat = self.physics.getMatrixFromQuaternion(carorn)
         ballpos, ballorn = self.physics.getBasePositionAndOrientation(self.ballUniqueId)
         invCarPos, invCarOrn = self.physics.invertTransform(carpos, carorn)
         ballPosInCar, ballOrnInCar = self.physics.multiplyTransforms(invCarPos, invCarOrn, ballpos, ballorn)
-        dist0 = 0.3
-        dist1 = 1.
-        eyePos = [carpos[0] + dist0 * carmat[0], carpos[1] + dist0 * carmat[3], carpos[2] + dist0 * carmat[6] + 0.3]
-        targetPos = [carpos[0] + dist1 * carmat[0], carpos[1] + dist1 * carmat[3],
-                     carpos[2] + dist1 * carmat[6] + 0.3]
-        up = [carmat[2], carmat[5], carmat[8]]
-        viewMat = self.physics.computeViewMatrix(eyePos, targetPos, up)
-        # viewMat = self._p.computeViewMatrixFromYawPitchRoll(carpos,1,0,0,0,2)
-        # print("projectionMatrix:")
-        # print(self._p.getDebugVisualizerCamera()[3])
-        projMatrix = [0.7499999403953552, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, -1.0000200271606445, -1.0,
-                      0.0, 0.0, -0.02000020071864128, 0.0]
-        img_arr = self.physics.getCameraImage(width=self.width, height=self.height, viewMatrix=viewMat,
-                                         projectionMatrix=projMatrix)
-        rgb = img_arr[2]
-        np_img_arr = np.reshape(rgb, (self.height, self.width, 4))
-        self.observation = np_img_arr
+
+        self.observation.extend([ballPosInCar[0], ballPosInCar[1]])
         return self.observation
+
+    #def getExtendedObservation(self):
+    #    carpos, carorn = self.physics.getBasePositionAndOrientation(self.robot.racecarUniqueId)
+    #    carmat = self.physics.getMatrixFromQuaternion(carorn)
+    #    ballpos, ballorn = self.physics.getBasePositionAndOrientation(self.ballUniqueId)
+    #    invCarPos, invCarOrn = self.physics.invertTransform(carpos, carorn)
+    #    ballPosInCar, ballOrnInCar = self.physics.multiplyTransforms(invCarPos, invCarOrn, ballpos, ballorn)
+    #    dist0 = 0.3
+    #    dist1 = 1.
+    #    eyePos = [carpos[0] + dist0 * carmat[0], carpos[1] + dist0 * carmat[3], carpos[2] + dist0 * carmat[6] + 0.3]
+    #    targetPos = [carpos[0] + dist1 * carmat[0], carpos[1] + dist1 * carmat[3],
+    #                 carpos[2] + dist1 * carmat[6] + 0.3]
+    #    up = [carmat[2], carmat[5], carmat[8]]
+    #    viewMat = self.physics.computeViewMatrix(eyePos, targetPos, up)
+    #    # viewMat = self._p.computeViewMatrixFromYawPitchRoll(carpos,1,0,0,0,2)
+    #    # print("projectionMatrix:")
+    #    # print(self._p.getDebugVisualizerCamera()[3])
+    #    projMatrix = [0.7499999403953552, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, -1.0000200271606445, -1.0,
+    #                  0.0, 0.0, -0.02000020071864128, 0.0]
+    #    img_arr = self.physics.getCameraImage(width=self.width, height=self.height, viewMatrix=viewMat,
+    #                                     projectionMatrix=projMatrix)
+    #    rgb = img_arr[2]
+    #    np_img_arr = np.reshape(rgb, (self.height, self.width, 4))
+    #    self.observation = np_img_arr
+    #    return self.observation
 
     def step(self, action):
         if self.renders:
