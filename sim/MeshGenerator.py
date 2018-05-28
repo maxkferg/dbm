@@ -618,13 +618,14 @@ class Generator:
             for i in range(4):
                 wall_vertices.append([np.dot(model_mat, positions[i]), texcoords[i], normal + [0.]])
 
-            wall_indices.append(vidx)
+            # Note: Add one to each index because OBJ indexing starts at 1 not 0
             wall_indices.append(vidx+1)
             wall_indices.append(vidx+2)
-
-            wall_indices.append(vidx)
-            wall_indices.append(vidx+2)
             wall_indices.append(vidx+3)
+
+            wall_indices.append(vidx+1)
+            wall_indices.append(vidx+3)
+            wall_indices.append(vidx+4)
 
         floor_vertices = []
         floor_indices = []
@@ -656,13 +657,14 @@ class Generator:
             for i in range(4):
                 floor_vertices.append([np.dot(model_mat, positions[i]), texcoords[i], [0., 0., 1.]])
 
-            floor_indices.append(vidx)
+            # Note: Add one to each index because OBJ indexing starts at 1 not 0
             floor_indices.append(vidx+1)
             floor_indices.append(vidx+2)
-
-            floor_indices.append(vidx)
-            floor_indices.append(vidx+2)
             floor_indices.append(vidx+3)
+
+            floor_indices.append(vidx+1)
+            floor_indices.append(vidx+3)
+            floor_indices.append(vidx+4)
 
         # Centre the model in XY-plane (We need to find it for all walls and floors)
         centre = self.find_centre(wall_vertices + floor_vertices)
@@ -692,16 +694,18 @@ class Generator:
         file.write("\n")
 
         # Write Walls Group
-        for i in range(int(len(wall_indices)/3)):
+        for i in range(int(len(wall_indices)/6)):
             file.write(group_string.format("wall_" + str(i)))
             file.write(matlib_string.format(matfile))
             file.write(material_string.format("walls_material"))
 
-            idx = 3*i
-            # Note: Add one to each index because OBJ indexing starts at 1 not 0
-            file.write(face_string.format(wall_indices[idx]+1, wall_indices[idx]+1, wall_indices[idx]+1,
-                                          wall_indices[idx+1]+1, wall_indices[idx+1]+1, wall_indices[idx+1]+1,
-                                          wall_indices[idx+2]+1, wall_indices[idx+2]+1, wall_indices[idx+2]+1))
+            idx = 6*i
+            file.write(face_string.format(wall_indices[idx+0], wall_indices[idx+0], wall_indices[idx+0],
+                                          wall_indices[idx+1], wall_indices[idx+1], wall_indices[idx+1],
+                                          wall_indices[idx+2], wall_indices[idx+2], wall_indices[idx+2]))
+            file.write(face_string.format(wall_indices[idx+3], wall_indices[idx+3], wall_indices[idx+3],
+                                          wall_indices[idx+4], wall_indices[idx+4], wall_indices[idx+4],
+                                          wall_indices[idx+5], wall_indices[idx+5], wall_indices[idx+5]))
 
         file.close()
 
@@ -730,15 +734,18 @@ class Generator:
         file.write("\n")
 
         # Write Floor Group
-        for i in range(int(len(floor_indices)/3)):
+        for i in range(int(len(floor_indices)/6)):
             file.write(group_string.format("floor_" + str(i)))
             file.write(matlib_string.format(matfile))
             file.write(material_string.format("floors_material"))
 
-            idx = 3*i
-            file.write(face_string.format(floor_indices[idx]+1, floor_indices[idx]+1, floor_indices[idx]+1,
-                                          floor_indices[idx+1]+1, floor_indices[idx+1]+1, floor_indices[idx+1]+1,
-                                          floor_indices[idx+2]+1, floor_indices[idx+2]+1, floor_indices[idx+2]+1))
+            idx = 6*i
+            file.write(face_string.format(floor_indices[idx+0], floor_indices[idx+0], floor_indices[idx+0],
+                                          floor_indices[idx+1], floor_indices[idx+1], floor_indices[idx+1],
+                                          floor_indices[idx+2], floor_indices[idx+2], floor_indices[idx+2]))
+            file.write(face_string.format(floor_indices[idx+3], floor_indices[idx+3], floor_indices[idx+3],
+                                          floor_indices[idx+4], floor_indices[idx+4], floor_indices[idx+4],
+                                          floor_indices[idx+5], floor_indices[idx+5], floor_indices[idx+5]))
 
         file.close()
 

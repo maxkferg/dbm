@@ -22,6 +22,7 @@ def register(id, *args, **kvargs):
 #       --export-obj assets/output.obj
 #       --export-sdf assets/output.sdf
 #       --run-test output
+#       --train output
 
 parser = argparse.ArgumentParser()
 parser.add_argument("plan_file")

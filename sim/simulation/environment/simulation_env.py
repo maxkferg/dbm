@@ -66,6 +66,7 @@ class SeekerSimEnv(gym.Env):
 
         # TODO: Determine location to spawn ball!
 
+
         #dist = 5 + 2. * random.random()
         #ang = 2. * 3.1415925438 * random.random()
 

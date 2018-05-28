@@ -365,239 +365,149 @@ o wall_0
 mtllib output_walls.mtl
 usemtl walls_material
 f 1/1/1 2/2/2 3/3/3
+f 1/1/1 3/3/3 4/4/4
 o wall_1
 mtllib output_walls.mtl
 usemtl walls_material
-f 1/1/1 3/3/3 4/4/4
+f 5/5/5 6/6/6 7/7/7
+f 5/5/5 7/7/7 8/8/8
 o wall_2
 mtllib output_walls.mtl
 usemtl walls_material
-f 5/5/5 6/6/6 7/7/7
+f 9/9/9 10/10/10 11/11/11
+f 9/9/9 11/11/11 12/12/12
 o wall_3
 mtllib output_walls.mtl
 usemtl walls_material
-f 5/5/5 7/7/7 8/8/8
+f 13/13/13 14/14/14 15/15/15
+f 13/13/13 15/15/15 16/16/16
 o wall_4
 mtllib output_walls.mtl
 usemtl walls_material
-f 9/9/9 10/10/10 11/11/11
+f 17/17/17 18/18/18 19/19/19
+f 17/17/17 19/19/19 20/20/20
 o wall_5
 mtllib output_walls.mtl
 usemtl walls_material
-f 9/9/9 11/11/11 12/12/12
+f 21/21/21 22/22/22 23/23/23
+f 21/21/21 23/23/23 24/24/24
 o wall_6
 mtllib output_walls.mtl
 usemtl walls_material
-f 13/13/13 14/14/14 15/15/15
+f 25/25/25 26/26/26 27/27/27
+f 25/25/25 27/27/27 28/28/28
 o wall_7
 mtllib output_walls.mtl
 usemtl walls_material
-f 13/13/13 15/15/15 16/16/16
+f 29/29/29 30/30/30 31/31/31
+f 29/29/29 31/31/31 32/32/32
 o wall_8
 mtllib output_walls.mtl
 usemtl walls_material
-f 17/17/17 18/18/18 19/19/19
+f 33/33/33 34/34/34 35/35/35
+f 33/33/33 35/35/35 36/36/36
 o wall_9
 mtllib output_walls.mtl
 usemtl walls_material
-f 17/17/17 19/19/19 20/20/20
+f 37/37/37 38/38/38 39/39/39
+f 37/37/37 39/39/39 40/40/40
 o wall_10
 mtllib output_walls.mtl
 usemtl walls_material
-f 21/21/21 22/22/22 23/23/23
+f 41/41/41 42/42/42 43/43/43
+f 41/41/41 43/43/43 44/44/44
 o wall_11
 mtllib output_walls.mtl
 usemtl walls_material
-f 21/21/21 23/23/23 24/24/24
+f 45/45/45 46/46/46 47/47/47
+f 45/45/45 47/47/47 48/48/48
 o wall_12
 mtllib output_walls.mtl
 usemtl walls_material
-f 25/25/25 26/26/26 27/27/27
+f 49/49/49 50/50/50 51/51/51
+f 49/49/49 51/51/51 52/52/52
 o wall_13
 mtllib output_walls.mtl
 usemtl walls_material
-f 25/25/25 27/27/27 28/28/28
+f 53/53/53 54/54/54 55/55/55
+f 53/53/53 55/55/55 56/56/56
 o wall_14
 mtllib output_walls.mtl
 usemtl walls_material
-f 29/29/29 30/30/30 31/31/31
+f 57/57/57 58/58/58 59/59/59
+f 57/57/57 59/59/59 60/60/60
 o wall_15
 mtllib output_walls.mtl
 usemtl walls_material
-f 29/29/29 31/31/31 32/32/32
+f 61/61/61 62/62/62 63/63/63
+f 61/61/61 63/63/63 64/64/64
 o wall_16
 mtllib output_walls.mtl
 usemtl walls_material
-f 33/33/33 34/34/34 35/35/35
+f 65/65/65 66/66/66 67/67/67
+f 65/65/65 67/67/67 68/68/68
 o wall_17
 mtllib output_walls.mtl
 usemtl walls_material
-f 33/33/33 35/35/35 36/36/36
+f 69/69/69 70/70/70 71/71/71
+f 69/69/69 71/71/71 72/72/72
 o wall_18
 mtllib output_walls.mtl
 usemtl walls_material
-f 37/37/37 38/38/38 39/39/39
+f 73/73/73 74/74/74 75/75/75
+f 73/73/73 75/75/75 76/76/76
 o wall_19
 mtllib output_walls.mtl
 usemtl walls_material
-f 37/37/37 39/39/39 40/40/40
+f 77/77/77 78/78/78 79/79/79
+f 77/77/77 79/79/79 80/80/80
 o wall_20
 mtllib output_walls.mtl
 usemtl walls_material
-f 41/41/41 42/42/42 43/43/43
+f 81/81/81 82/82/82 83/83/83
+f 81/81/81 83/83/83 84/84/84
 o wall_21
 mtllib output_walls.mtl
 usemtl walls_material
-f 41/41/41 43/43/43 44/44/44
+f 85/85/85 86/86/86 87/87/87
+f 85/85/85 87/87/87 88/88/88
 o wall_22
 mtllib output_walls.mtl
 usemtl walls_material
-f 45/45/45 46/46/46 47/47/47
+f 89/89/89 90/90/90 91/91/91
+f 89/89/89 91/91/91 92/92/92
 o wall_23
 mtllib output_walls.mtl
 usemtl walls_material
-f 45/45/45 47/47/47 48/48/48
+f 93/93/93 94/94/94 95/95/95
+f 93/93/93 95/95/95 96/96/96
 o wall_24
 mtllib output_walls.mtl
 usemtl walls_material
-f 49/49/49 50/50/50 51/51/51
+f 97/97/97 98/98/98 99/99/99
+f 97/97/97 99/99/99 100/100/100
 o wall_25
 mtllib output_walls.mtl
 usemtl walls_material
-f 49/49/49 51/51/51 52/52/52
+f 101/101/101 102/102/102 103/103/103
+f 101/101/101 103/103/103 104/104/104
 o wall_26
 mtllib output_walls.mtl
 usemtl walls_material
-f 53/53/53 54/54/54 55/55/55
+f 105/105/105 106/106/106 107/107/107
+f 105/105/105 107/107/107 108/108/108
 o wall_27
 mtllib output_walls.mtl
 usemtl walls_material
-f 53/53/53 55/55/55 56/56/56
+f 109/109/109 110/110/110 111/111/111
+f 109/109/109 111/111/111 112/112/112
 o wall_28
 mtllib output_walls.mtl
 usemtl walls_material
-f 57/57/57 58/58/58 59/59/59
+f 113/113/113 114/114/114 115/115/115
+f 113/113/113 115/115/115 116/116/116
 o wall_29
 mtllib output_walls.mtl
 usemtl walls_material
-f 57/57/57 59/59/59 60/60/60
-o wall_30
-mtllib output_walls.mtl
-usemtl walls_material
-f 61/61/61 62/62/62 63/63/63
-o wall_31
-mtllib output_walls.mtl
-usemtl walls_material
-f 61/61/61 63/63/63 64/64/64
-o wall_32
-mtllib output_walls.mtl
-usemtl walls_material
-f 65/65/65 66/66/66 67/67/67
-o wall_33
-mtllib output_walls.mtl
-usemtl walls_material
-f 65/65/65 67/67/67 68/68/68
-o wall_34
-mtllib output_walls.mtl
-usemtl walls_material
-f 69/69/69 70/70/70 71/71/71
-o wall_35
-mtllib output_walls.mtl
-usemtl walls_material
-f 69/69/69 71/71/71 72/72/72
-o wall_36
-mtllib output_walls.mtl
-usemtl walls_material
-f 73/73/73 74/74/74 75/75/75
-o wall_37
-mtllib output_walls.mtl
-usemtl walls_material
-f 73/73/73 75/75/75 76/76/76
-o wall_38
-mtllib output_walls.mtl
-usemtl walls_material
-f 77/77/77 78/78/78 79/79/79
-o wall_39
-mtllib output_walls.mtl
-usemtl walls_material
-f 77/77/77 79/79/79 80/80/80
-o wall_40
-mtllib output_walls.mtl
-usemtl walls_material
-f 81/81/81 82/82/82 83/83/83
-o wall_41
-mtllib output_walls.mtl
-usemtl walls_material
-f 81/81/81 83/83/83 84/84/84
-o wall_42
-mtllib output_walls.mtl
-usemtl walls_material
-f 85/85/85 86/86/86 87/87/87
-o wall_43
-mtllib output_walls.mtl
-usemtl walls_material
-f 85/85/85 87/87/87 88/88/88
-o wall_44
-mtllib output_walls.mtl
-usemtl walls_material
-f 89/89/89 90/90/90 91/91/91
-o wall_45
-mtllib output_walls.mtl
-usemtl walls_material
-f 89/89/89 91/91/91 92/92/92
-o wall_46
-mtllib output_walls.mtl
-usemtl walls_material
-f 93/93/93 94/94/94 95/95/95
-o wall_47
-mtllib output_walls.mtl
-usemtl walls_material
-f 93/93/93 95/95/95 96/96/96
-o wall_48
-mtllib output_walls.mtl
-usemtl walls_material
-f 97/97/97 98/98/98 99/99/99
-o wall_49
-mtllib output_walls.mtl
-usemtl walls_material
-f 97/97/97 99/99/99 100/100/100
-o wall_50
-mtllib output_walls.mtl
-usemtl walls_material
-f 101/101/101 102/102/102 103/103/103
-o wall_51
-mtllib output_walls.mtl
-usemtl walls_material
-f 101/101/101 103/103/103 104/104/104
-o wall_52
-mtllib output_walls.mtl
-usemtl walls_material
-f 105/105/105 106/106/106 107/107/107
-o wall_53
-mtllib output_walls.mtl
-usemtl walls_material
-f 105/105/105 107/107/107 108/108/108
-o wall_54
-mtllib output_walls.mtl
-usemtl walls_material
-f 109/109/109 110/110/110 111/111/111
-o wall_55
-mtllib output_walls.mtl
-usemtl walls_material
-f 109/109/109 111/111/111 112/112/112
-o wall_56
-mtllib output_walls.mtl
-usemtl walls_material
-f 113/113/113 114/114/114 115/115/115
-o wall_57
-mtllib output_walls.mtl
-usemtl walls_material
-f 113/113/113 115/115/115 116/116/116
-o wall_58
-mtllib output_walls.mtl
-usemtl walls_material
 f 117/117/117 118/118/118 119/119/119
-o wall_59
-mtllib output_walls.mtl
-usemtl walls_material
 f 117/117/117 119/119/119 120/120/120
