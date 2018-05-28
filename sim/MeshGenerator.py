@@ -586,7 +586,7 @@ class Generator:
         wall_vertices = []
         wall_indices = []
 
-        line_height = 10.
+        line_height = 20.
 
         # Add the walls
         for i in range(len(self.lines)):

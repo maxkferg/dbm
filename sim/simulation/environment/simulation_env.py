@@ -27,7 +27,7 @@ class SeekerSimEnv(gym.Env):
         self.actionRepeat = actionRepeat
         self.isEnableSelfCollision = isEnableSelfCollision
         self.observation = []
-        self.ballUniqueId = -1
+        self.targetUniqueId = -1
         self.robot = None               # The controlled robot
         self.buildingIds = []           # Each plane is given an id
         self.width = 320
@@ -74,7 +74,7 @@ class SeekerSimEnv(gym.Env):
         bally = 0       #dist * math.cos(ang)
         ballz = .5      #1
 
-        self.ballUniqueId = self.physics.loadURDF(os.path.join(self.urdfRoot, "target.urdf"), [ballx, bally, ballz])
+        self.targetUniqueId = self.physics.loadURDF(os.path.join(self.urdfRoot, "target.urdf"), [ballx, bally, ballz])
         self.physics.setGravity(0, 0, -10)
         self.robot = SimRobot.SimRobot(self.physics, urdfRootPath=self.urdfRoot, timeStep=self.timeStep)
         self.envStepCounter = 0
@@ -94,7 +94,7 @@ class SeekerSimEnv(gym.Env):
         # TODO:  Add 12 angle ray-collision test (verify details)
         self.observation = []  # self._racecar.getObservation()
         carpos, carorn = self.physics.getBasePositionAndOrientation(self.robot.racecarUniqueId)
-        ballpos, ballorn = self.physics.getBasePositionAndOrientation(self.ballUniqueId)
+        ballpos, ballorn = self.physics.getBasePositionAndOrientation(self.targetUniqueId)
         invCarPos, invCarOrn = self.physics.invertTransform(carpos, carorn)
         ballPosInCar, ballOrnInCar = self.physics.multiplyTransforms(invCarPos, invCarOrn, ballpos, ballorn)
 
@@ -129,7 +129,7 @@ class SeekerSimEnv(gym.Env):
     def step(self, action):
         if self.renders:
             basePos, orn = self.physics.getBasePositionAndOrientation(self.robot.racecarUniqueId)
-            # self.physics.resetDebugVisualizerCamera(1, 30, -40, basePos)
+            self.physics.resetDebugVisualizerCamera(1, 30, -40, basePos)
 
         if self.isDiscrete:
             fwd = [-1, -1, -1, 0, 0, 0, 1, 1, 1]
@@ -156,6 +156,7 @@ class SeekerSimEnv(gym.Env):
 
         return np.array(self.observation), reward, done, {}
 
+    # This function is not being called in the test environment
     def render(self, mode='human', close=False):
         if mode != "rgb_array":
             return np.array([])
@@ -187,7 +188,7 @@ class SeekerSimEnv(gym.Env):
         # Adapt the reward to:
         # 1 if target reached, else 0
         # -1 if wall collision
-        closestPoints = self.physics.getClosestPoints(self.robot.racecarUniqueId, self.ballUniqueId, 10000)
+        closestPoints = self.physics.getClosestPoints(self.robot.racecarUniqueId, self.targetUniqueId, 10000)
 
         numPt = len(closestPoints)
         reward = -1000
@@ -197,3 +198,4 @@ class SeekerSimEnv(gym.Env):
             reward = -closestPoints[0][8]
             # print(reward)
         return reward
+

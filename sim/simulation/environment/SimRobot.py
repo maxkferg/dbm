@@ -10,12 +10,13 @@ class SimRobot:
         self.urdfRootPath = urdfRootPath
         self.timeStep = timeStep
         self.physics = bullet_client
+        self.racecarUniqueId = -1
         self.reset()
 
     def reset(self):
         # TODO: Does the car need to be randomly positioned?
         car = self.physics.loadURDF(os.path.join(self.urdfRootPath, "pybullet/models/racecar_differential.urdf"),
-                                    [1.2, +1.5, .2], useFixedBase=False)
+                                    [1.1, +1.3, .2], useFixedBase=False)
         self.racecarUniqueId = car
         for wheel in range(self.physics.getNumJoints(car)):
             self.physics.setJointMotorControl2(car, wheel, self.physics.VELOCITY_CONTROL, targetVelocity=0, force=0)
