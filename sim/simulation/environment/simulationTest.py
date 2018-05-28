@@ -5,13 +5,13 @@ currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentfram
 parentdir = os.path.dirname(os.path.dirname(currentdir))
 os.sys.path.insert(0, parentdir)
 
-from simulation.environment.simulation_env import SimRobotEnv
+from simulation.environment.simulation_env import SeekerSimEnv
 
 isDiscrete = False
 
 
-def main():
-    environment = SimRobotEnv(renders=True, isDiscrete=isDiscrete)
+def run_test():
+    environment = SeekerSimEnv(renders=True, isDiscrete=isDiscrete)
     environment.reset()
 
     targetVelocitySlider = environment.physics.addUserDebugParameter("wheelVelocity", -1, 1, 0)
@@ -42,4 +42,4 @@ def main():
         #print("obs:", obs)
 
 if __name__ == "__main__":
-    main()
+    run_test()

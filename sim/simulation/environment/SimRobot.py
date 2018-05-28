@@ -13,6 +13,7 @@ class SimRobot:
         self.reset()
 
     def reset(self):
+        # TODO: Does the car need to be randomly positioned?
         car = self.physics.loadURDF(os.path.join(self.urdfRootPath, "pybullet/models/racecar_differential.urdf"),
                                     [1.2, +1.5, .2], useFixedBase=False)
         self.racecarUniqueId = car

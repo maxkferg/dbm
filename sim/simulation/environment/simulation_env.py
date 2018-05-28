@@ -14,7 +14,7 @@ RENDER_WIDTH = 960
 RENDER_HEIGHT = 720
 
 
-class SimRobotEnv(gym.Env):
+class SeekerSimEnv(gym.Env):
     metadata = {
         'render.modes': ['human', 'rgb_array'],
         'video.frames_per_second': 50
@@ -63,6 +63,8 @@ class SimRobotEnv(gym.Env):
         self.buildingIds = self.physics.loadSDF(os.path.join(self.urdfRoot, "output.sdf"))
 
         print("BUILDING IDS:", self.buildingIds)
+
+        # TODO: Determine location to spawn ball!
 
         #dist = 5 + 2. * random.random()
         #ang = 2. * 3.1415925438 * random.random()
