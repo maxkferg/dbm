@@ -52,6 +52,14 @@ def mul_quat(qA, qB):
     ]
 
 
+def scale_vec(scale, vec):
+    return [scale*vec[0], scale*vec[1], scale*vec[2]]
+
+
+def add_vec(vA, vB):
+    return [vA[0]+vB[0], vA[1]+vB[1], vA[2]+vB[2]]
+
+
 class SeekerSimEnv(gym.Env):
     metadata = {
         'render.modes': ['human', 'rgb_array'],
@@ -95,6 +103,16 @@ class SeekerSimEnv(gym.Env):
         self.observation_space = spaces.Box(-observation_high, observation_high)
         self.viewer = None
 
+        # Generate the sensor rays so we don't have to do it repeatedly
+        ray_count = 12          # 12 rays of 30 degrees each
+        ray_angle = 2. * np.pi / ray_count
+        print("ray_angle:", ray_angle)
+
+        self.rays = []
+        for i in range(ray_count):
+            q = make_quaternion([0, 0, 1], i*ray_angle)
+            self.rays.append(q)
+
     def reset(self):
         self.physics.resetSimulation()
         self.physics.setTimeStep(self.timeStep)
@@ -127,9 +145,6 @@ class SeekerSimEnv(gym.Env):
     def getExtendedObservation(self):
         self.observation = []
 
-        ray_count = 12          # 12 rays of 30 degrees each
-        ray_angle = 2. * np.pi / ray_count
-        print("ray_angle:", ray_angle)
         carpos, carorn = self.physics.getBasePositionAndOrientation(self.robot.racecarUniqueId)
         tarpos, tarorn = self.physics.getBasePositionAndOrientation(self.targetUniqueId)
         invCarPos, invCarOrn = self.physics.invertTransform(carpos, carorn)
@@ -137,20 +152,21 @@ class SeekerSimEnv(gym.Env):
 
         # Get the car's direction in Euler angles
         dir_vec = rotate_vector(carorn, [1, 0, 0])
-        print("Dir:", dir_vec)
+        print("Car Forward:", dir_vec)
 
-        # Test rotation by quaternion
-        for i in range(ray_count):
-            q = make_quaternion([0, 0, 1], i*ray_angle)
+        ray_len = 5
 
-            R = mul_quat(carorn, q)
+        # Rotate the ray vector and determine intersection
+        print("Start")
+        for ray in self.rays:
+            rot = mul_quat(carorn, ray)
+            dir_vec = rotate_vector(rot, [ray_len, 0, 0])
+            #print("Dir:", dir_vec)
+            intersection = self.physics.rayTest(carpos, add_vec(carpos, dir_vec))
+            if intersection[0][0] == self.targetUniqueId:
+                print("INTERSECTION:", rotate_vector(ray, [1, 0, 0]))
 
-            print("q:", i, q)
-            print("R:", i, R)
-            dir_vec = rotate_vector(q, [1, 0, 0])
-            print("Dir:", i, dir_vec)
-            dir_vec = rotate_vector(R, [1, 0, 0])
-            print("Dir:", i, dir_vec)
+        print("End")
 
         self.observation.extend([tarPosInCar[0], tarPosInCar[1]])
 
