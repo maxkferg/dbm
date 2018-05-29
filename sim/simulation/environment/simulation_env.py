@@ -150,26 +150,32 @@ class SeekerSimEnv(gym.Env):
         invCarPos, invCarOrn = self.physics.invertTransform(carpos, carorn)
         tarPosInCar, tarOrnInCar = self.physics.multiplyTransforms(invCarPos, invCarOrn, tarpos, tarorn)
 
+        self.observation.extend([tarPosInCar[0], tarPosInCar[1]])
+
         # Get the car's direction in Euler angles
-        dir_vec = rotate_vector(carorn, [1, 0, 0])
-        print("Car Forward:", dir_vec)
+        #dir_vec = rotate_vector(carorn, [1, 0, 0])
+        #print("Car Forward:", dir_vec)
+
+        # The LIDAR is assumed to be attached to the top (to avoid self-intersection)
+        lidar_pos = add_vec(carpos, [0, 0, .25])
 
         ray_len = 5
 
         # Rotate the ray vector and determine intersection
-        print("Start")
+        intersections = []
         for ray in self.rays:
             rot = mul_quat(carorn, ray)
-            dir_vec = rotate_vector(rot, [ray_len, 0, 0])
-            #print("Dir:", dir_vec)
-            intersection = self.physics.rayTest(carpos, add_vec(carpos, dir_vec))
+            dir_vec = rotate_vector(rot, [1, 0, 0])
+            start_pos = add_vec(lidar_pos, scale_vec(.1, dir_vec))
+            end_pos = add_vec(lidar_pos, scale_vec(ray_len, dir_vec))
+            intersection = self.physics.rayTest(start_pos, end_pos)
             if intersection[0][0] == self.targetUniqueId:
                 print("INTERSECTION:", rotate_vector(ray, [1, 0, 0]))
+                intersections.append(1)
+            else:
+                intersections.append(0)
 
-        print("End")
-
-        self.observation.extend([tarPosInCar[0], tarPosInCar[1]])
-
+        self.observation.extend(intersections)
         return self.observation
 
     #def getExtendedObservation(self):
