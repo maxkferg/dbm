@@ -43,6 +43,15 @@ def make_quaternion(axis, angle_in_radians):
     return [s*axis[0], s*axis[1], s*axis[2], cos_theta]
 
 
+def mul_quat(qA, qB):
+    return [
+        qA[3]*qB[0] + qA[0]*qB[3] + qA[1]*qB[2] - qA[2]*qB[2],
+        qA[3]*qB[1] + qA[1]*qB[3] + qA[2]*qB[0] - qA[0]*qB[2],
+        qA[3]*qB[2] + qA[2]*qB[3] + qA[0]*qB[1] - qA[1]*qB[0],
+        qA[3]*qB[3] - qA[0]*qB[0] - qA[1]*qB[1] - qA[2]*qB[2],
+    ]
+
+
 class SeekerSimEnv(gym.Env):
     metadata = {
         'render.modes': ['human', 'rgb_array'],
@@ -133,8 +142,14 @@ class SeekerSimEnv(gym.Env):
         # Test rotation by quaternion
         for i in range(ray_count):
             q = make_quaternion([0, 0, 1], i*ray_angle)
+
+            R = mul_quat(carorn, q)
+
             print("q:", i, q)
+            print("R:", i, R)
             dir_vec = rotate_vector(q, [1, 0, 0])
+            print("Dir:", i, dir_vec)
+            dir_vec = rotate_vector(R, [1, 0, 0])
             print("Dir:", i, dir_vec)
 
         self.observation.extend([tarPosInCar[0], tarPosInCar[1]])
