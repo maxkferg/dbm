@@ -152,15 +152,14 @@ class SeekerSimEnv(gym.Env):
 
         self.observation.extend([tarPosInCar[0], tarPosInCar[1]])
 
-        # Get the car's direction in Euler angles
         #dir_vec = rotate_vector(carorn, [1, 0, 0])
         #print("Car Forward:", dir_vec)
 
         # The LIDAR is assumed to be attached to the top (to avoid self-intersection)
         lidar_pos = add_vec(carpos, [0, 0, .25])
 
+        # The total length of the ray emanating from the LIDAR
         ray_len = 5
-
         # Rotate the ray vector and determine intersection
         intersections = []
         for ray in self.rays:
@@ -172,6 +171,8 @@ class SeekerSimEnv(gym.Env):
             if intersection[0][0] == self.targetUniqueId:
                 print("INTERSECTION:", rotate_vector(ray, [1, 0, 0]))
                 intersections.append(1)
+            elif intersection[0][0] == self.buildingIds[0]:
+                intersections.append(-1)
             else:
                 intersections.append(0)
 
@@ -217,6 +218,7 @@ class SeekerSimEnv(gym.Env):
     def step(self, action):
         if self.renders:
             basePos, orn = self.physics.getBasePositionAndOrientation(self.robot.racecarUniqueId)
+            # Comment out this line to prevent the camera moving with the car
             self.physics.resetDebugVisualizerCamera(1, 30, -40, basePos)
 
         if self.isDiscrete:
@@ -269,8 +271,11 @@ class SeekerSimEnv(gym.Env):
         rgb_array = rgb_array[:, :, :3]
         return rgb_array
 
+    # Note: The termination condition is specified in steps.  The step size is .001 and therefore the counter should be
+    # divided by 100 to compute the number of seconds
     def termination(self):
-        return self.envStepCounter > 1000
+        total_sim_duration = 20000  # 200 seconds for small model, 1000 for big model?
+        return self.envStepCounter > total_sim_duration
 
     def reward(self):
         # Adapt the reward to:
@@ -285,6 +290,7 @@ class SeekerSimEnv(gym.Env):
         #print(numPt)
         if (numPt > 0):
             reward = -closestPoints[0][8]       # (contactFlag, bodyUniqueIdA, bodyUniqueIdB, linkIndexA, linkIndexB, positionOnA, positionOnB, contactNormalOnB, contactDistance, normalForce)
-            print("Reward:", reward)
+        reward += sum(self.observation[1:])
+        print("Reward:", reward)
         return reward
 

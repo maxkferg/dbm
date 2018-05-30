@@ -429,7 +429,6 @@ class Generator:
         px = img.load()
 
         # Draw the floor first on the bottom
-
         for r in self.rects:
             colour = get_rand3(0, 256)
             for row in range(r[0][1], r[1][1]+1):
