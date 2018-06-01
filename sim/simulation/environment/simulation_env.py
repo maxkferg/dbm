@@ -8,6 +8,7 @@ import time
 import pybullet
 from . import SimRobot
 from . import bullet_client
+from .config import URDF_ROOT
 import random
 
 RENDER_WIDTH = 960
@@ -66,7 +67,7 @@ class SeekerSimEnv(gym.Env):
         'video.frames_per_second': 50
     }
 
-    def __init__(self, urdfRoot="/Users/otgaard/Development/dbm/sim/assets", actionRepeat=50,
+    def __init__(self, urdfRoot=URDF_ROOT, actionRepeat=50,
                  isEnableSelfCollision=True, isDiscrete=False, renders=False):
         self.timeStep = .01
         self.urdfRoot = urdfRoot
