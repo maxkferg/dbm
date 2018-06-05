@@ -89,11 +89,19 @@ class SeekerSimEnv(gym.Env):
             self.physics = bullet_client.BulletClient()
 
         self.seed()
-        observationDim = 2  # len(self.getExtendedObservation())
+        ray_count = 12                      # 12 rays of 30 degrees each
+        observationDim = 2                  # These are positional coordinates
+
+
         # print("observationDim")
         # print(observationDim)
         # observation_high = np.array([np.finfo(np.float32).max] * observationDim)
-        observation_high = np.ones(observationDim) * 1000  # np.inf
+
+        highs = [1000, 1000]
+        highs.extend([1]*ray_count)
+
+        observation_high = np.array(highs)      #snp.ones(observationDim) * 1000  # np.inf
+
         if isDiscrete:
             self.action_space = spaces.Discrete(9)
         else:
@@ -105,7 +113,6 @@ class SeekerSimEnv(gym.Env):
         self.viewer = None
 
         # Generate the sensor rays so we don't have to do it repeatedly
-        ray_count = 12          # 12 rays of 30 degrees each
         ray_angle = 2. * np.pi / ray_count
         print("ray_angle:", ray_angle)
 
@@ -170,10 +177,10 @@ class SeekerSimEnv(gym.Env):
             end_pos = add_vec(lidar_pos, scale_vec(ray_len, dir_vec))
             intersection = self.physics.rayTest(start_pos, end_pos)
             if intersection[0][0] == self.targetUniqueId:
-                print("INTERSECTION:", rotate_vector(ray, [1, 0, 0]))
+                #print("INTERSECTION:", rotate_vector(ray, [1, 0, 0]))
                 intersections.append(1)
             elif intersection[0][0] == self.buildingIds[0]:
-                intersections.append(-1)
+                intersections.append(-.25)     # This was causing the sim to avoid the walls, set to 0.25 for now, maybe distance computation?
             else:
                 intersections.append(0)
 
@@ -181,7 +188,6 @@ class SeekerSimEnv(gym.Env):
         return self.observation
 
     #def getExtendedObservation(self):
-    #    # TODO:  Add 12 angle ray-collision test (verify details)
     #    self.observation = []  # self._racecar.getObservation()
     #    carpos, carorn = self.physics.getBasePositionAndOrientation(self.robot.racecarUniqueId)
     #    ballpos, ballorn = self.physics.getBasePositionAndOrientation(self.targetUniqueId)
@@ -243,7 +249,7 @@ class SeekerSimEnv(gym.Env):
             self.envStepCounter += 1
         reward = self.reward()
         done = self.termination()
-        print("len=%r" % len(self.observation))
+        #print("len=%r" % len(self.observation))
 
         return np.array(self.observation), reward, done, {}
 
@@ -291,7 +297,6 @@ class SeekerSimEnv(gym.Env):
         #print(numPt)
         if (numPt > 0):
             reward = -closestPoints[0][8]       # (contactFlag, bodyUniqueIdA, bodyUniqueIdB, linkIndexA, linkIndexB, positionOnA, positionOnB, contactNormalOnB, contactDistance, normalForce)
-        reward += sum(self.observation[1:])
-        print("Reward:", reward)
+        reward += sum(self.observation[2:])
+        #print("Reward:", reward)
         return reward
-
