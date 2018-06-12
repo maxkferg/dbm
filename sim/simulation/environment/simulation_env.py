@@ -108,8 +108,8 @@ class SeekerSimEnv(gym.Env):
             action_dim = 2
             self._action_bound = 1
             action_high = np.array([self._action_bound] * action_dim)
-            self.action_space = spaces.Box(-action_high, action_high)
-        self.observation_space = spaces.Box(-observation_high, observation_high)
+            self.action_space = spaces.Box(-action_high, action_high, dtype=np.float32)
+        self.observation_space = spaces.Box(-observation_high, observation_high, dtype=np.float32)
         self.viewer = None
 
         # Generate the sensor rays so we don't have to do it repeatedly
@@ -249,6 +249,9 @@ class SeekerSimEnv(gym.Env):
             self.envStepCounter += 1
         reward = self.reward()
         done = self.termination()
+        if done:
+            pass
+            #print('--- reset ---')
         #print("len=%r" % len(self.observation))
 
         return np.array(self.observation), reward, done, {}
@@ -281,7 +284,8 @@ class SeekerSimEnv(gym.Env):
     # Note: The termination condition is specified in steps.  The step size is .001 and therefore the counter should be
     # divided by 100 to compute the number of seconds
     def termination(self):
-        total_sim_duration = 20000  # 200 seconds for small model, 1000 for big model?
+        # Want agent to make 20 actions. 50 physics steps per action. Total duration 1000
+        total_sim_duration = 1000  # 200 seconds for small model, 1000 for big model?
         return self.envStepCounter > total_sim_duration
 
     def reward(self):
