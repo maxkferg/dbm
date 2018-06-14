@@ -37,22 +37,24 @@ generator = Generator()
 
 generator.process_image(args.plan_file)
 
+# Default is for assets/building.png
+offset = [0, 0, 0]
+scale = 125.
+
+if args.plan_file == "assets/test2.png":
+    scale = 12.5
+elif args.plan_file == "assets/test3.png":
+    scale = 10.
+elif args.plan_file == "assets/test4.png":
+    scale = 5.0
+
 if args.render_image:
     generator.render_to_image(args.render_image)
 
 if args.export_object:
-    generator.export_to_object(args.export_object)
+    generator.export_to_object(args.export_object, scale)
 
 if args.export_sdf:
-    offset = [0, 0, 0]
-    scale = 125.
-
-    if args.plan_file == "assets/building.png":
-        offset[0] = 12.5
-    elif args.plan_file == "assets/test2.png":
-        offset[0] = 0
-        scale = 12.5
-
     generator.export_to_sdf(offset, scale, args.export_sdf)
 
 if args.run_test:

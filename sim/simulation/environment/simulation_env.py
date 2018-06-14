@@ -62,11 +62,12 @@ def add_vec(vA, vB):
     return [vA[0]+vB[0], vA[1]+vB[1], vA[2]+vB[2]]
 
 
-def load_floor_file(path, scale):
+def load_floor_file(path):
     file = open(path)
 
     vertices = []
     indices = []
+    scale = 1
 
     for line in file:
         if line[0:2] == 'v ':
@@ -76,10 +77,12 @@ def load_floor_file(path, scale):
             els = line.split(' ')
             indices.append(
                 [int(els[1].split('/')[0]) - 1, int(els[2].split('/')[0]) - 1, int(els[3].split('/')[0]) - 1])
+        elif line[0:7] == '#scale ':
+            scale = float(line.split(' ')[1])
 
     file.close()
 
-    return [vertices, indices]
+    return [vertices, indices, scale]
 
 
 def gen_start_position(radius, floor):
@@ -173,7 +176,7 @@ class SeekerSimEnv(gym.Env):
             self.rays.append(q)
 
         # Load the floor file so we don't have to repeatedly read it
-        self.floor = load_floor_file(self.urdfRoot + "/output_floors.obj", 12.5)
+        self.floor = load_floor_file(self.urdfRoot + "/output_floors.obj")
 
     def reset(self):
         self.physics.resetSimulation()
@@ -181,7 +184,7 @@ class SeekerSimEnv(gym.Env):
         self.buildingIds = self.physics.loadSDF(os.path.join(self.urdfRoot, "output.sdf"))
 
         target_pos = gen_start_position(.25, self.floor) + [.25]
-        car_pos = gen_start_position(.125, self.floor) + [.25]
+        car_pos = gen_start_position(.3, self.floor) + [.25]
         self.targetUniqueId = self.physics.loadURDF(os.path.join(self.urdfRoot, "target.urdf"), target_pos)
         self.robot = SimRobot.SimRobot(self.physics, urdfRootPath=self.urdfRoot, timeStep=self.timeStep, pos=car_pos)
 

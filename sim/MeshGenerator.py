@@ -565,7 +565,7 @@ class Generator:
         else:
             return path
 
-    def export_to_object(self, filename="assets/output.obj"):
+    def export_to_object(self, filename="assets/output.obj", obj_scale=1.0):
         """Export the plan file to an object file.  Call this only after the file has been processed."""
         # Normalise to the image size taking the longer axis as the dimension for the model
         dim = max(self.size[0], self.size[1])
@@ -716,6 +716,8 @@ class Generator:
         matfile = self.strip_filename(matpath)
 
         file = open(floors_filename, "w")
+        # Write the scale as a comment to the floors object output
+        file.write("#scale " + str(obj_scale) + "\n")
 
         for v in floor_vertices:
             file.write(vertex_string.format(v[0][0], v[0][1], v[0][2]))
