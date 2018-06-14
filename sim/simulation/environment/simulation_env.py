@@ -10,6 +10,7 @@ from . import SimRobot
 from . import bullet_client
 from .config import URDF_ROOT
 import random
+from random import random, randint
 
 RENDER_WIDTH = 960
 RENDER_HEIGHT = 720
@@ -61,6 +62,56 @@ def add_vec(vA, vB):
     return [vA[0]+vB[0], vA[1]+vB[1], vA[2]+vB[2]]
 
 
+def load_floor_file(path, scale):
+    file = open(path)
+
+    vertices = []
+    indices = []
+
+    for line in file:
+        if line[0:2] == 'v ':
+            els = line.split(' ')
+            vertices.append([scale*float(els[1]), scale*float(els[2]), scale*float(els[3].strip('\n'))])
+        elif line[0:2] == 'f ':
+            els = line.split(' ')
+            indices.append(
+                [int(els[1].split('/')[0]) - 1, int(els[2].split('/')[0]) - 1, int(els[3].split('/')[0]) - 1])
+
+    file.close()
+
+    return [vertices, indices]
+
+
+def gen_start_position(radius, floor):
+    def lerp(A, B, t):
+        return (1 - t)*A + t*B
+
+    # Select a random quad and generate a position on the quad with sufficient distance from the walls
+    quad_count = len(floor[1])/2
+
+    done = False
+    ret = []
+    while not done:
+        quad = randint(0, quad_count - 1)
+        qidx = 2 * quad
+        f0, f1, f2 = floor[1][qidx]
+        v0, v1, v2 = floor[0][f0], floor[0][f1], floor[0][f2]
+
+        for i in range(20):
+            u, v = random(), random()
+            x, y = lerp(v0[0], v1[0], u), lerp(v0[1], v2[1], v)
+
+            lb = [v0[0], v0[1]]
+            rt = [v1[0], v2[1]]
+
+            if lb[0] < x-radius and x+radius < rt[0] and lb[1] < y-radius and y+radius < rt[1]:
+                ret = [x, y]
+                done = True
+                break
+
+    return ret
+
+
 class SeekerSimEnv(gym.Env):
     metadata = {
         'render.modes': ['human', 'rgb_array'],
@@ -92,7 +143,6 @@ class SeekerSimEnv(gym.Env):
         ray_count = 12                      # 12 rays of 30 degrees each
         observationDim = 2                  # These are positional coordinates
 
-
         # print("observationDim")
         # print(observationDim)
         # observation_high = np.array([np.finfo(np.float32).max] * observationDim)
@@ -109,6 +159,7 @@ class SeekerSimEnv(gym.Env):
             self._action_bound = 1
             action_high = np.array([self._action_bound] * action_dim)
             self.action_space = spaces.Box(-action_high, action_high, dtype=np.float32)
+
         self.observation_space = spaces.Box(-observation_high, observation_high, dtype=np.float32)
         self.viewer = None
 
@@ -121,25 +172,25 @@ class SeekerSimEnv(gym.Env):
             q = make_quaternion([0, 0, 1], i*ray_angle)
             self.rays.append(q)
 
+        # Load the floor file so we don't have to repeatedly read it
+        self.floor = load_floor_file(self.urdfRoot + "/output_floors.obj", 12.5)
+
     def reset(self):
         self.physics.resetSimulation()
         self.physics.setTimeStep(self.timeStep)
         self.buildingIds = self.physics.loadSDF(os.path.join(self.urdfRoot, "output.sdf"))
 
-        # TODO: Determine location to spawn ball!
-        #dist = 5 + 2. * random.random()
-        #ang = 2. * 3.1415925438 * random.random()
+        target_pos = gen_start_position(.25, self.floor) + [.25]
+        car_pos = gen_start_position(.125, self.floor) + [.25]
+        self.targetUniqueId = self.physics.loadURDF(os.path.join(self.urdfRoot, "target.urdf"), target_pos)
+        self.robot = SimRobot.SimRobot(self.physics, urdfRootPath=self.urdfRoot, timeStep=self.timeStep, pos=car_pos)
 
-        ballx = 1       #dist * math.sin(ang)
-        bally = 0       #dist * math.cos(ang)
-        ballz = .5      #1
-
-        self.targetUniqueId = self.physics.loadURDF(os.path.join(self.urdfRoot, "target.urdf"), [ballx, bally, ballz])
         self.physics.setGravity(0, 0, -10)
-        self.robot = SimRobot.SimRobot(self.physics, urdfRootPath=self.urdfRoot, timeStep=self.timeStep)
         self.envStepCounter = 0
+
         for i in range(100):
             self.physics.stepSimulation()
+
         self.observation = self.getExtendedObservation()
         return np.array(self.observation)
 

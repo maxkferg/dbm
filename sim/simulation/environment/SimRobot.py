@@ -4,19 +4,21 @@ import os
 import numpy as np
 import copy
 import math
+from random import randint, random
+
 
 class SimRobot:
-    def __init__(self, bullet_client, urdfRootPath='assets/', timeStep=0.01):
+    def __init__(self, bullet_client, urdfRootPath='assets/', timeStep=0.01, pos=[0, 0, 0]):
         self.urdfRootPath = urdfRootPath
         self.timeStep = timeStep
         self.physics = bullet_client
         self.racecarUniqueId = -1
+        self.pos = pos
         self.reset()
 
     def reset(self):
-        # TODO: Does the car need to be randomly positioned?
         car = self.physics.loadURDF(os.path.join(self.urdfRootPath, "pybullet/models/racecar_differential.urdf"),
-                                    [1.1, +1.3, .2], useFixedBase=False)
+                                    self.pos, useFixedBase=False)
         self.racecarUniqueId = car
         for wheel in range(self.physics.getNumJoints(car)):
             self.physics.setJointMotorControl2(car, wheel, self.physics.VELOCITY_CONTROL, targetVelocity=0, force=0)

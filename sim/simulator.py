@@ -50,7 +50,7 @@ if args.export_sdf:
     if args.plan_file == "assets/building.png":
         offset[0] = 12.5
     elif args.plan_file == "assets/test2.png":
-        offset[0] = -1
+        offset[0] = 0
         scale = 12.5
 
     generator.export_to_sdf(offset, scale, args.export_sdf)

@@ -3,7 +3,7 @@
   <world name="building_model">
     <model name="walls">
       <static>1</static>
-      <pose frame="walls_frame">-1 0 0 0.0 0.0 0.0</pose>
+      <pose frame="walls_frame">0 0 0 0.0 0.0 0.0</pose>
       <link name="walls_link">
         <inertial>
           <mass>0</mass>
@@ -42,7 +42,7 @@
     </model>
     <model name="floors">
       <static>1</static>
-      <pose frame="floors_frame">-1 0 0 0.0 0.0 0.0</pose>
+      <pose frame="floors_frame">0 0 0 0.0 0.0 0.0</pose>
       <link name="floors_link">
         <inertial>
           <mass>0</mass>
