@@ -346,7 +346,7 @@ class SeekerSimEnv(gym.Env):
         rgb_array = rgb_array.reshape((RENDER_HEIGHT, RENDER_WIDTH, 4))
         return rgb_array
 
-    # Note: The termination condition is specified in steps.  The step size is .001 and therefore the counter should be
+    # Note: The termination condition is specified in steps.  The step size is .01 and therefore the counter should be
     # divided by 100 to compute the number of seconds
     def termination(self):
         # Want agent to make 20 actions. 50 physics steps per action. Total duration 1000

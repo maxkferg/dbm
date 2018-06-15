@@ -131,11 +131,11 @@ def main(_):
 FLAGS = None
 
 
-def setup_visualize_env():
+def setup_visualize_env(input_dir):
     global FLAGS
     FLAGS = tf.app.flags.FLAGS
     tf.app.flags.DEFINE_string(
-      'logdir', "logdir/seekersim",
+      'logdir', input_dir,
       'Directory to the checkpoint of a training run.')
     tf.app.flags.DEFINE_string(
       'outdir', "visualise",

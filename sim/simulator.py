@@ -32,7 +32,7 @@ parser.add_argument("--export-object", help="Analyse the plan-file and export it
 parser.add_argument("--export-sdf", help="Export the plan to an SDF file (OBJ + Physics)")
 parser.add_argument("--run-test", help="Run the test environment")
 parser.add_argument("--train", help="Train the agent")
-parser.add_argument("--visualise", help="Visualise the learned policy")
+parser.add_argument("--visualise", help="Pass logdir of saved training results and visualise the learned policy")
 args = parser.parse_args()
 
 generator = Generator()
@@ -74,6 +74,6 @@ if args.visualise:
              entry_point='simulation.environment:SeekerSimEnv',
              timestep_limit=1000,
              reward_threshold=.5)
-    setup_visualize_env()
+    setup_visualize_env(args.visualise)
 
 print("Done.")
