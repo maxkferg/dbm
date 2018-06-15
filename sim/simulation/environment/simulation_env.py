@@ -16,6 +16,10 @@ RENDER_WIDTH = 960
 RENDER_HEIGHT = 720
 
 
+def normalize(vec):
+    return np.multiply(vec, np.linalg.norm(vec));
+
+
 def rotate_vector(quat, vec):
     n1 = quat[0] * 2.
     n2 = quat[1] * 2.
@@ -133,6 +137,10 @@ class SeekerSimEnv(gym.Env):
         self.buildingIds = []           # Each plane is given an id
         self.width = 320                # The resolution of the sensor image (320x240)
         self.height = 240
+        self.cam_dist = 3.
+        self.cam_pitch = 0.
+        self.cam_yaw = 0.
+        self.cam_roll = 0.
 
         self.envStepCounter = 0
         self.renders = renders
@@ -177,6 +185,7 @@ class SeekerSimEnv(gym.Env):
 
         # Load the floor file so we don't have to repeatedly read it
         self.floor = load_floor_file(self.urdfRoot + "/output_floors.obj")
+        self.world_up = np.array([0, 0, 1])
 
     def reset(self):
         self.physics.resetSimulation()
@@ -316,23 +325,33 @@ class SeekerSimEnv(gym.Env):
             return np.array([])
 
         # Move the camera with the base_pos
-        base_pos, orn = self.physics.getBasePositionAndOrientation(self.robot.racecarUniqueId)
+        base_pos, carorn = self.physics.getBasePositionAndOrientation(self.robot.racecarUniqueId)
 
-        view_matrix = self.physics.computeViewMatrixFromYawPitchRoll(
+        #view_matrix = self.physics.computeViewMatrixFromYawPitchRoll(
+        #    cameraTargetPosition=base_pos,
+        #    distance=self.cam_dist,
+        #    yaw=self.cam_yaw,
+        #    pitch=self.cam_pitch,
+        #    roll=0,
+        #    upAxisIndex=2)
+
+        # Position the camera behind the car, slightly above
+        dir_vec = np.array(rotate_vector(carorn, [1, 0, 0]))
+        cam_eye = np.array(base_pos)
+        cam_up = normalize(self.world_up - np.multiply(np.dot(self.world_up, dir_vec), dir_vec))
+
+        view_matrix = self.physics.computeViewMatrix(
+            cameraEyePosition=cam_eye,
             cameraTargetPosition=base_pos,
-            distance=self.cam_dist,
-            yaw=self.cam_yaw,
-            pitch=self.cam_pitch,
-            roll=0,
-            upAxisIndex=2)
+            cameraUpVector=cam_up)
         proj_matrix = self.physics.computeProjectionMatrixFOV(
             fov=60, aspect=float(RENDER_WIDTH) / RENDER_HEIGHT,
             nearVal=0.1, farVal=100.0)
         (_, _, px, _, _) = self.physics.getCameraImage(
             width=RENDER_WIDTH, height=RENDER_HEIGHT, viewMatrix=view_matrix,
             projectionMatrix=proj_matrix, renderer=pybullet.ER_BULLET_HARDWARE_OPENGL)
-        rgb_array = np.array(px)
-        rgb_array = rgb_array[:, :, :3]
+        rgb_array = np.array(px, dtype=np.uint8)
+        rgb_array = rgb_array.reshape((RENDER_HEIGHT, RENDER_WIDTH, 4))
         return rgb_array
 
     # Note: The termination condition is specified in steps.  The step size is .001 and therefore the counter should be

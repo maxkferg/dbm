@@ -128,6 +128,33 @@ def main(_):
       FLAGS.checkpoint, FLAGS.env_processes)
 
 
+FLAGS = None
+
+
+def setup_visualize_env():
+    global FLAGS
+    FLAGS = tf.app.flags.FLAGS
+    tf.app.flags.DEFINE_string(
+      'logdir', "logdir/seekersim",
+      'Directory to the checkpoint of a training run.')
+    tf.app.flags.DEFINE_string(
+      'outdir', "visualise",
+      'Local directory for storing the monitoring outdir.')
+    tf.app.flags.DEFINE_string(
+      'checkpoint', None,
+      'Checkpoint name to load; defaults to most recent.')
+    tf.app.flags.DEFINE_integer(
+      'num_agents', 1,
+      'How many environments to step in parallel.')
+    tf.app.flags.DEFINE_integer(
+      'num_episodes', 5,
+      'Minimum number of episodes to render.')
+    tf.app.flags.DEFINE_boolean(
+      'env_processes', True,
+      'Step environments in separate processes to circumvent the GIL.')
+    tf.app.run(main)
+
+
 if __name__ == '__main__':
   FLAGS = tf.app.flags.FLAGS
   tf.app.flags.DEFINE_string(

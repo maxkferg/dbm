@@ -5,6 +5,7 @@ from MeshGenerator import Generator
 from simulation.environment.simulationTest import run_test
 from gym.envs.registration import registry, make, spec
 from simulation.agents.train_ppo import setup_training_env
+from simulation.agents.visualize_ppo import setup_visualize_env
 import tensorflow as tf
 
 
@@ -31,6 +32,7 @@ parser.add_argument("--export-object", help="Analyse the plan-file and export it
 parser.add_argument("--export-sdf", help="Export the plan to an SDF file (OBJ + Physics)")
 parser.add_argument("--run-test", help="Run the test environment")
 parser.add_argument("--train", help="Train the agent")
+parser.add_argument("--visualise", help="Visualise the learned policy")
 args = parser.parse_args()
 
 generator = Generator()
@@ -64,8 +66,14 @@ if args.train:
     register(id='SeekerSimEnv-v0',
              entry_point='simulation.environment:SeekerSimEnv',
              timestep_limit=1000,
-             reward_threshold=5.0)
+             reward_threshold=.5)
     setup_training_env()
 
+if args.visualise:
+    register(id='SeekerSimEnv-v0',
+             entry_point='simulation.environment:SeekerSimEnv',
+             timestep_limit=1000,
+             reward_threshold=.5)
+    setup_visualize_env()
 
 print("Done.")

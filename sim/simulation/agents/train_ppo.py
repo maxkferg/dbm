@@ -141,7 +141,9 @@ def main(_):
   for score in train(config, FLAGS.env_processes):
     tf.logging.info('Score {}.'.format(score))
 
+
 FLAGS = None
+
 
 def setup_training_env():
     global FLAGS
