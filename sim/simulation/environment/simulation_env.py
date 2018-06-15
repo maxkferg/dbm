@@ -327,17 +327,9 @@ class SeekerSimEnv(gym.Env):
         # Move the camera with the base_pos
         base_pos, carorn = self.physics.getBasePositionAndOrientation(self.robot.racecarUniqueId)
 
-        #view_matrix = self.physics.computeViewMatrixFromYawPitchRoll(
-        #    cameraTargetPosition=base_pos,
-        #    distance=self.cam_dist,
-        #    yaw=self.cam_yaw,
-        #    pitch=self.cam_pitch,
-        #    roll=0,
-        #    upAxisIndex=2)
-
         # Position the camera behind the car, slightly above
         dir_vec = np.array(rotate_vector(carorn, [1, 0, 0]))
-        cam_eye = np.array(base_pos)
+        cam_eye = np.subtract(np.array(base_pos), np.add(dir_vec, np.array([0, 0, -.5])))
         cam_up = normalize(self.world_up - np.multiply(np.dot(self.world_up, dir_vec), dir_vec))
 
         view_matrix = self.physics.computeViewMatrix(
