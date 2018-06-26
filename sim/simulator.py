@@ -2,7 +2,7 @@ import argparse
 import gym
 import datetime
 from MeshGenerator import Generator
-from simulation.environment.simulationTest import run_test
+from simulation.SeekerSimEnv.simulationTest import run_test
 from gym.envs.registration import registry, make, spec
 from simulation.agents.train_ppo import setup_training_env
 from simulation.agents.visualize_ppo import setup_visualize_env
@@ -30,7 +30,7 @@ parser.add_argument("plan_file")
 parser.add_argument("--render-image", help="Analyse the plan-file and export the walls and normals to an image file")
 parser.add_argument("--export-object", help="Analyse the plan-file and export it to an OBJ mesh file")
 parser.add_argument("--export-sdf", help="Export the plan to an SDF file (OBJ + Physics)")
-parser.add_argument("--run-test", help="Run the test environment")
+parser.add_argument("--run-test", help="Run the test SeekerSimEnv")
 parser.add_argument("--train", help="Train the agent")
 parser.add_argument("--visualise", help="Pass logdir of saved training results and visualise the learned policy")
 args = parser.parse_args()
@@ -64,14 +64,14 @@ if args.run_test:
 
 if args.train:
     register(id='SeekerSimEnv-v0',
-             entry_point='simulation.environment:SeekerSimEnv',
+             entry_point='simulation.SeekerSimEnv:SeekerSimEnv',
              timestep_limit=1000,
              reward_threshold=.5)
     setup_training_env()
 
 if args.visualise:
     register(id='SeekerSimEnv-v0',
-             entry_point='simulation.environment:SeekerSimEnv',
+             entry_point='simulation.SeekerSimEnv:SeekerSimEnv',
              timestep_limit=1000,
              reward_threshold=.5)
     setup_visualize_env(args.visualise)

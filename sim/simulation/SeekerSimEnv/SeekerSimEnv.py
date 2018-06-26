@@ -6,7 +6,7 @@ from gym.utils import seeding
 import numpy as np
 import time
 import pybullet
-from . import SimRobot
+from . import SeekerBot
 from . import bullet_client
 from .config import URDF_ROOT
 import random
@@ -195,7 +195,7 @@ class SeekerSimEnv(gym.Env):
         target_pos = gen_start_position(.25, self.floor) + [.25]
         car_pos = gen_start_position(.3, self.floor) + [.25]
         self.targetUniqueId = self.physics.loadURDF(os.path.join(self.urdfRoot, "target.urdf"), target_pos)
-        self.robot = SimRobot.SimRobot(self.physics, urdfRootPath=self.urdfRoot, timeStep=self.timeStep, pos=car_pos)
+        self.robot = SeekerBot.SimRobot(self.physics, urdfRootPath=self.urdfRoot, timeStep=self.timeStep, pos=car_pos)
 
         self.physics.setGravity(0, 0, -10)
         self.envStepCounter = 0
@@ -319,7 +319,7 @@ class SeekerSimEnv(gym.Env):
 
         return np.array(self.observation), reward, done, {}
 
-    # This function is not being called in the test environment
+    # This function is not being called in the test SeekerSimEnv
     def render(self, mode='human', close=False):
         if mode != "rgb_array":
             return np.array([])
