@@ -195,7 +195,7 @@ class SeekerSimEnv(gym.Env):
         target_pos = gen_start_position(.25, self.floor) + [.25]
         car_pos = gen_start_position(.3, self.floor) + [.25]
         self.targetUniqueId = self.physics.loadURDF(os.path.join(self.urdfRoot, "target.urdf"), target_pos)
-        self.robot = SeekerBot.SimRobot(self.physics, urdfRootPath=self.urdfRoot, timeStep=self.timeStep, pos=car_pos)
+        self.robot = SeekerBot.SeekerBot(self.physics, urdfRootPath=self.urdfRoot, timeStep=self.timeStep, pos=car_pos)
 
         self.physics.setGravity(0, 0, -10)
         self.envStepCounter = 0

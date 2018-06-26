@@ -7,7 +7,7 @@ import math
 from random import randint, random
 
 
-class SimRobot:
+class SeekerBot:
     def __init__(self, bullet_client, urdfRootPath='assets/', timeStep=0.01, pos=[0, 0, 0]):
         self.urdfRootPath = urdfRootPath
         self.timeStep = timeStep
