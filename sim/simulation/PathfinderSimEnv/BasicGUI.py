@@ -1,8 +1,8 @@
 import tkinter as tk
-from tkinter import Tk, Label, Canvas
+from tkinter import Tk, Canvas
 from PIL import ImageTk, Image
 from random import randint
-import time
+
 
 class DisplayWindow:
     def __init__(self, master):
@@ -27,6 +27,12 @@ class DisplayWindow:
             self.canvas.create_oval(250, 250, 270, 270, fill="blue")
         ]
 
+    def draw_sdf(self, floors_file, walls_file):
+        # We need to parse the OBJ file and display it in 2D
+        pass
+
+    
+
     def on_update(self):
         for i in range(len(self.balls)):
             delta_x = randint(-1, 1)
@@ -41,10 +47,14 @@ class DisplayWindow:
         self.img = ImageTk.PhotoImage(self.image)
 
         self.bk = self.canvas.create_image(event.width/2, event.height/2, image=self.img, anchor=tk.CENTER)
+        for i in range(len(self.balls)):
+            self.canvas.tag_raise(self.balls[i])
 
 
 root = Tk()
-my_gui = DisplayWindow(root)
+floors_file = '/Users/otgaard/Development/dbm/sim/assets/output_floors.obj'
+walls_file = '/Users/otgaard/Development/dbm/sim/assets/output_walls.obj'
+my_gui = DisplayWindow(root, floors_file, walls_file)
 
 my_gui.on_update()
 
