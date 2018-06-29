@@ -6,8 +6,8 @@
 import os
 
 class OBJParser:
-    def __init__(self, filename):
-        self.filename = filename
+    def __init__(self, obj_file):
+        self.filename = obj_file
         self.positions = None
         self.normals = None
         self.texcoords = None
@@ -56,6 +56,14 @@ class OBJParser:
                     int(els[2].split('/')[0]) - 1,
                     int(els[3].split('/')[0]) - 1
                 ])
+
+        file.close()
+
+        if self.get_positions_count() != self.get_normals_count() or self.get_positions_count() != self.get_texcoords_count():
+            print("OBJParser expects positions == normals == texcoords!")
+            return False
+        else:
+            return True
 
     def get_prim_count(self):
         return len(self.indices)

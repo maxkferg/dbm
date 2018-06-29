@@ -1,19 +1,21 @@
 import tkinter as tk
-from tkinter import Tk, Canvas
+from tkinter import Tk, Canvas, Button
 from PIL import ImageTk, Image
 from random import randint
-from ... import OBJParser
+import sys, os
 
+sys.path.insert(1, os.path.join(sys.path[0], '../..'))
+from OBJParser import OBJParser
 
 class DisplayWindow:
     def __init__(self, master, floor_file, walls_file):
         self.master = master
         master.title("PathfinderSim Display Window")
-        master.geometry("512x512")
+        master.geometry("512x600")
 
         # Parse the input files
-        self.floors = OBJParser.OBJParser(floor_file)
-        self.walls = OBJParser.OBJParser(walls_file)
+        self.floors = OBJParser(floor_file)
+        self.walls = OBJParser(walls_file)
         self.floors.parse()
         self.walls.parse()
 
@@ -28,15 +30,21 @@ class DisplayWindow:
         self.bk = self.canvas.create_image(256, 256, image=self.img, anchor=tk.CENTER)
         self.canvas.bind('<Configure>', self.on_resize)
 
-        self.ball_pos = [[randint(0,5), randint(0,5)], [randint(0,5), randint(0,5)]]
+        self.ball_pos = [[randint(0, 5), randint(0, 5)], [randint(0, 5), randint(0, 5)]]
         self.balls = [
             self.canvas.create_oval(250, 250, 270, 270, fill="red"),
             self.canvas.create_oval(250, 250, 270, 270, fill="blue")
         ]
 
+        self.button = Button(master, text="Quit", command=self.shutdown)
+        self.button.pack()
+
     def draw_map(self):
         # We need to draw the OBJ file in 2D
         pass
+
+    def shutdown(self):
+        self.master.destroy()
 
     def on_update(self):
         for i in range(len(self.balls)):
