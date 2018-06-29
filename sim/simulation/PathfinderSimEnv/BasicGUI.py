@@ -1,10 +1,36 @@
 import tkinter as tk
 from tkinter import Tk, Canvas, Button
-from random import randint
+from random import randint, random
+import math
+import struct
 import sys, os
 
 sys.path.insert(1, os.path.join(sys.path[0], '../..'))
 from OBJParser import OBJParser
+
+
+def rgb2hex(rgb):
+    return "#" + hex(rgb[0])[2:].rjust(2, '0') + hex(rgb[1])[2:].rjust(2, '0') + hex(rgb[2])[2:].rjust(2, '0')
+
+
+def rand_colour():
+    return rgb2hex((randint(0, 255), randint(0, 255), randint(0, 255)))
+
+
+def rotate(points, angle, centre):
+    angle = math.radians(angle)
+    cos_val = math.cos(angle)
+    sin_val = math.sin(angle)
+    cx, cy = centre
+    new_points = []
+    for x_old, y_old in points:
+        x_old -= cx
+        y_old -= cy
+        x_new = x_old * cos_val - y_old * sin_val
+        y_new = x_old * sin_val + y_old * cos_val
+        new_points.append([x_new + cx, y_new + cy])
+    return new_points
+
 
 class DisplayWindow:
     def __init__(self, master, floor_file, walls_file):
@@ -35,6 +61,8 @@ class DisplayWindow:
         self.button = Button(master, text="Quit", command=self.shutdown)
         self.button.pack()
 
+        self.car = self.draw_rot_rect([10, 10], [30, 10], rand_colour())
+
         self.draw_map()
 
     def clear_map(self):
@@ -53,11 +81,10 @@ class DisplayWindow:
             (self.walls_AABB[1][1] - self.walls_AABB[0][1])/2 + self.walls_AABB[0][1]
         ]
 
-        print(self.floors_AABB, self.walls_AABB)
-
         bias = [self.width/2 - centre[0]*self.width, self.height/2 - centre[1]*self.height]
         scale = [self.width, self.height]
-        scale_bias = lambda v, s, b: [v[0]*s[0]+b[0], v[1]*s[1]+b[1]]
+
+        def scale_bias(v, s, b): return [v[0]*s[0]+b[0], v[1]*s[1]+b[1]]
 
         for wall in range(int(self.walls.get_prim_count())):       # We actually want the quads and we know they're paired
             prim = self.walls.get_prim(wall)
@@ -87,7 +114,12 @@ class DisplayWindow:
 
             print(P0, P1)
 
-            self.canvas.create_rectangle(P0[0], P0[1], P1[0], P1[1], fill="green")
+            self.canvas.create_rectangle(P0[0], P0[1], P1[0], P1[1], fill=rand_colour())
+
+    def draw_rot_rect(self, A, B, colour):
+        verts = [A, [A[0], B[1]], [B[0], A[1]], B]
+        centre = [(B[0] - A[0])/2, (B[1] - A[1])/2]
+        return self.canvas.create_polygon(rotate(verts, (random()*math.pi*2), centre), fill=colour)
 
     def shutdown(self):
         self.master.destroy()
@@ -108,6 +140,10 @@ class DisplayWindow:
         self.height = self.canvas.winfo_height()
 
         self.clear_map()
+
+        self.canvas.tag_raise(self.balls[0])
+        self.canvas.tag_raise(self.balls[1])
+        self.canvas.tag_raise(self.car)
 
 root = Tk()
 floors_file = '/Users/otgaard/Development/dbm/sim/assets/output_floors.obj'
