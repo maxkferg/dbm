@@ -2,13 +2,20 @@ import tkinter as tk
 from tkinter import Tk, Canvas
 from PIL import ImageTk, Image
 from random import randint
+from ... import OBJParser
 
 
 class DisplayWindow:
-    def __init__(self, master):
+    def __init__(self, master, floor_file, walls_file):
         self.master = master
         master.title("PathfinderSim Display Window")
         master.geometry("512x512")
+
+        # Parse the input files
+        self.floors = OBJParser.OBJParser(floor_file)
+        self.walls = OBJParser.OBJParser(walls_file)
+        self.floors.parse()
+        self.walls.parse()
 
         self.canvas = Canvas(master, width=512, height=512)
         self.canvas.pack(fill="both", expand=True)
@@ -27,11 +34,9 @@ class DisplayWindow:
             self.canvas.create_oval(250, 250, 270, 270, fill="blue")
         ]
 
-    def draw_sdf(self, floors_file, walls_file):
-        # We need to parse the OBJ file and display it in 2D
+    def draw_map(self):
+        # We need to draw the OBJ file in 2D
         pass
-
-    
 
     def on_update(self):
         for i in range(len(self.balls)):
