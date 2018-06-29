@@ -18,6 +18,7 @@ class DisplayWindow:
         self.floors.parse()
         self.walls.parse()
         self.walls_AABB = self.walls.model_AABB()       # cache this
+        self.floors_AABB = self.floors.model_AABB()     # cached
 
         self.canvas = Canvas(master, width=512, height=512)
         self.canvas.pack(fill="both", expand=True)
@@ -47,13 +48,14 @@ class DisplayWindow:
 
     def draw_map(self):
         # We need to draw the OBJ file in 2D
+        centre = [
+            (self.walls_AABB[1][0] - self.walls_AABB[0][0])/2 + self.walls_AABB[0][0],
+            (self.walls_AABB[1][1] - self.walls_AABB[0][1])/2 + self.walls_AABB[0][1]
+        ]
 
-        centre = [(self.walls_AABB[1][0] - self.walls_AABB[0][0])/2, (self.walls_AABB[1][1] - self.walls_AABB[0][1])/2]
+        print(self.floors_AABB, self.walls_AABB)
 
-        print("Centre:", centre)
-        print("AABB:", self.walls_AABB)
-
-        bias = [self.width/2, self.height/2]
+        bias = [self.width/2 - centre[0]*self.width, self.height/2 - centre[1]*self.height]
         scale = [self.width, self.height]
         scale_bias = lambda v, s, b: [v[0]*s[0]+b[0], v[1]*s[1]+b[1]]
 
@@ -71,6 +73,21 @@ class DisplayWindow:
             print(P0, P1)
 
             self.canvas.create_line(P0[0], P0[1], P1[0], P1[1], fill="red")
+
+        for floor in range(int(self.floors.get_prim_count())):
+            prim = self.floors.get_prim(floor)
+
+            if len(prim) != 3: continue
+
+            A = self.floors.get_position(prim[0])[:-1]
+            B = self.floors.get_position(prim[2])[:-1]
+
+            P0 = scale_bias(A, scale, bias)
+            P1 = scale_bias(B, scale, bias)
+
+            print(P0, P1)
+
+            self.canvas.create_rectangle(P0[0], P0[1], P1[0], P1[1], fill="green")
 
     def shutdown(self):
         self.master.destroy()
