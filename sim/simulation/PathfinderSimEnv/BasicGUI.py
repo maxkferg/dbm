@@ -1,6 +1,5 @@
 import tkinter as tk
 from tkinter import Tk, Canvas, Button
-from PIL import ImageTk, Image
 from random import randint
 import sys, os
 
@@ -13,25 +12,18 @@ class DisplayWindow:
         master.title("PathfinderSim Display Window")
         master.geometry("512x600")
 
-        self.width = 512
-        self.height = 512
-
         # Parse the input files
         self.floors = OBJParser(floor_file)
         self.walls = OBJParser(walls_file)
         self.floors.parse()
         self.walls.parse()
+        self.walls_AABB = self.walls.model_AABB()       # cache this
 
-        self.canvas = Canvas(master, width=self.width, height=self.height)
+        self.canvas = Canvas(master, width=512, height=512)
         self.canvas.pack(fill="both", expand=True)
-
-        # Resize to fit the window
-        #self.original = Image.open('/Users/otgaard/Development/dbm/sim/assets/test2.png')
-        #self.image = self.original.resize((512, 512))
-        #self.img = ImageTk.PhotoImage(image=self.image)
-
-        #self.bk = self.canvas.create_image(256, 256, image=self.img, anchor=tk.CENTER)
         self.canvas.bind('<Configure>', self.on_resize)
+        self.width = self.canvas.winfo_width()
+        self.height = self.canvas.winfo_height()
 
         self.ball_pos = [[randint(0, 5), randint(0, 5)], [randint(0, 5), randint(0, 5)]]
         self.balls = [
@@ -46,18 +38,28 @@ class DisplayWindow:
 
     def clear_map(self):
         self.canvas.delete("all")
+        self.ball_pos = [[randint(0, 5), randint(0, 5)], [randint(0, 5), randint(0, 5)]]
+        self.balls = [
+            self.canvas.create_oval(250, 250, 270, 270, fill="red"),
+            self.canvas.create_oval(250, 250, 270, 270, fill="blue")
+        ]
+        self.draw_map()
 
     def draw_map(self):
         # We need to draw the OBJ file in 2D
+
+        centre = [(self.walls_AABB[1][0] - self.walls_AABB[0][0])/2, (self.walls_AABB[1][1] - self.walls_AABB[0][1])/2]
+
+        print("Centre:", centre)
+        print("AABB:", self.walls_AABB)
+
         bias = [self.width/2, self.height/2]
         scale = [self.width, self.height]
         scale_bias = lambda v, s, b: [v[0]*s[0]+b[0], v[1]*s[1]+b[1]]
 
-        print("Walls", int(self.walls.get_prim_count()/2))
-
-        for wall in range(int(self.walls.get_prim_count()/2)):       # We actually want the quads and we know they're paired
+        for wall in range(int(self.walls.get_prim_count())):       # We actually want the quads and we know they're paired
             prim = self.walls.get_prim(wall)
-            print(prim)
+
             if len(prim) != 3: continue
 
             A = self.walls.get_position(prim[0])[:-1]
@@ -88,13 +90,7 @@ class DisplayWindow:
         self.width = self.canvas.winfo_width()
         self.height = self.canvas.winfo_height()
 
-        #self.image = self.original.resize((self.width, self.height))
-        #self.img = ImageTk.PhotoImage(self.image)
-        #self.bk = self.canvas.create_image(self.width/2, self.height/2, image=self.img, anchor=tk.CENTER)
-
-        for i in range(len(self.balls)):
-            self.canvas.tag_raise(self.balls[i])
-
+        self.clear_map()
 
 root = Tk()
 floors_file = '/Users/otgaard/Development/dbm/sim/assets/output_floors.obj'

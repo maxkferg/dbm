@@ -92,6 +92,20 @@ class OBJParser:
     def get_texcoord(self, idx):
         return self.texcoords[idx] if len(self.texcoords) > idx else []
 
+    def model_AABB(self):
+        min = [100000000, 100000000, 100000000]
+        max = [-min[0], -min[0], -min[0]]
+
+        for p in range(len(self.positions)):
+            pos = self.positions[p]
+            for e in range(len(pos)):
+                if min[e] > pos[e]:
+                    min[e] = pos[e]
+                if max[e] < pos[e]:
+                    max[e] = pos[e]
+
+        return [min, max]
+
 
 if __name__ == '__main__':
     filename = '/Users/otgaard/Development/dbm/sim/assets/output_floors.obj'
