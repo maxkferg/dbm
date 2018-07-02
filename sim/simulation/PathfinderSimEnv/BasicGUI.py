@@ -44,9 +44,14 @@ def sub(A, B):
     return [A[0] - B[0], A[1] - B[1]]
 
 
+def scale_bias(v, s, b):
+    return [v[0] * s[0] + b[0], v[1] * s[1] + b[1]]
+
+
 CAR_BODY = [[-20, -12.5], [20, 12.5]]
 CAR_FRONT = [[-5, -10.], [5, 10]]
-FRONT_TRANS = [7, -14.5]                       # The relative translation of the front to the body (tkinter doesn't have a scene graph)
+FRONT_TRANS = [10, 0]                       # The relative translation of the front to the body (tkinter doesn't have a scene graph)
+RAY_LINE = [100, 0]                         # A line of 100 pixels long
 
 
 class DisplayWindow:
@@ -70,7 +75,8 @@ class DisplayWindow:
         self.height = self.canvas.winfo_height()
 
         self.car_pos = [100, 100]
-        self.car_orn = math.pi/3
+        self.car_orn = 0
+        self.car_rays = 12
 
         self.ball_pos = [[randint(0, 5), randint(0, 5)], [randint(0, 5), randint(0, 5)]]
         self.balls = [
@@ -105,8 +111,6 @@ class DisplayWindow:
         bias = [self.width/2 - centre[0]*self.width, self.height/2 - centre[1]*self.height]
         scale = [self.width, self.height]
 
-        def scale_bias(v, s, b): return [v[0]*s[0]+b[0], v[1]*s[1]+b[1]]
-
         for floor in range(int(self.floors.get_prim_count())):
             prim = self.floors.get_prim(floor)
 
@@ -139,29 +143,41 @@ class DisplayWindow:
         return verts, centre
 
     def translate_vertices(self, verts, trans):
-        verts = list(map(lambda x: [x[0]+trans[0], x[1]+trans[1]], verts))
+        return list(map(lambda x: [x[0]+trans[0], x[1]+trans[1]], verts))
+
+    def flatten(self, verts):
         return [item for sublist in verts for item in sublist]
 
     def update_object_coords(self, obj, verts):
-        self.canvas.coords(obj, verts)
+        self.canvas.coords(obj, self.flatten(verts))
 
-    def rotate_polygon(self, AABB, rotation):
-        verts, centre = self.AABB_to_vertices(AABB)
-        return rotate(verts, rotation, centre)
+    def rotate_polygon(self, AABB, rotation, centre):
+        verts, centre2 = self.AABB_to_vertices(AABB)
+        return rotate(verts, rotation, centre2 if not centre else centre)
 
     def build_car(self, position, rays):
         """Builds the mesh for the car and the view triangles for intersecting mesh geometry"""
         car = list()            # Two rectangles and rays - 1 triangles
+        # car[0]
         car.append(self.canvas.create_polygon(self.AABB_to_vertices(CAR_BODY), fill="blue"))
+        # car[1]
         car.append(self.canvas.create_polygon(self.AABB_to_vertices(CAR_FRONT), fill="red"))
 
-        verts = self.translate_vertices(self.rotate_polygon(CAR_BODY, self.car_orn), position)
+        verts = self.translate_vertices(self.rotate_polygon(CAR_BODY, self.car_orn, [0, 0]), position)
         self.update_object_coords(car[0], verts)
 
         # We have to rotate the local transformation of the front-AABB
-        offset = add(position, rot_vec(FRONT_TRANS, self.car_orn))
-        verts = self.translate_vertices(self.rotate_polygon(CAR_FRONT, self.car_orn), offset)
+        verts = self.translate_vertices(self.rotate_polygon(CAR_FRONT, self.car_orn, [0, 0]), position)
+        rot = rot_vec(FRONT_TRANS, self.car_orn)
+        verts = list(map(lambda x: add(x, rot), verts))
         self.update_object_coords(car[1], verts)
+
+        #car[2] to car[rays + 2]
+        theta = 2.*math.pi/rays
+        for i in range(rays):
+            vec = rot_vec(RAY_LINE, i*theta)
+            verts = self.flatten([self.car_pos, add(self.car_pos, vec)])
+            car.append(self.canvas.create_line(*verts, fill="black"))
 
         return car
 
@@ -180,15 +196,16 @@ class DisplayWindow:
             delta_y = randint(-1, 1)
             self.canvas.move(self.balls[i], delta_x, delta_y)
 
-        verts = self.translate_vertices(self.rotate_polygon(CAR_BODY, self.car_orn), self.car_pos)
+        verts = self.translate_vertices(self.rotate_polygon(CAR_BODY, self.car_orn, [0, 0]), self.car_pos)
         self.update_object_coords(self.car[0], verts)
 
         # We have to rotate the local transformation of the front-AABB
-        offset = add(self.car_pos, rot_vec(FRONT_TRANS, self.car_orn))
-        verts = self.translate_vertices(self.rotate_polygon(CAR_FRONT, self.car_orn), offset)
+        verts = self.translate_vertices(self.rotate_polygon(CAR_FRONT, self.car_orn, [0, 0]), self.car_pos)
+        rot = rot_vec(FRONT_TRANS, self.car_orn)
+        verts = list(map(lambda x: add(x, rot), verts))
         self.update_object_coords(self.car[1], verts)
 
-        self.car_orn += 0.01
+        self.car_orn += .05
 
         self.canvas.after(50, self.on_update)
 
