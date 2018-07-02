@@ -30,7 +30,23 @@ def rotate(points, angle, centre):
     return new_points
 
 
-CAR_BODY = [[-20, -10], [20, 10]]
+def rot_vec(vec, rot):
+    st = math.sin(rot)
+    ct = math.cos(rot)
+    return [vec[0] * ct - vec[1] * st, vec[0] * st + vec[1] * ct]
+
+
+def add(A, B):
+    return [A[0] + B[0], A[1] + B[1]]
+
+
+def sub(A, B):
+    return [A[0] - B[0], A[1] - B[1]]
+
+
+CAR_BODY = [[-20, -12.5], [20, 12.5]]
+CAR_FRONT = [[-5, -10.], [5, 10]]
+FRONT_TRANS = [7, -14.5]                       # The relative translation of the front to the body (tkinter doesn't have a scene graph)
 
 
 class DisplayWindow:
@@ -53,6 +69,9 @@ class DisplayWindow:
         self.width = self.canvas.winfo_width()
         self.height = self.canvas.winfo_height()
 
+        self.car_pos = [100, 100]
+        self.car_orn = math.pi/3
+
         self.ball_pos = [[randint(0, 5), randint(0, 5)], [randint(0, 5), randint(0, 5)]]
         self.balls = [
             self.canvas.create_oval(250, 250, 270, 270, fill="red"),
@@ -64,7 +83,7 @@ class DisplayWindow:
 
         self.draw_map()
 
-        self.car = self.build_car([100, 100], 12)
+        self.car = self.build_car(self.car_pos, 12)
 
     def clear_map(self):
         self.canvas.delete("all")
@@ -74,7 +93,7 @@ class DisplayWindow:
             self.canvas.create_oval(250, 250, 270, 270, fill="blue")
         ]
         self.draw_map()
-        self.car = self.build_car([100, 100], 12)
+        self.car = self.build_car(self.car_pos, 12)
 
     def draw_map(self):
         # We need to draw the OBJ file in 2D
@@ -120,12 +139,13 @@ class DisplayWindow:
         return verts, centre
 
     def translate_vertices(self, verts, trans):
-        return list(map(lambda x: [x[0]+trans[0], x[1]+trans[1]], verts))
+        verts = list(map(lambda x: [x[0]+trans[0], x[1]+trans[1]], verts))
+        return [item for sublist in verts for item in sublist]
 
     def update_object_coords(self, obj, verts):
         self.canvas.coords(obj, verts)
 
-    def rotate_polygon(self, obj, AABB, rotation):
+    def rotate_polygon(self, AABB, rotation):
         verts, centre = self.AABB_to_vertices(AABB)
         return rotate(verts, rotation, centre)
 
@@ -133,17 +153,23 @@ class DisplayWindow:
         """Builds the mesh for the car and the view triangles for intersecting mesh geometry"""
         car = list()            # Two rectangles and rays - 1 triangles
         car.append(self.canvas.create_polygon(self.AABB_to_vertices(CAR_BODY), fill="blue"))
-        verts = self.translate_vertices(self.rotate_polygon(car[0], CAR_BODY, 0.), [200, 200])
-        verts = [item for sublist in verts for item in sublist]
-        print(list(verts))
+        car.append(self.canvas.create_polygon(self.AABB_to_vertices(CAR_FRONT), fill="red"))
+
+        verts = self.translate_vertices(self.rotate_polygon(CAR_BODY, self.car_orn), position)
         self.update_object_coords(car[0], verts)
+
+        # We have to rotate the local transformation of the front-AABB
+        offset = add(position, rot_vec(FRONT_TRANS, self.car_orn))
+        verts = self.translate_vertices(self.rotate_polygon(CAR_FRONT, self.car_orn), offset)
+        self.update_object_coords(car[1], verts)
+
         return car
 
     # Draw the car along with its view intersection triangles
     def draw_car(self, position):
         """The draw_car method continually recreates the polygons used to display the car and view area because
         no other form of rotation is available in tkinter canvas"""
-
+        pass
 
     def shutdown(self):
         self.master.destroy()
@@ -153,6 +179,16 @@ class DisplayWindow:
             delta_x = randint(-1, 1)
             delta_y = randint(-1, 1)
             self.canvas.move(self.balls[i], delta_x, delta_y)
+
+        verts = self.translate_vertices(self.rotate_polygon(CAR_BODY, self.car_orn), self.car_pos)
+        self.update_object_coords(self.car[0], verts)
+
+        # We have to rotate the local transformation of the front-AABB
+        offset = add(self.car_pos, rot_vec(FRONT_TRANS, self.car_orn))
+        verts = self.translate_vertices(self.rotate_polygon(CAR_FRONT, self.car_orn), offset)
+        self.update_object_coords(self.car[1], verts)
+
+        self.car_orn += 0.01
 
         self.canvas.after(50, self.on_update)
 
