@@ -30,6 +30,9 @@ def rotate(points, angle, centre):
     return new_points
 
 
+CAR_BODY = [[-20, -10], [20, 10]]
+
+
 class DisplayWindow:
     def __init__(self, master, floor_file, walls_file):
         self.master = master
@@ -61,7 +64,7 @@ class DisplayWindow:
 
         self.draw_map()
 
-        self.car = self.draw_rot_rect([10, 10], [100, 40], rand_colour())
+        self.car = self.build_car([100, 100], 12)
 
     def clear_map(self):
         self.canvas.delete("all")
@@ -71,7 +74,7 @@ class DisplayWindow:
             self.canvas.create_oval(250, 250, 270, 270, fill="blue")
         ]
         self.draw_map()
-        self.car = self.draw_rot_rect([10, 10], [100, 40], rand_colour())
+        self.car = self.build_car([100, 100], 12)
 
     def draw_map(self):
         # We need to draw the OBJ file in 2D
@@ -96,8 +99,6 @@ class DisplayWindow:
             P0 = scale_bias(A, scale, bias)
             P1 = scale_bias(B, scale, bias)
 
-            print(P0, P1)
-
             self.canvas.create_rectangle(P0[0], P0[1], P1[0], P1[1], fill=rand_colour())
 
         for wall in range(int(self.walls.get_prim_count())):
@@ -111,18 +112,38 @@ class DisplayWindow:
             P0 = scale_bias(A, scale, bias)
             P1 = scale_bias(B, scale, bias)
 
-            print(P0, P1)
-
             self.canvas.create_line(P0[0], P0[1], P1[0], P1[1], fill="red", width=2)
 
-    def draw_rot_rect(self, A, B, colour):
-        verts = [A, [B[0], A[1]], B, [A[0], B[1]]]
-        centre = [(B[0] - A[0])/2, (B[1] - A[1])/2]
-        verts2 = rotate(verts, (random()*math.pi*2), centre)
+    def AABB_to_vertices(self, AABB):
+        verts = [AABB[0], [AABB[1][0], AABB[0][1]], AABB[1], [AABB[0][0], AABB[1][1]]]
+        centre = [(AABB[1][0] - AABB[0][0])/2, (AABB[1][1] - AABB[0][1])/2]
+        return verts, centre
 
-        print("verts:", verts2, "centre:", centre, "colour:", colour)
+    def translate_vertices(self, verts, trans):
+        return list(map(lambda x: [x[0]+trans[0], x[1]+trans[1]], verts))
 
-        return self.canvas.create_polygon(verts2, fill="blue")
+    def update_object_coords(self, obj, verts):
+        self.canvas.coords(obj, verts)
+
+    def rotate_polygon(self, obj, AABB, rotation):
+        verts, centre = self.AABB_to_vertices(AABB)
+        return rotate(verts, rotation, centre)
+
+    def build_car(self, position, rays):
+        """Builds the mesh for the car and the view triangles for intersecting mesh geometry"""
+        car = list()            # Two rectangles and rays - 1 triangles
+        car.append(self.canvas.create_polygon(self.AABB_to_vertices(CAR_BODY), fill="blue"))
+        verts = self.translate_vertices(self.rotate_polygon(car[0], CAR_BODY, 0.), [200, 200])
+        verts = [item for sublist in verts for item in sublist]
+        print(list(verts))
+        self.update_object_coords(car[0], verts)
+        return car
+
+    # Draw the car along with its view intersection triangles
+    def draw_car(self, position):
+        """The draw_car method continually recreates the polygons used to display the car and view area because
+        no other form of rotation is available in tkinter canvas"""
+
 
     def shutdown(self):
         self.master.destroy()
