@@ -2,7 +2,6 @@ import tkinter as tk
 from tkinter import Tk, Canvas, Button
 from random import randint, random
 import math
-import struct
 import sys, os
 
 sys.path.insert(1, os.path.join(sys.path[0], '../..'))
@@ -18,7 +17,6 @@ def rand_colour():
 
 
 def rotate(points, angle, centre):
-    angle = math.radians(angle)
     cos_val = math.cos(angle)
     sin_val = math.sin(angle)
     cx, cy = centre
@@ -61,9 +59,9 @@ class DisplayWindow:
         self.button = Button(master, text="Quit", command=self.shutdown)
         self.button.pack()
 
-        self.car = self.draw_rot_rect([10, 10], [30, 10], rand_colour())
-
         self.draw_map()
+
+        self.car = self.draw_rot_rect([10, 10], [100, 40], rand_colour())
 
     def clear_map(self):
         self.canvas.delete("all")
@@ -73,6 +71,7 @@ class DisplayWindow:
             self.canvas.create_oval(250, 250, 270, 270, fill="blue")
         ]
         self.draw_map()
+        self.car = self.draw_rot_rect([10, 10], [100, 40], rand_colour())
 
     def draw_map(self):
         # We need to draw the OBJ file in 2D
@@ -85,21 +84,6 @@ class DisplayWindow:
         scale = [self.width, self.height]
 
         def scale_bias(v, s, b): return [v[0]*s[0]+b[0], v[1]*s[1]+b[1]]
-
-        for wall in range(int(self.walls.get_prim_count())):       # We actually want the quads and we know they're paired
-            prim = self.walls.get_prim(wall)
-
-            if len(prim) != 3: continue
-
-            A = self.walls.get_position(prim[0])[:-1]
-            B = self.walls.get_position(prim[1])[:-1]
-
-            P0 = scale_bias(A, scale, bias)
-            P1 = scale_bias(B, scale, bias)
-
-            print(P0, P1)
-
-            self.canvas.create_line(P0[0], P0[1], P1[0], P1[1], fill="red")
 
         for floor in range(int(self.floors.get_prim_count())):
             prim = self.floors.get_prim(floor)
@@ -116,10 +100,29 @@ class DisplayWindow:
 
             self.canvas.create_rectangle(P0[0], P0[1], P1[0], P1[1], fill=rand_colour())
 
+        for wall in range(int(self.walls.get_prim_count())):
+            prim = self.walls.get_prim(wall)
+
+            if len(prim) != 3: continue
+
+            A = self.walls.get_position(prim[0])[:-1]
+            B = self.walls.get_position(prim[1])[:-1]
+
+            P0 = scale_bias(A, scale, bias)
+            P1 = scale_bias(B, scale, bias)
+
+            print(P0, P1)
+
+            self.canvas.create_line(P0[0], P0[1], P1[0], P1[1], fill="red", width=2)
+
     def draw_rot_rect(self, A, B, colour):
-        verts = [A, [A[0], B[1]], [B[0], A[1]], B]
+        verts = [A, [B[0], A[1]], B, [A[0], B[1]]]
         centre = [(B[0] - A[0])/2, (B[1] - A[1])/2]
-        return self.canvas.create_polygon(rotate(verts, (random()*math.pi*2), centre), fill=colour)
+        verts2 = rotate(verts, (random()*math.pi*2), centre)
+
+        print("verts:", verts2, "centre:", centre, "colour:", colour)
+
+        return self.canvas.create_polygon(verts2, fill="blue")
 
     def shutdown(self):
         self.master.destroy()
