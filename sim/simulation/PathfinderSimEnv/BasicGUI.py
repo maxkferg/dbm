@@ -3,6 +3,9 @@ from tkinter import Tk, Canvas, Button
 from random import randint, random
 import math
 import sys, os
+from queue import Queue
+from threading import Thread
+from time import sleep
 
 sys.path.insert(1, os.path.join(sys.path[0], '../..'))
 from OBJParser import OBJParser
@@ -15,6 +18,13 @@ def rgb2hex(rgb):
 def rand_colour():
     return rgb2hex((randint(0, 255), randint(0, 255), randint(0, 255)))
 
+
+def rand_pos(min=(0, 0), max=(1, 1)):
+    return [min[0] + (max[0] - min[0])*random(), min[1] + (max[1] - min[1])*random()]
+
+
+def rand_orn(min=0, max=1):
+    return min + (max - min)*random()
 
 def rotate(points, angle, centre):
     cos_val = math.cos(angle)
@@ -79,12 +89,10 @@ class DisplayWindow:
         self.car_rays = 12
         self.ray_dtheta = 2.*math.pi/self.car_rays
 
-
-        self.ball_pos = [[randint(0, 5), randint(0, 5)], [randint(0, 5), randint(0, 5)]]
-        self.balls = [
-            self.canvas.create_oval(250, 250, 270, 270, fill="red"),
-            self.canvas.create_oval(250, 250, 270, 270, fill="blue")
-        ]
+        # Async comms to class in separate thread
+        self.command_q = Queue()
+        self.response_q = Queue()
+        self.shutdown_flag = False
 
         self.button = Button(master, text="Quit", command=self.shutdown)
         self.button.pack()
@@ -95,11 +103,6 @@ class DisplayWindow:
 
     def clear_map(self):
         self.canvas.delete("all")
-        self.ball_pos = [[randint(0, 5), randint(0, 5)], [randint(0, 5), randint(0, 5)]]
-        self.balls = [
-            self.canvas.create_oval(250, 250, 270, 270, fill="red"),
-            self.canvas.create_oval(250, 250, 270, 270, fill="blue")
-        ]
         self.draw_map()
         self.car = self.build_car(self.car_pos, 12)
 
@@ -174,7 +177,6 @@ class DisplayWindow:
         verts = list(map(lambda x: add(x, rot), verts))
         self.update_object_coords(car[1], verts)
 
-        #car[2] to car[rays + 2]
         for i in range(rays):
             vec = rot_vec(RAY_LINE, i*self.ray_dtheta)
             verts = self.flatten([self.car_pos, add(self.car_pos, vec)])
@@ -183,20 +185,7 @@ class DisplayWindow:
         return car
 
     # Draw the car along with its view intersection triangles
-    def draw_car(self, position):
-        """The draw_car method continually recreates the polygons used to display the car and view area because
-        no other form of rotation is available in tkinter canvas"""
-        pass
-
-    def shutdown(self):
-        self.master.destroy()
-
-    def on_update(self):
-        for i in range(len(self.balls)):
-            delta_x = randint(-1, 1)
-            delta_y = randint(-1, 1)
-            self.canvas.move(self.balls[i], delta_x, delta_y)
-
+    def draw_car(self):
         verts = self.translate_vertices(self.rotate_polygon(CAR_BODY, self.car_orn, [0, 0]), self.car_pos)
         self.update_object_coords(self.car[0], verts)
 
@@ -210,6 +199,55 @@ class DisplayWindow:
             vec = rot_vec(RAY_LINE, self.car_orn + i*self.ray_dtheta)
             self.update_object_coords(self.car[i], [self.car_pos, add(self.car_pos, vec)])
 
+    # Command interface for moving the vehicle
+    # Note: the commands are synchronised via a queue because the GUI thread must run separately to the rest of
+    # the simulation
+    def cmd_move_car(self, target_vec):
+        self.command_q.put(["move", target_vec])
+
+    def cmd_turn_car(self, target_orn):
+        self.command_q.put(["turn", target_orn])
+
+    # Variables:
+    # car_pos = the current position of the vehicle
+    # car_orn = the current orientation of the vehicle
+    def cmd_read_var(self, variable="car_pos"):
+        self.command_q.put(["read", variable])
+
+    def get_response(self, block=True):
+        return self.response_q.get(block)
+
+    def has_response(self):
+        return not self.response_q.empty()
+
+    def shutdown(self):
+        self.shutdown_flag = True
+        self.response_q.put(["shutdown", self.shutdown_flag])
+        self.master.destroy()
+
+    def process_commands(self):
+        while not self.command_q.empty():
+            cmd = self.command_q.get()
+            if cmd[0] == "move":
+                print("move:", cmd)
+                self.car_pos = cmd[1]
+            elif cmd[0] == "turn":
+                print("turn:", cmd)
+                self.car_orn = cmd[1]
+            elif cmd[0] == "read":
+                print("read", cmd)
+                if cmd[1] == "car_pos":
+                    self.response_q.put(["car_pos", self.car_pos])
+                elif cmd[1] == "car_orn":
+                    self.response_q.put(["car_orn", self.car_orn])
+                elif cmd[1] == "shutdown":
+                    self.response_q.put(["shutdown", self.shutdown])
+            else:
+                print("Unknown command", cmd)
+
+    def on_update(self):
+        self.process_commands()
+        self.draw_car()
         self.car_orn += .05
         self.canvas.after(50, self.on_update)
 
@@ -222,10 +260,6 @@ class DisplayWindow:
 
         self.clear_map()
 
-        self.canvas.tag_raise(self.balls[0])
-        self.canvas.tag_raise(self.balls[1])
-        self.canvas.tag_raise(self.car)
-
 root = Tk()
 floors_file = '/Users/otgaard/Development/dbm/sim/assets/output_floors.obj'
 walls_file = '/Users/otgaard/Development/dbm/sim/assets/output_walls.obj'
@@ -233,4 +267,24 @@ walls_file = '/Users/otgaard/Development/dbm/sim/assets/output_walls.obj'
 my_gui = DisplayWindow(root, floors_file, walls_file)
 my_gui.on_update()
 
+
+def test_thread_fnc():
+    shutdown = False
+    while not shutdown:
+        my_gui.cmd_move_car(rand_pos([0,0], [512,512]))
+        my_gui.cmd_turn_car(rand_orn(0, 2*math.pi))
+        if my_gui.has_response():
+            rsp = my_gui.get_response()
+            if rsp[0] == "shutdown":
+                shutdown = True
+            else:
+                print(rsp)
+        sleep(1)
+
+
+thread = Thread(target=test_thread_fnc)
+thread.start()
+
 root.mainloop()
+
+thread.join()
