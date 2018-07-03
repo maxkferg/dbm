@@ -77,6 +77,8 @@ class DisplayWindow:
         self.car_pos = [100, 100]
         self.car_orn = 0
         self.car_rays = 12
+        self.ray_dtheta = 2.*math.pi/self.car_rays
+
 
         self.ball_pos = [[randint(0, 5), randint(0, 5)], [randint(0, 5), randint(0, 5)]]
         self.balls = [
@@ -173,9 +175,8 @@ class DisplayWindow:
         self.update_object_coords(car[1], verts)
 
         #car[2] to car[rays + 2]
-        theta = 2.*math.pi/rays
         for i in range(rays):
-            vec = rot_vec(RAY_LINE, i*theta)
+            vec = rot_vec(RAY_LINE, i*self.ray_dtheta)
             verts = self.flatten([self.car_pos, add(self.car_pos, vec)])
             car.append(self.canvas.create_line(*verts, fill="black"))
 
@@ -205,8 +206,11 @@ class DisplayWindow:
         verts = list(map(lambda x: add(x, rot), verts))
         self.update_object_coords(self.car[1], verts)
 
-        self.car_orn += .05
+        for i in range(2, 2 + self.car_rays):
+            vec = rot_vec(RAY_LINE, self.car_orn + i*self.ray_dtheta)
+            self.update_object_coords(self.car[i], [self.car_pos, add(self.car_pos, vec)])
 
+        self.car_orn += .05
         self.canvas.after(50, self.on_update)
 
     def on_resize(self, event):
