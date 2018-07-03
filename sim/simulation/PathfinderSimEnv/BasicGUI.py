@@ -5,7 +5,7 @@ import math
 import sys, os
 from queue import Queue
 from threading import Thread
-from time import sleep
+from time import sleep, clock
 
 sys.path.insert(1, os.path.join(sys.path[0], '../..'))
 from OBJParser import OBJParser
@@ -77,6 +77,9 @@ class DisplayWindow:
         self.walls.parse()
         self.walls_AABB = self.walls.model_AABB()       # cache this
         self.floors_AABB = self.floors.model_AABB()     # cached
+
+        # Intercept the destroy event so we can shutdown gracefully
+        master.bind("<Destroy>", self.on_destroy)
 
         self.canvas = Canvas(master, width=512, height=512)
         self.canvas.pack(fill="both", expand=True)
@@ -209,8 +212,9 @@ class DisplayWindow:
         self.command_q.put(["turn", target_orn])
 
     # Variables:
-    # car_pos = the current position of the vehicle
-    # car_orn = the current orientation of the vehicle
+    # car_pos = the current position of the vehicle, [x, y]
+    # car_orn = the current orientation of the vehicle, value
+    # screen = the current screen size, [width, height]
     def cmd_read_var(self, variable="car_pos"):
         self.command_q.put(["read", variable])
 
@@ -221,34 +225,37 @@ class DisplayWindow:
         return not self.response_q.empty()
 
     def shutdown(self):
+        self.master.destroy()
+
+    def on_destroy(self, arg):
         self.shutdown_flag = True
         self.response_q.put(["shutdown", self.shutdown_flag])
-        self.master.destroy()
 
     def process_commands(self):
         while not self.command_q.empty():
             cmd = self.command_q.get()
             if cmd[0] == "move":
-                print("move:", cmd)
+                #print("move:", cmd)
                 self.car_pos = cmd[1]
             elif cmd[0] == "turn":
-                print("turn:", cmd)
+                #print("turn:", cmd)
                 self.car_orn = cmd[1]
             elif cmd[0] == "read":
-                print("read", cmd)
+                #print("read", cmd)
                 if cmd[1] == "car_pos":
                     self.response_q.put(["car_pos", self.car_pos])
                 elif cmd[1] == "car_orn":
                     self.response_q.put(["car_orn", self.car_orn])
+                elif cmd[1] == "screen":
+                    self.response_q.put(["screen", [self.width, self.height]])
                 elif cmd[1] == "shutdown":
                     self.response_q.put(["shutdown", self.shutdown])
-            else:
-                print("Unknown command", cmd)
+                else:
+                    print("Unknown command", cmd)
 
     def on_update(self):
         self.process_commands()
         self.draw_car()
-        self.car_orn += .05
         self.canvas.after(50, self.on_update)
 
     def on_resize(self, event):
@@ -258,7 +265,10 @@ class DisplayWindow:
         self.width = self.canvas.winfo_width()
         self.height = self.canvas.winfo_height()
 
+        self.response_q.put(["screen", [self.width, self.height]])
+
         self.clear_map()
+
 
 root = Tk()
 floors_file = '/Users/otgaard/Development/dbm/sim/assets/output_floors.obj'
@@ -268,18 +278,62 @@ my_gui = DisplayWindow(root, floors_file, walls_file)
 my_gui.on_update()
 
 
+def lerp(A, B, u):
+    if isinstance(A, (list,)):
+        result = []
+        for i in range(len(A)):
+            result.append((1 - u) * A[i] + u * B[i])
+        return result
+    else:
+        return (1 - u) * A + u * B
+
+
 def test_thread_fnc():
+    dim = [512, 512]
+    # Move the vehicle according to random targets
+    src_pos = rand_pos([0, 0], rand_pos(dim))
+    src_orn = rand_orn(0., 2.*math.pi)
+    trg_pos = rand_pos([0, 0], rand_pos(dim))
+    trg_orn = rand_orn(0., 2. * math.pi)
+    pos_dur = [.2, 0]
+    orn_dur = [.2, 0]
+
+    curr_t = clock()
+    prev_t = clock()
+    dt = curr_t - prev_t
+
     shutdown = False
     while not shutdown:
-        my_gui.cmd_move_car(rand_pos([0,0], [512,512]))
-        my_gui.cmd_turn_car(rand_orn(0, 2*math.pi))
+        dt = curr_t - prev_t
+        prev_t = curr_t
+        curr_t = clock()
+
+        pos_dur[1] += dt
+        orn_dur[1] += dt
+
+        if pos_dur[1] > pos_dur[0]:
+            src_pos = trg_pos
+            trg_pos = rand_pos([0, 0], dim)
+            print(src_pos, trg_pos)
+            pos_dur[1] = 0
+
+        if orn_dur[1] > orn_dur[0]:
+            src_orn = trg_orn
+            trg_orn = rand_orn(0, 2*math.pi)
+            orn_dur[1] = 0
+
+        my_gui.cmd_move_car(lerp(src_pos, trg_pos, pos_dur[1]/pos_dur[0]))
+        my_gui.cmd_turn_car(lerp(src_orn, trg_orn, orn_dur[1]/orn_dur[0]))
+
         if my_gui.has_response():
             rsp = my_gui.get_response()
             if rsp[0] == "shutdown":
                 shutdown = True
+            if rsp[0] == "screen":
+                dim = rsp[1]
             else:
                 print(rsp)
-        sleep(1)
+        sleep(.016)
 
 
 thread = Thread(target=test_thread_fnc)
