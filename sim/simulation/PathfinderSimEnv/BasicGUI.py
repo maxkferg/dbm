@@ -54,8 +54,16 @@ def sub(A, B):
     return [A[0] - B[0], A[1] - B[1]]
 
 
+def mul(A, s):
+    return [s*A[0], s*A[1]]
+
+
 def scale_bias(v, s, b):
     return [v[0] * s[0] + b[0], v[1] * s[1] + b[1]]
+
+
+def make_polar(orn):
+    return [math.cos(orn), math.sin(orn)]
 
 
 CAR_BODY = [[-20, -12.5], [20, 12.5]]
@@ -65,7 +73,8 @@ RAY_LINE = [100, 0]                         # A line of 100 pixels long
 
 
 class DisplayWindow:
-    def __init__(self, master, floor_file, walls_file):
+    # Pass is_test = True if controlling car from keyboard
+    def __init__(self, master, floor_file, walls_file, is_test=True):
         self.master = master
         master.title("PathfinderSim Display Window")
         master.geometry("512x600")
@@ -80,6 +89,13 @@ class DisplayWindow:
 
         # Intercept the destroy event so we can shutdown gracefully
         master.bind("<Destroy>", self.on_destroy)
+
+        self.is_test = is_test
+        if is_test:
+            master.bind('<Left>', lambda x: self.cmd_turn_car(self.car_orn - .1))
+            master.bind('<Right>', lambda x: self.cmd_turn_car(self.car_orn + .1))
+            master.bind('<Up>', lambda x: self.cmd_move_car(add(self.car_pos, mul(make_polar(self.car_orn), 5))))
+            master.bind('<Down>', lambda x: self.cmd_move_car(add(self.car_pos, mul(make_polar(self.car_orn), -5))))
 
         self.canvas = Canvas(master, width=512, height=512)
         self.canvas.pack(fill="both", expand=True)
@@ -336,9 +352,9 @@ def test_thread_fnc():
         sleep(.016)
 
 
-thread = Thread(target=test_thread_fnc)
-thread.start()
+#thread = Thread(target=test_thread_fnc)
+#thread.start()
 
 root.mainloop()
 
-thread.join()
+#thread.join()
