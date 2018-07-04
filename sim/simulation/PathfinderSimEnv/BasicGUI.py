@@ -266,7 +266,7 @@ class DisplayWindow:
             tri = rand_tri([0, 0], [self.width, self.height])
             self.canvas.coords(self.test_rect, self.flatten(rect))
             self.canvas.coords(self.test_tri, self.flatten(tri))
-            print("Intersection:", test_intersection(rect, tri))
+            print("Intersection:", test_intersection(tri, rect))
             self.test_timer = 0
             self.canvas.tag_raise(self.test_rect)
             self.canvas.tag_raise(self.test_tri)

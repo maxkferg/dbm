@@ -50,7 +50,7 @@ def dot(A, B):
 
 
 def perp(A):
-    return [A[1], -A[0]]
+    return [-A[1], A[0]]
 
 
 def lerp(A, B, u):
