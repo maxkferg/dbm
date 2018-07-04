@@ -6,6 +6,7 @@ import sys, os
 from queue import Queue
 from threading import Thread
 from time import sleep, clock
+from .Math2D import rotate, rot_vec, add, sub, mul, scale_bias, make_polar, which_side, test_intersection
 
 sys.path.insert(1, os.path.join(sys.path[0], '../..'))
 from OBJParser import OBJParser
@@ -25,45 +26,6 @@ def rand_pos(min=(0, 0), max=(1, 1)):
 
 def rand_orn(min=0, max=1):
     return min + (max - min)*random()
-
-def rotate(points, angle, centre):
-    cos_val = math.cos(angle)
-    sin_val = math.sin(angle)
-    cx, cy = centre
-    new_points = []
-    for x_old, y_old in points:
-        x_old -= cx
-        y_old -= cy
-        x_new = x_old * cos_val - y_old * sin_val
-        y_new = x_old * sin_val + y_old * cos_val
-        new_points.append([x_new + cx, y_new + cy])
-    return new_points
-
-
-def rot_vec(vec, rot):
-    st = math.sin(rot)
-    ct = math.cos(rot)
-    return [vec[0] * ct - vec[1] * st, vec[0] * st + vec[1] * ct]
-
-
-def add(A, B):
-    return [A[0] + B[0], A[1] + B[1]]
-
-
-def sub(A, B):
-    return [A[0] - B[0], A[1] - B[1]]
-
-
-def mul(A, s):
-    return [s*A[0], s*A[1]]
-
-
-def scale_bias(v, s, b):
-    return [v[0] * s[0] + b[0], v[1] * s[1] + b[1]]
-
-
-def make_polar(orn):
-    return [math.cos(orn), math.sin(orn)]
 
 
 CAR_BODY = [[-20, -12.5], [20, 12.5]]
