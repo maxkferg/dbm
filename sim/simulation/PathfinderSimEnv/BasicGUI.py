@@ -1,15 +1,13 @@
-import tkinter as tk
 from tkinter import Tk, Canvas, Button
 from random import randint, random
 import math
 import sys, os
 from queue import Queue
-from threading import Thread
 from time import sleep, clock
-from .Math2D import rotate, rot_vec, add, sub, mul, scale_bias, make_polar, which_side, test_intersection
 
 sys.path.insert(1, os.path.join(sys.path[0], '../..'))
 from OBJParser import OBJParser
+from Math2D import rotate, rot_vec, add, sub, dot, perp, mul, scale_bias, make_polar, lerp, test_intersection
 
 
 def rgb2hex(rgb):
@@ -26,6 +24,24 @@ def rand_pos(min=(0, 0), max=(1, 1)):
 
 def rand_orn(min=0, max=1):
     return min + (max - min)*random()
+
+
+def rand_rect(min=(0, 0), max=(1, 1)):
+    A = rand_pos(min, max)
+    B = rand_pos(min, max)
+
+    lb = [A[0] if A[0] < B[0] else B[0], A[1] if A[1] < B[1] else B[1]]
+    rt = [A[0] if A[0] > B[0] else B[0], A[1] if A[1] > B[1] else B[1]]
+
+    return [lb, [rt[0], lb[1]], rt, [lb[0], rt[1]]]
+
+
+def rand_tri(min=(0, 0), max=(1, 1)):
+    A = rand_pos(min, max)
+    B = rand_pos(min, max)
+    C = rand_pos(min, max)
+    N = perp(sub(B, A))
+    return [A, B, C] if dot(N, C) > 0 else [A, C, B]
 
 
 CAR_BODY = [[-20, -12.5], [20, 12.5]]
@@ -82,10 +98,18 @@ class DisplayWindow:
 
         self.car = self.build_car(self.car_pos, 12)
 
+        # Intersections Tests: remove later
+        self.test_timer = 0
+        self.test_rect = self.canvas.create_polygon(*self.flatten(rand_rect([0, 0], [512, 512])), fill='red')
+        self.test_tri = self.canvas.create_polygon(*self.flatten(rand_tri([0, 0], [512, 512])), fill='blue')
+
     def clear_map(self):
         self.canvas.delete("all")
         self.draw_map()
         self.car = self.build_car(self.car_pos, 12)
+        self.test_rect = self.canvas.create_polygon(*self.flatten(rand_rect([0, 0], [512, 512])), fill='red')
+        self.test_tri = self.canvas.create_polygon(*self.flatten(rand_tri([0, 0], [512, 512])), fill='blue')
+
 
     def draw_map(self):
         # We need to draw the OBJ file in 2D
@@ -234,6 +258,19 @@ class DisplayWindow:
     def on_update(self):
         self.process_commands()
         self.draw_car()
+
+        # Note, this is just a visual test of the intersection algorithm to check everything is ok
+        self.test_timer += .02
+        if self.test_timer > 1.:
+            rect = rand_rect([0, 0], [self.width, self.height])
+            tri = rand_tri([0, 0], [self.width, self.height])
+            self.canvas.coords(self.test_rect, self.flatten(rect))
+            self.canvas.coords(self.test_tri, self.flatten(tri))
+            print("Intersection:", test_intersection(rect, tri))
+            self.test_timer = 0
+            self.canvas.tag_raise(self.test_rect)
+            self.canvas.tag_raise(self.test_tri)
+
         self.canvas.after(50, self.on_update)
 
     def on_resize(self, event):
@@ -254,16 +291,6 @@ walls_file = '/Users/otgaard/Development/dbm/sim/assets/output_walls.obj'
 
 my_gui = DisplayWindow(root, floors_file, walls_file)
 my_gui.on_update()
-
-
-def lerp(A, B, u):
-    if isinstance(A, (list,)):
-        result = []
-        for i in range(len(A)):
-            result.append((1 - u) * A[i] + u * B[i])
-        return result
-    else:
-        return (1 - u) * A + u * B
 
 
 def test_thread_fnc():

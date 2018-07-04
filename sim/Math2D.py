@@ -53,34 +53,53 @@ def perp(A):
     return [A[1], -A[0]]
 
 
+def lerp(A, B, u):
+    if isinstance(A, (list,)):
+        result = []
+        for i in range(len(A)):
+            result.append((1 - u) * A[i] + u * B[i])
+        return result
+    else:
+        return (1 - u) * A + u * B
+
+
 # pointset = [[x0,y0], [x1,y1], ...]
 # D, P = [x,y], [x,y]
 def which_side(pointset, D, P):
-    pn = [0, 0]
+    pos = 0
+    neg = 0
     for i in range(len(pointset)):
         t = dot(D, sub(pointset[i], P))
-        if t > 0: pn[0] += 1
-        elif t < 0: pn[1] += 1
-        if pn[0] > 0 and pn[1] > 0: return 0
+        if t > 0: pos += 1
+        elif t < 0: neg += 1
+        if pos > 0 and neg > 0: return 0
 
-    return 1 if pn[0] > 0 else -1
+    return 1 if pos > 0 else -1
 
 
-# polyA [ [x0, y0], [x1, y1], ... ] counter-clockwise ordered
+# polyA [ [x0, y0], [x1, y1], ... ]
 # polyB ditto...
 def test_intersection(polyA, polyB):
     i1 = len(polyA)-1
     for i0 in range(len(polyA)):
-        D = perp(sub(polyA[i0], polyA[i1]))
-        if which_side(polyB, D, polyA[0]) > 0:
+        D = perp(sub(polyA[i1], polyA[i0]))
+        if which_side(polyB, D, polyA[i0]) > 0:
             return False
         i1 = i0
 
     i1 = len(polyB)-1
     for i0 in range(len(polyB)):
-        D = perp(sub(polyB[i0], polyB[i1]))
-        if which_side(polyA, D, polyB[0]) > 0:
+        D = perp(sub(polyB[i1], polyB[i0]))
+        if which_side(polyA, D, polyB[i0]) > 0:
             return False
         i1 = i0
 
     return True
+
+
+if __name__ == "__main__":
+    # Testing SAT
+    tri = [[100, 100], [300, 300], [600, 200]]
+    rect = [[499, 100], [999, 100], [999, 500], [499, 500]]
+
+    print("Tri vs. Rect:", test_intersection(tri, rect))
