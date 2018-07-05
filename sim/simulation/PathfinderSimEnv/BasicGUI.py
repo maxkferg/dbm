@@ -62,6 +62,9 @@ class DisplayWindow:
         self.walls.parse()
         self.walls_AABB = self.walls.model_AABB()       # cache this
         self.floors_AABB = self.floors.model_AABB()     # cached
+        self.floor_polys = []
+        self.floors_seen = [False] * self.floors.get_prim_count()
+        self.floors_id = []
 
         # Intercept the destroy event so we can shutdown gracefully
         master.bind("<Destroy>", self.on_destroy)
@@ -111,6 +114,9 @@ class DisplayWindow:
         bias = [self.width/2 - centre[0]*self.width, self.height/2 - centre[1]*self.height]
         scale = [self.width, self.height]
 
+        self.floor_polys = []
+        self.floors_id = []
+
         for floor in range(int(self.floors.get_prim_count())):
             prim = self.floors.get_prim(floor)
 
@@ -122,7 +128,13 @@ class DisplayWindow:
             P0 = scale_bias(A, scale, bias)
             P1 = scale_bias(B, scale, bias)
 
-            self.canvas.create_rectangle(P0[0], P0[1], P1[0], P1[1], fill=rand_colour())
+            colour = rand_colour()
+            if self.floors_seen[floor]: colour = "lightblue"
+
+            id = self.canvas.create_rectangle(P0[0], P0[1], P1[0], P1[1], fill=colour)
+            self.floors_id.append(id)
+            verts, _ = self.AABB_to_vertices([P0, P1])
+            self.floor_polys.append(verts)
 
         for wall in range(int(self.walls.get_prim_count())):
             prim = self.walls.get_prim(wall)
@@ -172,10 +184,17 @@ class DisplayWindow:
         verts = list(map(lambda x: add(x, rot), verts))
         self.update_object_coords(car[1], verts)
 
+        ray_points = []
         for i in range(rays):
             vec = rot_vec(RAY_LINE, i*self.ray_dtheta)
             verts = self.flatten([self.car_pos, add(self.car_pos, vec)])
+            ray_points.append(add(self.car_pos, vec))
             car.append(self.canvas.create_line(*verts, fill="black"))
+
+        i1 = len(ray_points) - 1
+        for i0 in range(len(ray_points)):
+            car.append(self.canvas.create_line(*[ray_points[i1], ray_points[i0]], fill="black"))
+            i1 = i0
 
         return car
 
@@ -190,9 +209,29 @@ class DisplayWindow:
         verts = list(map(lambda x: add(x, rot), verts))
         self.update_object_coords(self.car[1], verts)
 
+        ray_points = []
         for i in range(2, 2 + self.car_rays):
             vec = rot_vec(RAY_LINE, self.car_orn + i*self.ray_dtheta)
             self.update_object_coords(self.car[i], [self.car_pos, add(self.car_pos, vec)])
+            ray_points.append(add(self.car_pos, vec))
+
+        i1 = len(ray_points) - 1
+        for i0 in range(self.car_rays):
+            i = i0 + 2 + self.car_rays
+            self.update_object_coords(self.car[i], [ray_points[i1], ray_points[i0]])
+            i1 = i0
+
+        # Test each rectangle that has not been seen against the ray triangles
+        i1 = len(ray_points) - 1
+        for i0 in range(self.car_rays):
+            tri = [self.car_pos, ray_points[i1], ray_points[i0]]
+            if not is_ccw(tri): tri.reverse()
+            for j in range(len(self.floor_polys)):
+                if self.floors_seen[j]: continue
+                elif test_intersection(tri, self.floor_polys[j]):
+                    self.canvas.itemconfig(self.floors_id[j], fill='lightblue')
+                    self.floors_seen[j] = True
+            i1 = i0
 
     # Command interface for moving the vehicle
     # Note: the commands are synchronised via a queue because the GUI thread must run separately to the rest of
