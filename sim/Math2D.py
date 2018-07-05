@@ -50,7 +50,11 @@ def dot(A, B):
 
 
 def perp(A):
-    return [-A[1], A[0]]
+    return [A[1], -A[0]]
+
+
+def dotperp(A, B):
+    return A[0] * B[1] - A[1] * B[0]
 
 
 def lerp(A, B, u):
@@ -61,6 +65,17 @@ def lerp(A, B, u):
         return result
     else:
         return (1 - u) * A + u * B
+
+
+# Takes a list of points of a polygon and determines the winding order
+def is_ccw(points):
+    pc = len(points)
+    total = 0
+    for i0 in range(0, pc):
+        i1 = (i0+1)%pc
+        total += (points[i1][0] - points[i0][0]) * (points[i1][1] + points[i0][1])
+
+    return total <= 0
 
 
 # pointset = [[x0,y0], [x1,y1], ...]
@@ -82,14 +97,14 @@ def which_side(pointset, D, P):
 def test_intersection(polyA, polyB):
     i1 = len(polyA)-1
     for i0 in range(len(polyA)):
-        D = perp(sub(polyA[i1], polyA[i0]))
+        D = perp(sub(polyA[i0], polyA[i1]))
         if which_side(polyB, D, polyA[i0]) > 0:
             return False
         i1 = i0
 
     i1 = len(polyB)-1
     for i0 in range(len(polyB)):
-        D = perp(sub(polyB[i1], polyB[i0]))
+        D = perp(sub(polyB[i0], polyB[i1]))
         if which_side(polyA, D, polyB[i0]) > 0:
             return False
         i1 = i0
@@ -99,7 +114,10 @@ def test_intersection(polyA, polyB):
 
 if __name__ == "__main__":
     # Testing SAT
-    tri = [[100, 100], [300, 300], [600, 200]]
+    tri = [[100, 100], [600, 200], [300, 300]]
     rect = [[499, 100], [999, 100], [999, 500], [499, 500]]
+
+    print("tri:", is_ccw(tri))
+    print("rect:", is_ccw(rect))
 
     print("Tri vs. Rect:", test_intersection(tri, rect))

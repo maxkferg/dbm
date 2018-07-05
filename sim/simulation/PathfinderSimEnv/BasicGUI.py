@@ -7,7 +7,7 @@ from time import sleep, clock
 
 sys.path.insert(1, os.path.join(sys.path[0], '../..'))
 from OBJParser import OBJParser
-from Math2D import rotate, rot_vec, add, sub, dot, perp, mul, scale_bias, make_polar, lerp, test_intersection
+from Math2D import rotate, rot_vec, add, sub, dot, perp, mul, scale_bias, make_polar, lerp, test_intersection, is_ccw
 
 
 def rgb2hex(rgb):
@@ -100,16 +100,15 @@ class DisplayWindow:
 
         # Intersections Tests: remove later
         self.test_timer = 0
-        self.test_rect = self.canvas.create_polygon(*self.flatten(rand_rect([0, 0], [512, 512])), fill='red')
-        self.test_tri = self.canvas.create_polygon(*self.flatten(rand_tri([0, 0], [512, 512])), fill='blue')
+        self.test_rect = self.canvas.create_polygon(*self.flatten([[499, 100], [999, 100], [999, 500], [499, 500]]), fill='red')
+        self.test_tri = self.canvas.create_polygon(*self.flatten([[100, 100], [600, 200], [300, 300]]), fill='blue')
 
     def clear_map(self):
         self.canvas.delete("all")
         self.draw_map()
         self.car = self.build_car(self.car_pos, 12)
-        self.test_rect = self.canvas.create_polygon(*self.flatten(rand_rect([0, 0], [512, 512])), fill='red')
-        self.test_tri = self.canvas.create_polygon(*self.flatten(rand_tri([0, 0], [512, 512])), fill='blue')
-
+        self.test_rect = self.canvas.create_polygon(*self.flatten([[499, 100], [999, 100], [999, 500], [499, 500]]), fill='red')
+        self.test_tri = self.canvas.create_polygon(*self.flatten([[100, 100], [600, 200], [300, 300]]), fill='blue')
 
     def draw_map(self):
         # We need to draw the OBJ file in 2D
@@ -266,6 +265,16 @@ class DisplayWindow:
             tri = rand_tri([0, 0], [self.width, self.height])
             self.canvas.coords(self.test_rect, self.flatten(rect))
             self.canvas.coords(self.test_tri, self.flatten(tri))
+            print("is_ccw tri:", is_ccw(tri))
+            if not is_ccw(tri):
+                tri.reverse()
+                print("is_ccw tri:", is_ccw(tri))
+
+            print("is_ccw rect:", is_ccw(rect))
+            if not is_ccw(rect):
+                rect.reverse()
+                print("is_ccw rect:", is_ccw(rect))
+
             print("Intersection:", test_intersection(tri, rect))
             self.test_timer = 0
             self.canvas.tag_raise(self.test_rect)
