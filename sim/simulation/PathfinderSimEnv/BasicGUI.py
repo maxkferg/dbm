@@ -37,11 +37,9 @@ def rand_rect(min=(0, 0), max=(1, 1)):
 
 
 def rand_tri(min=(0, 0), max=(1, 1)):
-    A = rand_pos(min, max)
-    B = rand_pos(min, max)
-    C = rand_pos(min, max)
-    N = perp(sub(B, A))
-    return [A, B, C] if dot(N, C) > 0 else [A, C, B]
+    tri = [rand_pos(min, max), rand_pos(min, max), rand_pos(min, max)]
+    if not is_ccw(tri): tri.reverse()
+    return tri
 
 
 CAR_BODY = [[-20, -12.5], [20, 12.5]]
@@ -98,17 +96,10 @@ class DisplayWindow:
 
         self.car = self.build_car(self.car_pos, 12)
 
-        # Intersections Tests: remove later
-        self.test_timer = 0
-        self.test_rect = self.canvas.create_polygon(*self.flatten([[499, 100], [999, 100], [999, 500], [499, 500]]), fill='red')
-        self.test_tri = self.canvas.create_polygon(*self.flatten([[100, 100], [600, 200], [300, 300]]), fill='blue')
-
     def clear_map(self):
         self.canvas.delete("all")
         self.draw_map()
         self.car = self.build_car(self.car_pos, 12)
-        self.test_rect = self.canvas.create_polygon(*self.flatten([[499, 100], [999, 100], [999, 500], [499, 500]]), fill='red')
-        self.test_tri = self.canvas.create_polygon(*self.flatten([[100, 100], [600, 200], [300, 300]]), fill='blue')
 
     def draw_map(self):
         # We need to draw the OBJ file in 2D
@@ -236,13 +227,10 @@ class DisplayWindow:
         while not self.command_q.empty():
             cmd = self.command_q.get()
             if cmd[0] == "move":
-                #print("move:", cmd)
                 self.car_pos = cmd[1]
             elif cmd[0] == "turn":
-                #print("turn:", cmd)
                 self.car_orn = cmd[1]
             elif cmd[0] == "read":
-                #print("read", cmd)
                 if cmd[1] == "car_pos":
                     self.response_q.put(["car_pos", self.car_pos])
                 elif cmd[1] == "car_orn":
@@ -257,29 +245,6 @@ class DisplayWindow:
     def on_update(self):
         self.process_commands()
         self.draw_car()
-
-        # Note, this is just a visual test of the intersection algorithm to check everything is ok
-        self.test_timer += .02
-        if self.test_timer > 1.:
-            rect = rand_rect([0, 0], [self.width, self.height])
-            tri = rand_tri([0, 0], [self.width, self.height])
-            self.canvas.coords(self.test_rect, self.flatten(rect))
-            self.canvas.coords(self.test_tri, self.flatten(tri))
-            print("is_ccw tri:", is_ccw(tri))
-            if not is_ccw(tri):
-                tri.reverse()
-                print("is_ccw tri:", is_ccw(tri))
-
-            print("is_ccw rect:", is_ccw(rect))
-            if not is_ccw(rect):
-                rect.reverse()
-                print("is_ccw rect:", is_ccw(rect))
-
-            print("Intersection:", test_intersection(tri, rect))
-            self.test_timer = 0
-            self.canvas.tag_raise(self.test_rect)
-            self.canvas.tag_raise(self.test_tri)
-
         self.canvas.after(50, self.on_update)
 
     def on_resize(self, event):

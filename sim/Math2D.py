@@ -92,8 +92,8 @@ def which_side(pointset, D, P):
     return 1 if pos > 0 else -1
 
 
-# polyA [ [x0, y0], [x1, y1], ... ]
-# polyB ditto...
+# polyA [ [x0, y0], [x1, y1], ... ] - counter-clockwise ordered
+# polyB ditto...                    - counter-clockwise ordered
 def test_intersection(polyA, polyB):
     i1 = len(polyA)-1
     for i0 in range(len(polyA)):
