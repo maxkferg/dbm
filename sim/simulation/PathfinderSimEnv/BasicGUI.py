@@ -299,8 +299,8 @@ class DisplayWindow:
 
 
 root = Tk()
-floors_file = '/Users/otgaard/Development/dbm/sim/assets/output_floors.obj'
-walls_file = '/Users/otgaard/Development/dbm/sim/assets/output_walls.obj'
+floors_file = '../../assets/output_floors.obj'
+walls_file = '../../assets/output_walls.obj'
 
 my_gui = DisplayWindow(root, floors_file, walls_file)
 my_gui.on_update()
