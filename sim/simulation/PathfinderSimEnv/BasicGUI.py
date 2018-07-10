@@ -42,11 +42,11 @@ def rand_tri(min=(0, 0), max=(1, 1)):
     return tri
 
 
-CAR_BODY = [[-20, -12.5], [20, 12.5]]
-CAR_FRONT = [[-5, -10.], [5, 10]]
-FRONT_TRANS = [10, 0]                       # The relative translation of the front to the body (tkinter doesn't have a scene graph)
-RAY_LINE = [100, 0]                         # A line of 100 pixels long
-
+CAR_SCALE = .5
+CAR_BODY = [[CAR_SCALE*-20, CAR_SCALE*-12.5], [CAR_SCALE*20, CAR_SCALE*12.5]]
+CAR_FRONT = [[CAR_SCALE*-5, CAR_SCALE*-10.], [CAR_SCALE*5, CAR_SCALE*10]]
+FRONT_TRANS = [CAR_SCALE*10, 0]                       # The relative translation of the front to the body (tkinter doesn't have a scene graph)
+RAY_LINE = [CAR_SCALE*100, 0]                         # A line of 100 pixels long
 
 class DisplayWindow:
     # Pass is_test = True if controlling car from keyboard
@@ -299,8 +299,8 @@ class DisplayWindow:
 
 
 root = Tk()
-floors_file = '../../assets/output_floors.obj'
-walls_file = '../../assets/output_walls.obj'
+floors_file = 'assets/output_floors.obj'
+walls_file = 'assets/output_walls.obj'
 
 my_gui = DisplayWindow(root, floors_file, walls_file)
 my_gui.on_update()
