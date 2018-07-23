@@ -217,6 +217,7 @@ class SeekerSimEnv(gym.Env):
         self.observation = []
 
         carpos, carorn = self.physics.getBasePositionAndOrientation(self.robot.racecarUniqueId)
+        carmat = self.physics.getMatrixFromQuaternion(carorn)
         tarpos, tarorn = self.physics.getBasePositionAndOrientation(self.targetUniqueId)
         invCarPos, invCarOrn = self.physics.invertTransform(carpos, carorn)
         tarPosInCar, tarOrnInCar = self.physics.multiplyTransforms(invCarPos, invCarOrn, tarpos, tarorn)
@@ -248,7 +249,24 @@ class SeekerSimEnv(gym.Env):
                 intersections.append(0)
 
         self.observation.extend(intersections)
+
+        # Hijack the display for segmentation analysis to display a custom image
+        dist0 = 0.3
+        dist1 = 1.
+        eyePos = [carpos[0] + dist0 * carmat[0], carpos[1] + dist0 * carmat[3], carpos[2] + dist0 * carmat[6] + 0.3]
+        targetPos = [carpos[0] + dist1 * carmat[0], carpos[1] + dist1 * carmat[3],
+                     carpos[2] + dist1 * carmat[6] + 0.3]
+        up = [carmat[2], carmat[5], carmat[8]]
+        viewMat = self.physics.computeViewMatrix(eyePos, targetPos, up)
+        projMatrix = [0.7499999403953552, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, -1.0000200271606445, -1.0,
+                      0.0, 0.0, -0.02000020071864128, 0.0]
+        img_arr = self.physics.getCameraImage(width=self.width, height=self.height, viewMatrix=viewMat,
+                    projectionMatrix=projMatrix)
+        rgb = img_arr[2]
+        np_img_arr = np.reshape(rgb, (self.height, self.width, 4))
+        self.observation = list(np_img_arr) + self.observation
         return self.observation
+        #return self.observation
 
     #def getExtendedObservation(self):
     #    self.observation = []  # self._racecar.getObservation()
