@@ -4,9 +4,10 @@ import math
 import sys, os
 from queue import Queue
 from time import sleep, clock
+from threading import Thread
 
 sys.path.insert(1, os.path.join(sys.path[0], '../..'))
-from OBJParser import OBJParser
+from OBJModel import OBJModel
 from Math2D import rotate, rot_vec, add, sub, dot, perp, mul, scale_bias, make_polar, lerp, test_intersection, is_ccw
 
 
@@ -56,8 +57,8 @@ class DisplayWindow:
         master.geometry("512x600")
 
         # Parse the input files
-        self.floors = OBJParser(floor_file)
-        self.walls = OBJParser(walls_file)
+        self.floors = OBJModel(floor_file)
+        self.walls = OBJModel(walls_file)
         self.floors.parse()
         self.walls.parse()
         self.walls_AABB = self.walls.model_AABB()       # cache this
@@ -299,8 +300,8 @@ class DisplayWindow:
 
 
 root = Tk()
-floors_file = 'assets/output_floors.obj'
-walls_file = 'assets/output_walls.obj'
+floors_file = '../../assets/output_floors.obj'
+walls_file = '../../assets/output_walls.obj'
 
 my_gui = DisplayWindow(root, floors_file, walls_file)
 my_gui.on_update()
@@ -354,9 +355,11 @@ def test_thread_fnc():
         sleep(.016)
 
 
-#thread = Thread(target=test_thread_fnc)
-#thread.start()
+thread = Thread(target=test_thread_fnc)
+thread.start()
 
 root.mainloop()
 
-#thread.join()
+print("Here")
+
+thread.join()

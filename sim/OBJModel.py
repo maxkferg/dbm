@@ -5,7 +5,7 @@
 
 import os
 
-class OBJParser:
+class OBJModel:
     def __init__(self, obj_file):
         self.filename = obj_file
         self.positions = None
@@ -110,7 +110,7 @@ class OBJParser:
 if __name__ == '__main__':
     filename = '/Users/otgaard/Development/dbm/sim/assets/output_floors.obj'
 
-    objfile = OBJParser(filename)
+    objfile = OBJModel(filename)
     objfile.parse()
     print('Primitives:', objfile.get_prim_count())
     print('Positions:', objfile.get_positions_count())
