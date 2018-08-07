@@ -2,6 +2,8 @@ from tkinter import Tk, Canvas
 from random import randint, random
 import math
 import sys, os
+from multiprocessing import Process
+
 
 class PathfinderWindow:
     """This class displays a Tkinter window running in a separate thread.  The Tkinter window contains a 2D top-down
@@ -12,8 +14,10 @@ class PathfinderWindow:
     polygon by the height of the narrowest tile.  Thus, if we have two rects of 2 x 10, 4 x 2, the grid size will be set
     to 2 x 2 to ensure the entire floor can be covered with a uniform tile size.
     """
-    def __init__(self, floors, walls):
-        """Initialise the PathfinderWindow with the floors and walls OBJModel"""
+    def __init__(self, floors, walls, is_test=True):
+        """Initialise the PathfinderWindow with the floors and walls, both being paths because the OBJ files are
+        loaded into a separate process in a separate python interpreter to avoid mixing two different GUI event loops.
+        Set is_test equal to True when wishing to control the car with the keyboard."""
         self.master = Tk()
         self.on_update()
 
@@ -70,5 +74,11 @@ class PathfinderWindow:
         pass
 
     def shutdown(self):
-        """Shutdown the Tkinter applciation"""
+        """Shutdown the Tkinter application and resources."""
         pass
+
+    def on_destroy(self):
+        """Event triggered by closing window, etc. used to kill the thread and clean up the Tkinter resources."""
+        pass
+
+

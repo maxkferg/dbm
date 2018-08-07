@@ -1,10 +1,15 @@
 from tkinter import Tk, Canvas, Button
 from random import randint, random
 import math
-import sys, os
+import sys
+import os
 from queue import Queue
 from time import sleep, clock
 from threading import Thread
+import multiprocessing as mp
+import copyreg
+import types
+
 
 sys.path.insert(1, os.path.join(sys.path[0], '../..'))
 from OBJModel import OBJModel
@@ -298,15 +303,6 @@ class DisplayWindow:
 
         self.clear_map()
 
-
-root = Tk()
-floors_file = '../../assets/output_floors.obj'
-walls_file = '../../assets/output_walls.obj'
-
-my_gui = DisplayWindow(root, floors_file, walls_file)
-my_gui.on_update()
-
-
 def test_thread_fnc():
     dim = [512, 512]
     # Move the vehicle according to random targets
@@ -354,12 +350,52 @@ def test_thread_fnc():
                 print(rsp)
         sleep(.016)
 
+# https://bytes.com/topic/python/answers/552476-why-cant-you-pickle-instancemethods (See Steven Bethard response)
+# https://stackoverflow.com/questions/1816958/cant-pickle-type-instancemethod-when-using-multiprocessing-pool-map/1816969#1816969
 
-thread = Thread(target=test_thread_fnc)
-thread.start()
 
-root.mainloop()
+def _pickle_method(method):
+    func_name = method.im_func.__name__
+    obj = method.im_self
+    cls = method.im_class
+    return _unpickle_method, (func_name, obj, cls)
+
+
+def _unpickle_method(func_name, obj, cls):
+    for cls in cls.mro():
+        try:
+            func = cls.__dict__[func_name]
+        except KeyError:
+            pass
+        else:
+            break
+        return func.__get__(obj, cls)
+
+
+def runner(title):
+    print(title)
+    root = Tk()
+    floors_file = '../../assets/output_floors.obj'
+    walls_file = '../../assets/output_walls.obj'
+
+    my_gui = DisplayWindow(root, floors_file, walls_file)
+    my_gui.on_update()
+
+    print("HERE!!")
+
+    #thread2 = Thread(target=test_thread_fnc)
+    #thread2.start()
+    root.mainloop()
+    #thread2.join()
+
+
+copyreg.pickle(types.MethodType, _pickle_method, _unpickle_method)
+
+#mp.set_start_method('spawn')
+proc = mp.Process(target=runner, args=("Foo",))
+
+proc.start()
 
 print("Here")
 
-thread.join()
+proc.join()
