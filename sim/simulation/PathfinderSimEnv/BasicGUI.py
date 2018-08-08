@@ -1,10 +1,10 @@
-from tkinter import Tk, Canvas, Button
 from random import randint, random
 import math
 import sys
 import os
 from queue import Queue
 from time import sleep, clock
+from tkinter import Tk, Canvas, Button
 from threading import Thread
 import multiprocessing as mp
 import copyreg
@@ -53,6 +53,7 @@ CAR_BODY = [[CAR_SCALE*-20, CAR_SCALE*-12.5], [CAR_SCALE*20, CAR_SCALE*12.5]]
 CAR_FRONT = [[CAR_SCALE*-5, CAR_SCALE*-10.], [CAR_SCALE*5, CAR_SCALE*10]]
 FRONT_TRANS = [CAR_SCALE*10, 0]                       # The relative translation of the front to the body (tkinter doesn't have a scene graph)
 RAY_LINE = [CAR_SCALE*100, 0]                         # A line of 100 pixels long
+
 
 class DisplayWindow:
     # Pass is_test = True if controlling car from keyboard
@@ -288,7 +289,7 @@ class DisplayWindow:
                     print("Unknown command", cmd)
 
     def on_update(self):
-        self.process_commands()
+        #self.process_commands()
         self.draw_car()
         self.canvas.after(50, self.on_update)
 
@@ -350,52 +351,55 @@ def test_thread_fnc():
                 print(rsp)
         sleep(.016)
 
-# https://bytes.com/topic/python/answers/552476-why-cant-you-pickle-instancemethods (See Steven Bethard response)
-# https://stackoverflow.com/questions/1816958/cant-pickle-type-instancemethod-when-using-multiprocessing-pool-map/1816969#1816969
 
 
-def _pickle_method(method):
-    func_name = method.im_func.__name__
-    obj = method.im_self
-    cls = method.im_class
-    return _unpickle_method, (func_name, obj, cls)
-
-
-def _unpickle_method(func_name, obj, cls):
-    for cls in cls.mro():
-        try:
-            func = cls.__dict__[func_name]
-        except KeyError:
-            pass
-        else:
-            break
-        return func.__get__(obj, cls)
-
-
-def runner(title):
-    print(title)
-    root = Tk()
-    floors_file = '../../assets/output_floors.obj'
-    walls_file = '../../assets/output_walls.obj'
-
-    my_gui = DisplayWindow(root, floors_file, walls_file)
-    my_gui.on_update()
-
-    print("HERE!!")
-
-    #thread2 = Thread(target=test_thread_fnc)
-    #thread2.start()
-    root.mainloop()
-    #thread2.join()
-
-
-copyreg.pickle(types.MethodType, _pickle_method, _unpickle_method)
-
-#mp.set_start_method('spawn')
-proc = mp.Process(target=runner, args=("Foo",))
-
-proc.start()
-
-print("Here")
-
-proc.join()
+# # https://bytes.com/topic/python/answers/552476-why-cant-you-pickle-instancemethods (See Steven Bethard response)
+# # https://stackoverflow.com/questions/1816958/cant-pickle-type-instancemethod-when-using-multiprocessing-pool-map/1816969#1816969
+#
+#
+# def _pickle_method(method):
+#     func_name = method.im_func.__name__
+#     obj = method.im_self
+#     cls = method.im_class
+#     return _unpickle_method, (func_name, obj, cls)
+#
+#
+# def _unpickle_method(func_name, obj, cls):
+#     for cls in cls.mro():
+#         try:
+#             func = cls.__dict__[func_name]
+#         except KeyError:
+#             pass
+#         else:
+#             break
+#         return func.__get__(obj, cls)
+#
+#
+# def runner(title):
+#     print(title)
+#     from tkinter import Tk, Canvas, Button
+#     root = Tk()
+#     floors_file = '../../assets/output_floors.obj'
+#     walls_file = '../../assets/output_walls.obj'
+#
+#     my_gui = DisplayWindow(root, floors_file, walls_file)
+#     my_gui.on_update()
+#
+#     print("HERE!!")
+#
+#     #thread2 = Thread(target=test_thread_fnc)
+#     #thread2.start()
+#     root.mainloop()
+#     #thread2.join()
+#
+#
+# copyreg.pickle(types.MethodType, _pickle_method, _unpickle_method)
+#
+# mp.set_start_method('spawn')
+# proc = mp.Process(target=runner, args=("Foo",))
+#
+# proc.start()
+#
+# print("Here")
+#
+# proc.join()
