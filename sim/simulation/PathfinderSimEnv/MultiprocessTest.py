@@ -28,6 +28,3 @@ if __name__ == '__main__':
     p = Process(target=gui_process, args=('GUI',))
     p.start()
     p.join()
-
-
-

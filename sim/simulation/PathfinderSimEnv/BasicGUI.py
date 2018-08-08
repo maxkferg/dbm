@@ -5,11 +5,6 @@ import os
 from queue import Queue
 from time import sleep, clock
 from tkinter import Tk, Canvas, Button
-from threading import Thread
-import multiprocessing as mp
-import copyreg
-import types
-
 
 sys.path.insert(1, os.path.join(sys.path[0], '../..'))
 from OBJModel import OBJModel
