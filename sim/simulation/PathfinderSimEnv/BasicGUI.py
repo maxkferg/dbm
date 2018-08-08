@@ -2,7 +2,7 @@ from random import randint, random
 import math
 import sys
 import os
-from queue import Queue
+from multiprocessing import Queue
 from time import sleep, clock
 from tkinter import Tk, Canvas, Button
 
@@ -52,7 +52,7 @@ RAY_LINE = [CAR_SCALE*100, 0]                         # A line of 100 pixels lon
 
 class DisplayWindow:
     # Pass is_test = True if controlling car from keyboard
-    def __init__(self, master, floor_file, walls_file, is_test=True):
+    def __init__(self, master, queue, floor_file, walls_file, is_test=True):
         self.master = master
         master.title("PathfinderSim Display Window")
         master.geometry("512x600")
@@ -90,7 +90,7 @@ class DisplayWindow:
         self.ray_dtheta = 2.*math.pi/self.car_rays
 
         # Async comms to class in separate thread
-        self.command_q = Queue()
+        self.command_q = queue
         self.response_q = Queue()
         self.shutdown_flag = False
 
@@ -284,7 +284,7 @@ class DisplayWindow:
                     print("Unknown command", cmd)
 
     def on_update(self):
-        #self.process_commands()
+        self.process_commands()
         self.draw_car()
         self.canvas.after(50, self.on_update)
 
@@ -298,103 +298,3 @@ class DisplayWindow:
         self.response_q.put(["screen", [self.width, self.height]])
 
         self.clear_map()
-
-def test_thread_fnc():
-    dim = [512, 512]
-    # Move the vehicle according to random targets
-    src_pos = rand_pos([0, 0], rand_pos(dim))
-    src_orn = rand_orn(0., 2.*math.pi)
-    trg_pos = rand_pos([0, 0], rand_pos(dim))
-    trg_orn = rand_orn(0., 2. * math.pi)
-    pos_dur = [.2, 0]
-    orn_dur = [.2, 0]
-
-    curr_t = clock()
-    prev_t = clock()
-    dt = curr_t - prev_t
-
-    shutdown = False
-    while not shutdown:
-        dt = curr_t - prev_t
-        prev_t = curr_t
-        curr_t = clock()
-
-        pos_dur[1] += dt
-        orn_dur[1] += dt
-
-        if pos_dur[1] > pos_dur[0]:
-            src_pos = trg_pos
-            trg_pos = rand_pos([0, 0], dim)
-            print(src_pos, trg_pos)
-            pos_dur[1] = 0
-
-        if orn_dur[1] > orn_dur[0]:
-            src_orn = trg_orn
-            trg_orn = rand_orn(0, 2*math.pi)
-            orn_dur[1] = 0
-
-        my_gui.cmd_move_car(lerp(src_pos, trg_pos, pos_dur[1]/pos_dur[0]))
-        my_gui.cmd_turn_car(lerp(src_orn, trg_orn, orn_dur[1]/orn_dur[0]))
-
-        if my_gui.has_response():
-            rsp = my_gui.get_response()
-            if rsp[0] == "shutdown":
-                shutdown = True
-            if rsp[0] == "screen":
-                dim = rsp[1]
-            else:
-                print(rsp)
-        sleep(.016)
-
-
-
-# # https://bytes.com/topic/python/answers/552476-why-cant-you-pickle-instancemethods (See Steven Bethard response)
-# # https://stackoverflow.com/questions/1816958/cant-pickle-type-instancemethod-when-using-multiprocessing-pool-map/1816969#1816969
-#
-#
-# def _pickle_method(method):
-#     func_name = method.im_func.__name__
-#     obj = method.im_self
-#     cls = method.im_class
-#     return _unpickle_method, (func_name, obj, cls)
-#
-#
-# def _unpickle_method(func_name, obj, cls):
-#     for cls in cls.mro():
-#         try:
-#             func = cls.__dict__[func_name]
-#         except KeyError:
-#             pass
-#         else:
-#             break
-#         return func.__get__(obj, cls)
-#
-#
-# def runner(title):
-#     print(title)
-#     from tkinter import Tk, Canvas, Button
-#     root = Tk()
-#     floors_file = '../../assets/output_floors.obj'
-#     walls_file = '../../assets/output_walls.obj'
-#
-#     my_gui = DisplayWindow(root, floors_file, walls_file)
-#     my_gui.on_update()
-#
-#     print("HERE!!")
-#
-#     #thread2 = Thread(target=test_thread_fnc)
-#     #thread2.start()
-#     root.mainloop()
-#     #thread2.join()
-#
-#
-# copyreg.pickle(types.MethodType, _pickle_method, _unpickle_method)
-#
-# mp.set_start_method('spawn')
-# proc = mp.Process(target=runner, args=("Foo",))
-#
-# proc.start()
-#
-# print("Here")
-#
-# proc.join()
