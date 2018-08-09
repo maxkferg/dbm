@@ -1,4 +1,3 @@
-from random import randint, random
 import math
 import sys
 import os
@@ -7,51 +6,19 @@ from tkinter import Canvas, Button
 
 sys.path.insert(1, os.path.join(sys.path[0], '../..'))
 from tools.OBJModel import OBJModel
-from tools.Math2D import rotate, rot_vec, add, mul, scale_bias, make_polar, test_intersection, is_ccw
-
-
-def rgb2hex(rgb):
-    return "#" + hex(rgb[0])[2:].rjust(2, '0') + hex(rgb[1])[2:].rjust(2, '0') + hex(rgb[2])[2:].rjust(2, '0')
-
-
-def rand_colour():
-    return rgb2hex((randint(0, 255), randint(0, 255), randint(0, 255)))
-
-
-def rand_pos(min=(0, 0), max=(1, 1)):
-    return [min[0] + (max[0] - min[0])*random(), min[1] + (max[1] - min[1])*random()]
-
-
-def rand_orn(min=0, max=1):
-    return min + (max - min)*random()
-
-
-def rand_rect(min=(0, 0), max=(1, 1)):
-    A = rand_pos(min, max)
-    B = rand_pos(min, max)
-
-    lb = [A[0] if A[0] < B[0] else B[0], A[1] if A[1] < B[1] else B[1]]
-    rt = [A[0] if A[0] > B[0] else B[0], A[1] if A[1] > B[1] else B[1]]
-
-    return [lb, [rt[0], lb[1]], rt, [lb[0], rt[1]]]
-
-
-def rand_tri(min=(0, 0), max=(1, 1)):
-    tri = [rand_pos(min, max), rand_pos(min, max), rand_pos(min, max)]
-    if not is_ccw(tri): tri.reverse()
-    return tri
+import tools.Math2D as m2d
 
 
 CAR_SCALE = .5
 CAR_BODY = [[CAR_SCALE*-20, CAR_SCALE*-12.5], [CAR_SCALE*20, CAR_SCALE*12.5]]
 CAR_FRONT = [[CAR_SCALE*-5, CAR_SCALE*-10.], [CAR_SCALE*5, CAR_SCALE*10]]
-FRONT_TRANS = [CAR_SCALE*10, 0]                       # The relative translation of the front to the body (tkinter doesn't have a scene graph)
-RAY_LINE = [CAR_SCALE*100, 0]                         # A line of 100 pixels long
+FRONT_TRANS = [CAR_SCALE*10, 0]  # Relative translation of the front to the body (tkinter doesn't have a scene graph)
+RAY_LINE = [CAR_SCALE*100, 0]    # A line of 100 pixels long
 
 
 class DisplayWindow:
     # Pass is_test = True if controlling car from keyboard
-    def __init__(self, master, queue, floor_file, walls_file, is_test=True):
+    def __init__(self, master, send_q, resp_q, floor_file, walls_file, is_test=True):
         self.master = master
         master.title("PathfinderSim Display Window")
         master.geometry("512x600")
@@ -74,8 +41,8 @@ class DisplayWindow:
         if is_test:
             master.bind('<Left>', lambda x: self.cmd_turn_car(self.car_orn - .1))
             master.bind('<Right>', lambda x: self.cmd_turn_car(self.car_orn + .1))
-            master.bind('<Up>', lambda x: self.cmd_move_car(add(self.car_pos, mul(make_polar(self.car_orn), 5))))
-            master.bind('<Down>', lambda x: self.cmd_move_car(add(self.car_pos, mul(make_polar(self.car_orn), -5))))
+            master.bind('<Up>', lambda x: self.cmd_move_car(m2d.add(self.car_pos, m2d.mul(m2d.make_polar(self.car_orn), 5))))
+            master.bind('<Down>', lambda x: self.cmd_move_car(m2d.add(self.car_pos, m2d.mul(m2d.make_polar(self.car_orn), -5))))
 
         self.canvas = Canvas(master, width=512, height=512)
         self.canvas.pack(fill="both", expand=True)
@@ -89,8 +56,8 @@ class DisplayWindow:
         self.ray_dtheta = 2.*math.pi/self.car_rays
 
         # Async comms to class in separate thread
-        self.command_q = queue
-        self.response_q = Queue()
+        self.command_q = send_q
+        self.response_q = resp_q
         self.shutdown_flag = False
 
         self.button = Button(master, text="Quit", command=self.shutdown)
@@ -126,10 +93,10 @@ class DisplayWindow:
             A = self.floors.get_position(prim[0])[:-1]
             B = self.floors.get_position(prim[2])[:-1]
 
-            P0 = scale_bias(A, scale, bias)
-            P1 = scale_bias(B, scale, bias)
+            P0 = m2d.scale_bias(A, scale, bias)
+            P1 = m2d.scale_bias(B, scale, bias)
 
-            colour = rand_colour()
+            colour = m2d.rand_colour()
             if self.floors_seen[floor]: colour = "lightblue"
 
             id = self.canvas.create_rectangle(P0[0], P0[1], P1[0], P1[1], fill=colour)
@@ -145,8 +112,8 @@ class DisplayWindow:
             A = self.walls.get_position(prim[0])[:-1]
             B = self.walls.get_position(prim[1])[:-1]
 
-            P0 = scale_bias(A, scale, bias)
-            P1 = scale_bias(B, scale, bias)
+            P0 = m2d.scale_bias(A, scale, bias)
+            P1 = m2d.scale_bias(B, scale, bias)
 
             self.canvas.create_line(P0[0], P0[1], P1[0], P1[1], fill="red", width=2)
 
@@ -166,7 +133,7 @@ class DisplayWindow:
 
     def rotate_polygon(self, AABB, rotation, centre):
         verts, centre2 = self.AABB_to_vertices(AABB)
-        return rotate(verts, rotation, centre2 if not centre else centre)
+        return m2d.rotate(verts, rotation, centre2 if not centre else centre)
 
     def build_car(self, position, rays):
         """Builds the mesh for the car and the view triangles for intersecting mesh geometry"""
@@ -181,15 +148,15 @@ class DisplayWindow:
 
         # We have to rotate the local transformation of the front-AABB
         verts = self.translate_vertices(self.rotate_polygon(CAR_FRONT, self.car_orn, [0, 0]), position)
-        rot = rot_vec(FRONT_TRANS, self.car_orn)
-        verts = list(map(lambda x: add(x, rot), verts))
+        rot = m2d.rot_vec(FRONT_TRANS, self.car_orn)
+        verts = list(map(lambda x: m2d.add(x, rot), verts))
         self.update_object_coords(car[1], verts)
 
         ray_points = []
         for i in range(rays):
-            vec = rot_vec(RAY_LINE, i*self.ray_dtheta)
-            verts = self.flatten([self.car_pos, add(self.car_pos, vec)])
-            ray_points.append(add(self.car_pos, vec))
+            vec = m2d.rot_vec(RAY_LINE, i*self.ray_dtheta)
+            verts = self.flatten([self.car_pos, m2d.add(self.car_pos, vec)])
+            ray_points.append(m2d.add(self.car_pos, vec))
             car.append(self.canvas.create_line(*verts, fill="black"))
 
         i1 = len(ray_points) - 1
@@ -206,15 +173,15 @@ class DisplayWindow:
 
         # We have to rotate the local transformation of the front-AABB
         verts = self.translate_vertices(self.rotate_polygon(CAR_FRONT, self.car_orn, [0, 0]), self.car_pos)
-        rot = rot_vec(FRONT_TRANS, self.car_orn)
-        verts = list(map(lambda x: add(x, rot), verts))
+        rot = m2d.rot_vec(FRONT_TRANS, self.car_orn)
+        verts = list(map(lambda x: m2d.add(x, rot), verts))
         self.update_object_coords(self.car[1], verts)
 
         ray_points = []
         for i in range(2, 2 + self.car_rays):
-            vec = rot_vec(RAY_LINE, self.car_orn + i*self.ray_dtheta)
-            self.update_object_coords(self.car[i], [self.car_pos, add(self.car_pos, vec)])
-            ray_points.append(add(self.car_pos, vec))
+            vec = m2d.rot_vec(RAY_LINE, self.car_orn + i*self.ray_dtheta)
+            self.update_object_coords(self.car[i], [self.car_pos, m2d.add(self.car_pos, vec)])
+            ray_points.append(m2d.add(self.car_pos, vec))
 
         i1 = len(ray_points) - 1
         for i0 in range(self.car_rays):
@@ -226,10 +193,10 @@ class DisplayWindow:
         i1 = len(ray_points) - 1
         for i0 in range(self.car_rays):
             tri = [self.car_pos, ray_points[i1], ray_points[i0]]
-            if not is_ccw(tri): tri.reverse()
+            if not m2d.is_ccw(tri): tri.reverse()
             for j in range(len(self.floor_polys)):
                 if self.floors_seen[j]: continue
-                elif test_intersection(tri, self.floor_polys[j]):
+                elif m2d.test_intersection(tri, self.floor_polys[j]):
                     self.canvas.itemconfig(self.floors_id[j], fill='lightblue')
                     self.floors_seen[j] = True
             i1 = i0

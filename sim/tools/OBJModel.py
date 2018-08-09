@@ -14,7 +14,11 @@ class OBJModel:
         self.indices = None
 
     def parse(self):
-        file = open(self.filename)
+        file = None
+        try:
+            file = open(self.filename)
+        except FileNotFoundError:
+            return False
 
         self.positions = []
         self.normals = []

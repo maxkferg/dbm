@@ -3,6 +3,7 @@
 # See: https://www.geometrictools.com/Documentation/MethodOfSeparatingAxes.pdf
 
 import math
+from random import randint, random
 
 
 def rotate(points, angle, centre):
@@ -110,6 +111,38 @@ def test_intersection(polyA, polyB):
         i1 = i0
 
     return True
+
+
+def rgb2hex(rgb):
+    return "#" + hex(rgb[0])[2:].rjust(2, '0') + hex(rgb[1])[2:].rjust(2, '0') + hex(rgb[2])[2:].rjust(2, '0')
+
+
+def rand_colour():
+    return rgb2hex((randint(0, 255), randint(0, 255), randint(0, 255)))
+
+
+def rand_pos(min=(0, 0), max=(1, 1)):
+    return [min[0] + (max[0] - min[0])*random(), min[1] + (max[1] - min[1])*random()]
+
+
+def rand_orn(min=0, max=1):
+    return min + (max - min)*random()
+
+
+def rand_rect(min=(0, 0), max=(1, 1)):
+    A = rand_pos(min, max)
+    B = rand_pos(min, max)
+
+    lb = [A[0] if A[0] < B[0] else B[0], A[1] if A[1] < B[1] else B[1]]
+    rt = [A[0] if A[0] > B[0] else B[0], A[1] if A[1] > B[1] else B[1]]
+
+    return [lb, [rt[0], lb[1]], rt, [lb[0], rt[1]]]
+
+
+def rand_tri(min=(0, 0), max=(1, 1)):
+    tri = [rand_pos(min, max), rand_pos(min, max), rand_pos(min, max)]
+    if not is_ccw(tri): tri.reverse()
+    return tri
 
 
 if __name__ == "__main__":

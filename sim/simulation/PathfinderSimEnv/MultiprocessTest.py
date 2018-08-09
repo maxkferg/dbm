@@ -5,22 +5,22 @@ import multiprocessing as mp
 import sys
 import os
 
-sys.path.insert(1, os.path.join(sys.path[0], '.'))
-from BasicGUI import rand_pos, rand_orn
+sys.path.insert(1, os.path.join(sys.path[0], '../..'))
+
 from time import sleep, clock
 import math
-from tools.Math2D import lerp
+from tools.Math2D import lerp, rand_pos, rand_orn
 
 
 def gui_process(send_q, resp_q):
     # Note: must import Tkinter *after* forking!!!
     sys.path.insert(1, os.path.join(sys.path[0], '.'))
     from tkinter import Tk
-    from BasicGUI import DisplayWindow
+    from simulation.PathfinderSimEnv.BasicGUI import DisplayWindow
 
     root = Tk()
-    floors_file = '../../assets/output_floors.obj'
-    walls_file = '../../assets/output_walls.obj'
+    floors_file = 'assets/output_floors.obj'
+    walls_file = 'assets/output_walls.obj'
 
     my_gui = DisplayWindow(root, send_q, resp_q, floors_file, walls_file)
     my_gui.on_update()

@@ -4,9 +4,21 @@ import math
 import sys, os
 from multiprocessing import Process
 
+sys.path.insert(1, os.path.join(sys.path[0], '..'))
+from tools.OBJModel import OBJModel
+import tools.Math2D as m2d
+from tools.TileGrid import TileGrid
+
+
+CAR_SCALE = .5
+CAR_BODY = [[CAR_SCALE*-20, CAR_SCALE*-12.5], [CAR_SCALE*20, CAR_SCALE*12.5]]
+CAR_FRONT = [[CAR_SCALE*-5, CAR_SCALE*-10.], [CAR_SCALE*5, CAR_SCALE*10]]
+FRONT_TRANS = [CAR_SCALE*10, 0]  # Relative translation of the front to the body (tkinter doesn't have a scene graph)
+RAY_LINE = [CAR_SCALE*100, 0]    # A line of 100 pixels long
+
 
 class PathfinderWindow:
-    """This class displays a Tkinter window running in a separate thread.  The Tkinter window contains a 2D top-down
+    """This class displays a Tkinter window running in a separate process.  The Tkinter window contains a 2D top-down
     view of the model including the car, it's position, orientation, and visited grid blocks.
 
     Note: The grid will automatically be the smallest unit size possible.  Thus, when analysing the input model, the
@@ -14,12 +26,33 @@ class PathfinderWindow:
     polygon by the height of the narrowest tile.  Thus, if we have two rects of 2 x 10, 4 x 2, the grid size will be set
     to 2 x 2 to ensure the entire floor can be covered with a uniform tile size.
     """
-    def __init__(self, floors, walls, is_test=True):
+    def __init__(self, send_q, resp_q, floors, walls, is_test=True):
         """Initialise the PathfinderWindow with the floors and walls, both being paths because the OBJ files are
         loaded into a separate process in a separate python interpreter to avoid mixing two different GUI event loops.
         Set is_test equal to True when wishing to control the car with the keyboard."""
         self.master = Tk()
+        self.master.title("Grid Display")
+        self.master.geometry("512x600")
+
+        self.send_q = send_q        # The queue in which commands arrive for processing
+        self.resp_q = resp_q        # The queue used to send responses to queries
+
+        self.wall_model = None      # The loaded OBJ file mdoel for the walls
+        self.wall_bound = None      # The wall AABB world bound
+
+        self.tile_grid = None       # TileGrid instance
+
+        if not self.build_tiles(floors):
+            return
+
         self.on_update()
+
+    def build_tiles(self, floor_file):
+        self.tile_grid = TileGrid(floor_file)
+        if not self.tile_grid.is_valid():
+            print("Failed to intialize TileGrid, aborting")
+            return False
+        return True
 
     def on_update(self):
         """The on_update method reads the input command queue and updates the display with the new rendering"""

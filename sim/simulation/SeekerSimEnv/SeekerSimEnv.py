@@ -17,7 +17,7 @@ RENDER_HEIGHT = 720
 
 
 def normalize(vec):
-    return np.multiply(vec, np.linalg.norm(vec));
+    return np.multiply(vec, np.linalg.norm(vec))
 
 
 def rotate_vector(quat, vec):
