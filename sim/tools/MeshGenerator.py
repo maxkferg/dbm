@@ -718,6 +718,7 @@ class Generator:
         file = open(floors_filename, "w")
         # Write the scale as a comment to the floors object output
         file.write("#scale " + str(obj_scale) + "\n")
+        file.write("#dims " + str(self.size[0]) + " " + str(self.size[1]) + "\n")
 
         for v in floor_vertices:
             file.write(vertex_string.format(v[0][0], v[0][1], v[0][2]))

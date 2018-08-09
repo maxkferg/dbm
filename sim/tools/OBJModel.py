@@ -12,6 +12,8 @@ class OBJModel:
         self.normals = None
         self.texcoords = None
         self.indices = None
+        self.scale = 1
+        self.dims = [1, 1]
 
     def parse(self):
         file = None
@@ -60,6 +62,11 @@ class OBJModel:
                     int(els[2].split('/')[0]) - 1,
                     int(els[3].split('/')[0]) - 1
                 ])
+            elif line[0:6] == '#scale':
+                self.scale = float(line.split(' ')[1][:-1])
+            elif line[0:5] == '#dims':
+                els = line.split(' ')
+                self.dims = [int(els[1]), int(els[2])]
 
         file.close()
 

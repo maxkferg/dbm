@@ -35,15 +35,21 @@ class TileGrid:
         self.visited = []                                   # Visited flag
         self.min_dims = []                                  # The minimum dimensions of the grid in each axis
         self.quadtree = None                                # The TileGrid quadtree (intersection queries)
+        self.poly_arr = []                                  # Polygon array
 
     def is_valid(self):
         return self.obj is not None
 
     def build_grid(self):
         centre = compute_centre(self.bound)
+        scale = self.obj.scale
+        dims = self.obj.dims
+
+        print("Map Dims:", scale, dims)
+
         prim_count = self.obj.get_prim_count()
 
-        min_dims = m2d.sub(self.bound[PB], self.bound[PA])
+        min_dims = m2d.mul(m2d.sub(self.bound[PB][:-1], self.bound[PA][:-1]), dims[0])
         print(min_dims)
 
         # Find minimum dimensions
@@ -53,12 +59,14 @@ class TileGrid:
                 continue
 
             A = self.obj.get_position(prim[0])[:-1]         # Left Bottom corner, truncate z coord
-            B = self.obj.get_position(prim[2])[:-1]         # Top Right corner, truncate z coord
+            B = self.obj.get_position(prim[1])[:-1]         # Right Bottom corner
+            C = self.obj.get_position(prim[2])[:-1]         # Left Top corner
 
-            tile_delta = m2d.sub(B, A)
+            lb = [A[X], A[Y]]
+            rt = [B[X], C[Y]]
 
-            if tile_delta[X] == 0:
-                print(floor, tile_delta)
+            tile_delta = m2d.mul(m2d.sub(rt, lb), dims[0])
+            print(floor, A, B, tile_delta)
 
             if tile_delta[X] < min_dims[X]:
                 min_dims[X] = tile_delta[X]
@@ -70,6 +78,6 @@ class TileGrid:
 
 
 if __name__ == '__main__':
-    filename = '/Users/otgaard/Development/dbm/sim/assets/output_floors.obj'
+    filename = '/Users/otgaard/Development/dbm/sim/output/test2_floors.obj'
     grid = TileGrid(filename)
     grid.build_grid()

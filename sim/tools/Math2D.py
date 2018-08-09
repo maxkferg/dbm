@@ -38,6 +38,11 @@ def mul(A, s):
     return [s*A[0], s*A[1]]
 
 
+# A component-wise multiply
+def cp_mul(A, B):
+    return [A[0]*B[0], A[1]*B[1]]
+
+
 def scale_bias(v, s, b):
     return [v[0] * s[0] + b[0], v[1] * s[1] + b[1]]
 
