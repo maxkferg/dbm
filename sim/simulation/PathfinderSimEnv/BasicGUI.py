@@ -3,12 +3,11 @@ import math
 import sys
 import os
 from multiprocessing import Queue
-from time import sleep, clock
-from tkinter import Tk, Canvas, Button
+from tkinter import Canvas, Button
 
 sys.path.insert(1, os.path.join(sys.path[0], '../..'))
-from OBJModel import OBJModel
-from Math2D import rotate, rot_vec, add, sub, dot, perp, mul, scale_bias, make_polar, lerp, test_intersection, is_ccw
+from tools.OBJModel import OBJModel
+from tools.Math2D import rotate, rot_vec, add, mul, scale_bias, make_polar, test_intersection, is_ccw
 
 
 def rgb2hex(rgb):

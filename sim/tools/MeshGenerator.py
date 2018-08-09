@@ -3,7 +3,7 @@ from PIL import Image
 import numpy as np
 import math
 import random
-import SDFGenerator
+from tools import SDFGenerator
 
 '''Lines are based on the assumption that they are horizontal or vertical and
 therefore are identified by a range over x or y and a single value for the coordinate

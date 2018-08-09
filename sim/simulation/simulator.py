@@ -1,12 +1,10 @@
 import argparse
 import gym
-import datetime
-from MeshGenerator import Generator
+from tools.MeshGenerator import Generator
 from simulation.SeekerSimEnv.simulationTest import run_test
-from gym.envs.registration import registry, make, spec
+from gym.envs.registration import registry
 from simulation.agents.train_ppo import setup_training_env
 from simulation.agents.visualize_ppo import setup_visualize_env
-import tensorflow as tf
 
 
 def register(id, *args, **kvargs):

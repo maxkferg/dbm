@@ -1,6 +1,6 @@
 # This is a small test of running two separate processes and initiating IPC between the two.
 
-from multiprocessing import Process, Queue
+from multiprocessing import Process
 import multiprocessing as mp
 import sys
 import os
@@ -9,10 +9,10 @@ sys.path.insert(1, os.path.join(sys.path[0], '.'))
 from BasicGUI import rand_pos, rand_orn
 from time import sleep, clock
 import math
-from Math2D import rotate, rot_vec, add, sub, dot, perp, mul, scale_bias, make_polar, lerp, test_intersection, is_ccw
+from tools.Math2D import lerp
 
 
-def gui_process(q):
+def gui_process(send_q, resp_q):
     # Note: must import Tkinter *after* forking!!!
     sys.path.insert(1, os.path.join(sys.path[0], '.'))
     from tkinter import Tk
@@ -22,7 +22,7 @@ def gui_process(q):
     floors_file = '../../assets/output_floors.obj'
     walls_file = '../../assets/output_walls.obj'
 
-    my_gui = DisplayWindow(root, q, floors_file, walls_file)
+    my_gui = DisplayWindow(root, send_q, resp_q, floors_file, walls_file)
     my_gui.on_update()
 
     root.mainloop()
@@ -36,7 +36,7 @@ def cmd_turn_car(q, target_orn):
     q.put(["turn", target_orn])
 
 
-def test_fnc(q):
+def test_fnc(send_q, resp_q):
     dim = [512, 512]
     # Move the vehicle according to random targets
     src_pos = rand_pos([0, 0], rand_pos(dim))
@@ -70,16 +70,26 @@ def test_fnc(q):
             trg_orn = rand_orn(0, 2*math.pi)
             orn_dur[1] = 0
 
-        cmd_move_car(q, lerp(src_pos, trg_pos, pos_dur[1]/pos_dur[0]))
-        cmd_turn_car(q, lerp(src_orn, trg_orn, orn_dur[1]/orn_dur[0]))
+        cmd_move_car(send_q, lerp(src_pos, trg_pos, pos_dur[1]/pos_dur[0]))
+        cmd_turn_car(send_q, lerp(src_orn, trg_orn, orn_dur[1]/orn_dur[0]))
+
+        if not resp_q.empty():
+            rsp = resp_q.get(True)
+            if rsp[0] == "shutdown":
+                shutdown = True
+            if rsp[0] == "screen":
+                dim = rsp[1]
+            else:
+                print(rsp)
 
         sleep(.016)
 
 
 if __name__ == '__main__':
     mp.set_start_method('spawn')
-    queue = mp.Queue()
-    p = Process(target=gui_process, args=(queue,))
+    send_queue = mp.Queue()
+    resp_queue = mp.Queue()
+    p = Process(target=gui_process, args=(send_queue, resp_queue))
     p.start()
-    test_fnc(queue)
+    test_fnc(send_queue, resp_queue)
     p.join()
