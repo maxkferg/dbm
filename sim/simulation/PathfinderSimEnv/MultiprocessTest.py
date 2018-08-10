@@ -1,6 +1,5 @@
 # This is a small test of running two separate processes and initiating IPC between the two.
 
-from multiprocessing import Process
 import multiprocessing as mp
 import sys
 import os
@@ -19,8 +18,8 @@ def gui_process(send_q, resp_q):
     from simulation.PathfinderSimEnv.BasicGUI import DisplayWindow
 
     root = Tk()
-    floors_file = 'assets/output_floors.obj'
-    walls_file = 'assets/output_walls.obj'
+    floors_file = '../../assets/output_floors.obj'
+    walls_file = '../../assets/output_walls.obj'
 
     my_gui = DisplayWindow(root, send_q, resp_q, floors_file, walls_file)
     my_gui.on_update()

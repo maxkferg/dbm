@@ -1,4 +1,3 @@
-from tkinter import Tk, Canvas
 from random import randint, random
 import math
 import sys, os
@@ -30,6 +29,11 @@ def rotate_polygon(AABB, rotation, centre):
     return m2d.rotate(verts, rotation, centre2 if not centre else centre)
 
 
+def pathfinder_executor(send_q, resp_q, floors_file, walls_file):
+    pfw = PathfinderWindow(send_q, resp_q, floors_file, walls_file, False)
+    pfw.run()
+
+
 class PathfinderWindow:
     """This class displays a Tkinter window running in a separate process.  The Tkinter window contains a 2D top-down
     view of the model including the car, it's position, orientation, and visited grid blocks.
@@ -42,6 +46,8 @@ class PathfinderWindow:
     The GCD is computed in each axis to be the dimensions of the grid size.
     """
     def __init__(self, send_q, resp_q, floors, walls, is_test=True):
+        # Tkinter must be imported only after the process has spawned
+        from tkinter import Tk
         """Initialise the PathfinderWindow with the floors and walls, both being paths because the OBJ files are
         loaded into a separate process in a separate python interpreter to avoid mixing two different GUI event loops.
         Set is_test equal to True when wishing to control the car with the keyboard."""
@@ -81,10 +87,12 @@ class PathfinderWindow:
 
         self.draw_map()
 
+    def run(self):
         self.on_update()
         self.master.mainloop()
 
     def setup_window(self):
+        from tkinter import Canvas
         self.master.bind('<Destroy>', self.on_destroy)
         if self.is_test:
             self.master.bind('<Left>', lambda x: self.cmd_turn_car(self.car_orn - .1))
@@ -159,7 +167,9 @@ class PathfinderWindow:
 
     def clear_map(self):
         """The Tkinter window only draws the map during initialisation, clear the map to draw the map again."""
-        pass
+        self.canvas.delete("all")
+        self.draw_map()
+        self.car = self.build_car(self.car_pos, 12)
 
     def draw_map(self):
         """The draw_map routine should not need to be called except via the clear_map function."""

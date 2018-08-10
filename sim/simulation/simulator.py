@@ -23,6 +23,7 @@ def register(id, *args, **kvargs):
 #       --run-test output
 #       --train output
 
+
 parser = argparse.ArgumentParser()
 parser.add_argument("plan_file")
 parser.add_argument("--render-image", help="Analyse the plan-file and export the walls and normals to an image file")

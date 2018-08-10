@@ -27,7 +27,6 @@ def AABB_to_vertices(AABB):
     return verts, centre
 
 
-
 # The TileGrid is an abstraction of the floor of the building so we can model it as a gridded surface that contains a
 # binary field indicating whether or not the tile has been "seen" by the robot (i.e. that the tile has intersected a
 # portion of the LIDAR triangles
@@ -59,7 +58,6 @@ class TileGrid:
     def build_grid(self):
         scale = self.obj.scale
         dims = self.obj.dims
-        dims[1] *= -1                                       # Flip-y
 
         centre = m2d.mul(compute_centre(self.bound), dims[0])
 
@@ -72,8 +70,8 @@ class TileGrid:
 
         tile_dims = []
 
-        ss_offset = [dims[0], -dims[1]]                  # Screen space offset
-        ss_scale = [2, 2]
+        ss_offset = [dims[0], dims[1]]                  # Screen space offset
+        ss_scale = [1, -1]                              # Flip y axis on screen
         # Find minimum dimensions
         for floor in range(prim_count):
             prim = self.obj.get_prim(floor)
@@ -88,8 +86,8 @@ class TileGrid:
             rt = m2d.sub(m2d.cp_mul([B[X], C[Y]], dims), centre)
 
             # Move the polygon into screen-space for direct display by the Display Window
-            slb = m2d.add(m2d.cp_mul(lb, [2, 2]), ss_offset)
-            srt = m2d.add(m2d.cp_mul(rt, [2, 2]), ss_offset)
+            slb = m2d.add(m2d.cp_mul(lb, ss_scale), ss_offset)
+            srt = m2d.add(m2d.cp_mul(rt, ss_scale), ss_offset)
 
             self.poly_arr.append([slb, srt])
 
