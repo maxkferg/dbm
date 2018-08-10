@@ -64,6 +64,7 @@ class PathfinderWindow:
         self.wall_model = None      # The loaded OBJ file mdoel for the walls
         self.wall_bound = None      # The wall AABB world bound
         self.tile_grid = None       # TileGrid instance
+        self.car = None
 
         self.car_pos = [0, 0]       # The position of the car in screen coordinates
         self.car_orn = 0            # The orientation of the car in screen space
@@ -117,7 +118,7 @@ class PathfinderWindow:
             return False
 
         self.tile_grid.build_grid()
-
+        self.car = self.build_car(self.car_pos, self.car_rays)
         return True
 
     def on_update(self):
@@ -138,7 +139,23 @@ class PathfinderWindow:
     def process_commands(self):
         """The process_commands method reads input commands from the input command queue.  Note that the input command
         queue is thread-safe and therefore may be accessed from other concurrent threads."""
-        pass
+        while not self.send_q.empty():
+            cmd = self.send_q.get()
+            if cmd[0] == "move":
+                self.car_pos = cmd[1]
+            elif cmd[0] == "turn":
+                self.car_orn = cmd[1]
+            elif cmd[0] == "read":
+                if cmd[1] == "car_pos":
+                    self.resp_q.put(["car_pos", self.car_pos])
+                elif cmd[1] == "car_orn":
+                    self.resp_q.put(["car_orn", self.car_orn])
+                elif cmd[1] == "screen":
+                    self.resp_q.put(["screen", [self.width, self.height]])
+                elif cmd[1] == "shutdown":
+                    self.resp_q.put(["shutdown", self.shutdown])
+                else:
+                    print("Unknown command", cmd)
 
     def clear_map(self):
         """The Tkinter window only draws the map during initialisation, clear the map to draw the map again."""
@@ -157,29 +174,89 @@ class PathfinderWindow:
             print(LB, TR)
             self.canvas.create_rectangle(LB[0], LB[1], TR[0], TR[1], fill=colour)
 
-    def build_car(self):
+    def update_object_coords(self, obj, verts):
+        self.canvas.coords(obj, flatten(verts))
+
+    def build_car(self, position, rays):
         """Builds the Tkinter objects for displaying the car.  This must be called prior to draw_car."""
-        pass
+        car = list()
+        car.append(self.canvas.create_polygon(AABB_to_vertices(CAR_BODY), fill="blue"))
+        car.append(self.canvas.create_polygon(AABB_to_vertices(CAR_FRONT), fill="red"))
+
+        verts = translate_vertices(rotate_polygon(CAR_BODY, self.car_orn, [0, 0]), position)
+        self.update_object_coords(car[0], verts)
+
+        # We have to rotate the local transformation of the front-AABB
+        verts = translate_vertices(rotate_polygon(CAR_FRONT, self.car_orn, [0, 0]), position)
+        rot = m2d.rot_vec(FRONT_TRANS, self.car_orn)
+        verts = list(map(lambda x: m2d.add(x, rot), verts))
+        self.update_object_coords(car[1], verts)
+
+        ray_points = []
+        for i in range(rays):
+            vec = m2d.rot_vec(RAY_LINE, i*self.ray_dtheta)
+            verts = flatten([self.car_pos, m2d.add(self.car_pos, vec)])
+            ray_points.append(m2d.add(self.car_pos, vec))
+            car.append(self.canvas.create_line(*verts, fill="black"))
+
+        i1 = len(ray_points) - 1
+        for i0 in range(len(ray_points)):
+            car.append(self.canvas.create_line(*[ray_points[i1], ray_points[i0]], fill="black"))
+            i1 = i0
+
+        return car
 
     def update_car(self):
         """Updates the car each frame by updating the scene graph created by build_car."""
-        pass
+        verts = translate_vertices(rotate_polygon(CAR_BODY, self.car_orn, [0, 0]), self.car_pos)
+        self.update_object_coords(self.car[0], verts)
+
+        # We have to rotate the local transformation of the front-AABB
+        verts = translate_vertices(rotate_polygon(CAR_FRONT, self.car_orn, [0, 0]), self.car_pos)
+        rot = m2d.rot_vec(FRONT_TRANS, self.car_orn)
+        verts = list(map(lambda x: m2d.add(x, rot), verts))
+        self.update_object_coords(self.car[1], verts)
+
+        ray_points = []
+        for i in range(2, 2 + self.car_rays):
+            vec = m2d.rot_vec(RAY_LINE, self.car_orn + i*self.ray_dtheta)
+            self.update_object_coords(self.car[i], [self.car_pos, m2d.add(self.car_pos, vec)])
+            ray_points.append(m2d.add(self.car_pos, vec))
+
+        i1 = len(ray_points) - 1
+        for i0 in range(self.car_rays):
+            i = i0 + 2 + self.car_rays
+            self.update_object_coords(self.car[i], [ray_points[i1], ray_points[i0]])
+            i1 = i0
+
+        # Test each rectangle that has not been seen against the ray triangles
+        #i1 = len(ray_points) - 1
+        #for i0 in range(self.car_rays):
+        #    tri = [self.car_pos, ray_points[i1], ray_points[i0]]
+        #    if not m2d.is_ccw(tri): tri.reverse()
+        #    for j in range(len(self.floor_polys)):
+        #        if self.floors_seen[j]: continue
+        #        elif m2d.test_intersection(tri, self.floor_polys[j]):
+        #            self.canvas.itemconfig(self.floors_id[j], fill='lightblue')
+        #            self.floors_seen[j] = True
+        #    i1 = i0
 
     def has_response(self):
         """Returns whether or not there is a response for a read_var command in the response queue."""
-        pass
+        return not self.resp_q.empty()
 
-    def read_response(self):
+    def read_response(self, block=True):
         """Returns a response from the response queue."""
-        pass
+        return self.resp_q.get(block)
 
     def shutdown(self):
         """Shutdown the Tkinter application and resources."""
-        pass
+        self.master.destroy()
 
     def on_destroy(self, arg):
         """Event triggered by closing window, etc. used to kill the thread and clean up the Tkinter resources."""
-        pass
+        self.shutdown_flag = True
+        self.resp_q.put(["shutdown", self.shutdown_flag])
 
     def cmd_move_car(self, target_vec):
         print("move", target_vec)

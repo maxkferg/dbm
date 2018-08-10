@@ -7,7 +7,7 @@ from tools.OBJModel import OBJModel
 import tools.Math2D as m2d
 from math import gcd
 
-
+# Keys for AABB type
 PA = 0
 PB = 1
 X = 0
@@ -22,8 +22,8 @@ def compute_centre(AABB):
 
 
 def AABB_to_vertices(AABB):
-    verts = [AABB[0], [AABB[1][0], AABB[0][1]], AABB[1], [AABB[0][0], AABB[1][1]]]
-    centre = [(AABB[1][0] - AABB[0][0]) / 2, (AABB[1][1] - AABB[0][1]) / 2]
+    verts = [AABB[PA], [AABB[PB][X], AABB[PA][Y]], AABB[PB], [AABB[PA][X], AABB[PB][Y]]]
+    centre = compute_centre(AABB)
     return verts, centre
 
 
@@ -59,6 +59,7 @@ class TileGrid:
     def build_grid(self):
         scale = self.obj.scale
         dims = self.obj.dims
+        dims[1] *= -1                                       # Flip-y
 
         centre = m2d.mul(compute_centre(self.bound), dims[0])
 
@@ -71,6 +72,8 @@ class TileGrid:
 
         tile_dims = []
 
+        ss_offset = [dims[0], -dims[1]]                  # Screen space offset
+        ss_scale = [2, 2]
         # Find minimum dimensions
         for floor in range(prim_count):
             prim = self.obj.get_prim(floor)
@@ -81,10 +84,14 @@ class TileGrid:
             B = self.obj.get_position(prim[1])[:-1]         # Right Bottom corner
             C = self.obj.get_position(prim[2])[:-1]         # Left Top corner
 
-            lb = m2d.sub(m2d.mul([A[X], A[Y]], dims[0]), centre)
-            rt = m2d.sub(m2d.mul([B[X], C[Y]], dims[0]), centre)
+            lb = m2d.sub(m2d.cp_mul([A[X], A[Y]], dims), centre)
+            rt = m2d.sub(m2d.cp_mul([B[X], C[Y]], dims), centre)
 
-            self.poly_arr.append([lb, rt])
+            # Move the polygon into screen-space for direct display by the Display Window
+            slb = m2d.add(m2d.cp_mul(lb, [2, 2]), ss_offset)
+            srt = m2d.add(m2d.cp_mul(rt, [2, 2]), ss_offset)
+
+            self.poly_arr.append([slb, srt])
 
             tile_delta = m2d.sub(rt, lb)
             print(floor, A, B, tile_delta)
