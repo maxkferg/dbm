@@ -7,7 +7,7 @@ import multiprocessing as mp
 sys.path.insert(1, os.path.join(sys.path[0], '..'))
 from tools.OBJModel import OBJModel
 import tools.Math2D as m2d
-from tools.TileGrid import TileGrid
+from tools.TileGrid import TileGrid, compute_centre, AABB_to_vertices
 
 
 CAR_SCALE = .5
@@ -15,6 +15,19 @@ CAR_BODY = [[CAR_SCALE*-20, CAR_SCALE*-12.5], [CAR_SCALE*20, CAR_SCALE*12.5]]
 CAR_FRONT = [[CAR_SCALE*-5, CAR_SCALE*-10.], [CAR_SCALE*5, CAR_SCALE*10]]
 FRONT_TRANS = [CAR_SCALE*10, 0]  # Relative translation of the front to the body (tkinter doesn't have a scene graph)
 RAY_LINE = [CAR_SCALE*100, 0]    # A line of 100 pixels long
+
+
+def translate_vertices(verts, trans):
+    return list(map(lambda x: [x[0]+trans[0], x[1]+trans[1]], verts))
+
+
+def flatten(verts):
+    return [item for sublist in verts for item in sublist]
+
+
+def rotate_polygon(AABB, rotation, centre):
+    verts, centre2 = AABB_to_vertices(AABB)
+    return m2d.rotate(verts, rotation, centre2 if not centre else centre)
 
 
 class PathfinderWindow:
@@ -40,6 +53,7 @@ class PathfinderWindow:
         self.canvas = None
         self.width = None           # Screen space width (i.e. canvas, not whole window)
         self.height = None          # SS height
+        self.timer_freq = 50        # The frequency of the redraw event (20 Hz)
 
         # Multiprocessing resources
         self.send_q = send_q        # The queue in which commands arrive for processing
@@ -64,6 +78,8 @@ class PathfinderWindow:
             print("Failed to initialise Display Model")
             return
 
+        self.draw_map()
+
         self.on_update()
         self.master.mainloop()
 
@@ -86,27 +102,42 @@ class PathfinderWindow:
         if not self.build_tiles(floor_file):
             return False
 
+        self.wall_model = OBJModel(wall_file)
+        if not self.wall_model.parse():
+            return False
+
+        self.wall_bound = self.wall_model.model_AABB()
+
         return True
 
     def build_tiles(self, floor_file):
         self.tile_grid = TileGrid(floor_file)
         if not self.tile_grid.is_valid():
-            print("Failed to intialize TileGrid, aborting")
+            print("Failed to initialise TileGrid, aborting")
             return False
+
+        self.tile_grid.build_grid()
 
         return True
 
     def on_update(self):
         """The on_update method reads the input command queue and updates the display with the new rendering"""
+        self.process_commands()
+        self.update_car()
+        self.canvas.after(self.timer_freq, self.on_update)
         pass
 
     def on_resize(self, event):
         """Resizes the Tkinter display window"""
+        self.width = self.canvas.winfo_width()
+        self.height = self.canvas.winfo_height()
+        self.resp_q.put(["screen", [self.width, self.height]])
+        self.clear_map()
         pass
 
     def process_commands(self):
         """The process_commands method reads input commands from the input command queue.  Note that the input command
-        queue is threadsafe and therefore may be accessed from other concurrent threads."""
+        queue is thread-safe and therefore may be accessed from other concurrent threads."""
         pass
 
     def clear_map(self):
@@ -115,14 +146,23 @@ class PathfinderWindow:
 
     def draw_map(self):
         """The draw_map routine should not need to be called except via the clear_map function."""
-        pass
+        centre = compute_centre(self.wall_bound)
+
+        bias = [self.width/2 - centre[0]*self.width, self.height/2 - centre[1]*self.height]
+        scale = [self.width, self.height]
+
+        for floor in range(self.tile_grid.poly_count()):
+            LB, TR = self.tile_grid.get_poly(floor)
+            colour = m2d.rand_colour()
+            print(LB, TR)
+            self.canvas.create_rectangle(LB[0], LB[1], TR[0], TR[1], fill=colour)
 
     def build_car(self):
         """Builds the Tkinter objects for displaying the car.  This must be called prior to draw_car."""
         pass
 
-    def draw_car(self):
-        """Draws the car each frame by updating the scene graph created by build_car."""
+    def update_car(self):
+        """Updates the car each frame by updating the scene graph created by build_car."""
         pass
 
     def has_response(self):
@@ -142,12 +182,15 @@ class PathfinderWindow:
         pass
 
     def cmd_move_car(self, target_vec):
+        print("move", target_vec)
         self.send_q.put(["move", target_vec])
 
     def cmd_turn_car(self, target_orn):
+        print("turn", target_orn)
         self.send_q.put(["turn", target_orn])
 
     def cmd_read_var(self, variable="car_pos"): # car_pos, car_orn, or screen (dims)
+        print("read")
         self.send_q.put(["read", variable])
 
 

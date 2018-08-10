@@ -21,6 +21,13 @@ def compute_centre(AABB):
     ]
 
 
+def AABB_to_vertices(AABB):
+    verts = [AABB[0], [AABB[1][0], AABB[0][1]], AABB[1], [AABB[0][0], AABB[1][1]]]
+    centre = [(AABB[1][0] - AABB[0][0]) / 2, (AABB[1][1] - AABB[0][1]) / 2]
+    return verts, centre
+
+
+
 # The TileGrid is an abstraction of the floor of the building so we can model it as a gridded surface that contains a
 # binary field indicating whether or not the tile has been "seen" by the robot (i.e. that the tile has intersected a
 # portion of the LIDAR triangles
@@ -42,6 +49,12 @@ class TileGrid:
 
     def is_valid(self):
         return self.obj is not None
+
+    def poly_count(self):
+        return len(self.poly_arr)
+
+    def get_poly(self, idx):
+        return self.poly_arr[idx]
 
     def build_grid(self):
         scale = self.obj.scale
