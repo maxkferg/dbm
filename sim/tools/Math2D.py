@@ -73,6 +73,10 @@ def lerp(A, B, u):
         return (1 - u) * A + u * B
 
 
+def is_vec2(vec):
+    return isinstance(vec, list) and len(vec) == 2
+
+
 # Takes a list of points of a polygon and determines the winding order
 def is_ccw(points):
     pc = len(points)

@@ -148,11 +148,16 @@ class PathfinderWindow:
         """The process_commands method reads input commands from the input command queue.  Note that the input command
         queue is thread-safe and therefore may be accessed from other concurrent threads."""
         while not self.send_q.empty():
+            print('msg')
             cmd = self.send_q.get()
             if cmd[0] == "move":
                 self.car_pos = cmd[1]
             elif cmd[0] == "turn":
                 self.car_orn = cmd[1]
+            elif cmd[0] == "shutdown":
+                self.master.destroy()
+            elif cmd[0] == "scale":
+                self.scale = cmd[1]
             elif cmd[0] == "read":
                 if cmd[1] == "car_pos":
                     self.resp_q.put(["car_pos", self.car_pos])
@@ -176,7 +181,9 @@ class PathfinderWindow:
         centre = compute_centre(self.wall_bound)
 
         bias = [self.width/2 - centre[0]*self.width, self.height/2 - centre[1]*self.height]
-        scale = [self.width, self.height]
+        dims = self.tile_grid.get_map_dims()
+        scale = [self.width/dims[0], self.height/dims[1]]
+        self.tile_grid.set_screen_scale(scale)
 
         for floor in range(self.tile_grid.poly_count()):
             LB, TR = self.tile_grid.get_poly(floor)

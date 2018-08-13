@@ -44,16 +44,28 @@ class TileGrid:
         self.visited = []                                   # Visited flag
         self.min_dims = []                                  # The minimum dimensions of the grid in each axis
         self.quadtree = None                                # The TileGrid quadtree (intersection queries)
-        self.poly_arr = []                                  # Polygon array
+        self.poly_arr = []                                  # Polygon array (AABB)
+        self.offset = [0, 0]                                # 2D offset
+        self.screen_scale = [1, 1]                          # The screen scaling parameter
 
     def is_valid(self):
         return self.obj is not None
+
+    def get_map_dims(self):
+        return self.obj.dims
 
     def poly_count(self):
         return len(self.poly_arr)
 
     def get_poly(self, idx):
-        return self.poly_arr[idx]
+        poly = self.poly_arr[idx]
+        return [
+            m2d.cp_mul(poly[0], self.screen_scale),
+            m2d.cp_mul(poly[1], self.screen_scale)]
+
+    def set_screen_scale(self, scale):
+        if m2d.is_vec2(scale):
+            self.screen_scale = scale
 
     def build_grid(self):
         scale = self.obj.scale
@@ -70,8 +82,8 @@ class TileGrid:
 
         tile_dims = []
 
-        ss_offset = [dims[0], dims[1]]                  # Screen space offset
-        ss_scale = [1, -1]                              # Flip y axis on screen
+        ss_offset = [dims[0]/2, dims[1]/2]                  # Screen space offset
+        ss_scale = [1, -1]                                  # Flip y axis on screen
         # Find minimum dimensions
         for floor in range(prim_count):
             prim = self.obj.get_prim(floor)
@@ -116,8 +128,6 @@ class TileGrid:
 
 
 if __name__ == '__main__':
-    print("Hello")
-
     filename = '/Users/otgaard/Development/dbm/sim/output/test2_floors.obj'
     grid = TileGrid(filename)
     grid.build_grid()
