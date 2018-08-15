@@ -3,6 +3,7 @@ Building Navigation Reinforcement Learning Project
 
 # Table of Contents
 0. [Important Notes](#notes)
+1. [Running the Simulator](#running)
 1. [Model Preparation](#prep)
 2. [Training](#train)
 3. [Playback](#play)
@@ -19,6 +20,21 @@ Building Navigation Reinforcement Learning Project
 Notes on SDF file format
 
 [SDF File format in Gazebo](#https://www.youtube.com/watch?v=sHzC--X0zQE)
+
+## Running the Simulator <a name="running"></a>
+
+In order to set up the environment for running the simulator, ensure you have a valid Conda environment.  Type:
+
+> source activate sim
+
+To load the conda environment.
+
+Type:
+
+> python -m simulation.simulator
+
+For instructions on the command line parameters used to execute the simulator.  Please see [Model Preparation](#prep) to
+see how to prepare an input model.
 
 ## Model Preparation <a name="prep"></a>
 

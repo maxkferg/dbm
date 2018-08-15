@@ -6,6 +6,7 @@ import multiprocessing as mp
 from time import sleep
 import sys
 import os
+from queue import Empty
 
 sys.path.insert(1, os.path.join(sys.path[0], '..'))
 from tools.PathfinderWindow import pathfinder_executor
@@ -44,7 +45,7 @@ class MPQueue:
         try:
             resp = self.resp_q.get(True, 1)     # Timeout after a second
             return resp[1]
-        except mp.Queue.Empty:
+        except Empty:
             return None
 
     def read_pos(self):

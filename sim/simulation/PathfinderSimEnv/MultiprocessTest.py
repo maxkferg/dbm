@@ -88,7 +88,7 @@ if __name__ == '__main__':
     mp.set_start_method('spawn')
     send_queue = mp.Queue()
     resp_queue = mp.Queue()
-    p = Process(target=gui_process, args=(send_queue, resp_queue))
+    p = mp.Process(target=gui_process, args=(send_queue, resp_queue))
     p.start()
     test_fnc(send_queue, resp_queue)
     p.join()
