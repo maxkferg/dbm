@@ -36,6 +36,23 @@ def pathfinder_executor(send_q, resp_q, floors_file, walls_file):
     pfw.run()
 
 
+def scale_to_width(dims, width):
+    height = (width * dims[1]) / dims[0]
+    return (int(width), int(height))
+
+
+def scale_to_height(dims, height):
+    width = (height * dims[0]) / dims[1]
+    return (int(width), int(height))
+
+
+def scale_dims(dims, width, height):
+    if width >= height:
+        return scale_to_width(dims, width)
+    else:
+        return scale_to_height(dims, height)
+
+
 class PathfinderWindow:
     """This class displays a Tkinter window running in a separate process.  The Tkinter window contains a 2D top-down
     view of the model including the car, it's position, orientation, and visited grid blocks.
@@ -80,7 +97,8 @@ class PathfinderWindow:
         self.scale = [1, 1]         # The scale between the model and the display
         self.ray_dtheta = 2.*math.pi/self.car_rays
 
-        self.visited = []           # A set of images, for each polygon, displaying the visited pixels
+        self.images = []            # The source image, used to store visited pixels in image scale
+        self.visited = []           # A set of PhotoImages, for each polygon, for displaying the visited pixels
 
         if not self.setup_window():
             print("Failed to setup Tkinter Display")
@@ -185,38 +203,54 @@ class PathfinderWindow:
 
         bias = [self.width/2 - centre[0]*self.width, self.height/2 - centre[1]*self.height]
         dims = self.tile_grid.get_map_dims()
+        dims_i = [int(dims[0]), int(dims[1])]
         scale = [self.width/dims[0], self.height/dims[1]]
         print("DIMS:", dims, scale)
-        #self.tile_grid.set_screen_scale([1, 1])     # Use [1, 1] and scale
-        self.tile_grid.set_screen_scale(scale)
 
-        for floor in range(self.tile_grid.poly_count()):
-            test = floor == 0
-            LB, TR = self.tile_grid.get_poly(floor)
-            colour = m2d.rand_colour()
-            print("Floor:", floor, LB, TR)
-            # Create an image the same size as the rectangle and map pixels 1 to 1
-            w = int(TR[0] - LB[0])
-            h = int(LB[1] - TR[1])      # Y is flipped
+        if len(self.visited) == 0:
+            self.tile_grid.set_screen_scale([1, 1])  # Use [1, 1] and scale
+            for floor in range(self.tile_grid.poly_count()):
+                test = floor == 0
+                LB, TR = self.tile_grid.get_poly(floor)
+                colour = m2d.rand_colour()
+                print("Floor:", floor, LB, TR)
+                # Create an image the same size as the rectangle and map pixels 1 to 1
+                w = int(TR[0] - LB[0])
+                h = int(LB[1] - TR[1])      # Y is flipped
 
-            print("w:", w, "h:", h)
+                print("w:", w, "h:", h)
 
-            if w < 1 or h < 0:
-                continue
+                if w < 1 or h < 0:
+                    continue
 
-            img = Image.new("RGB", (w, h))
+                img = Image.new("RGB", (w, h))
 
-            pixels = [None] * (w * h)
+                pixels = [None] * (w * h)
 
-            half = w*h/2
-            A = m2d.rand_colour3()
-            B = m2d.rand_colour3()
-            for i in range(w*h):
-                pixels[i] = A if i < half else B
-            img.putdata(pixels)
-            photo = ImageTk.PhotoImage(image=img)
-            self.visited.append(photo)
-            self.canvas.create_image(int(LB[0])+w/2, int(LB[1])-h/2, image=photo)
+                half = w*h/2
+                A = m2d.rand_colour3()
+                B = m2d.rand_colour3()
+                for i in range(w*h):
+                    pixels[i] = A if i < half else B
+                img.putdata(pixels)
+                self.images.append(img)
+                photo = ImageTk.PhotoImage(image=img)
+                self.visited.append(photo)
+                self.canvas.create_image(int(LB[0])+w/2, int(LB[1])-h/2, image=photo)
+        else:
+            self.tile_grid.set_screen_scale(scale)  # Use [1, 1] and scale
+            for floor in range(self.tile_grid.poly_count()):
+                LB, TR = self.tile_grid.get_poly(floor)
+                w = int(TR[0] - LB[0])
+                h = int(LB[1] - TR[1])      # Y is flipped
+                img = self.images[floor]
+                new_size = (int(scale[0] * img.width), int(scale[1] * img.height))
+                print(new_size)
+                img = img.resize(new_size, Image.NEAREST)
+                photo = ImageTk.PhotoImage(image=img)
+                self.visited[floor] = photo
+                self.canvas.create_image(int(LB[0])+w/2, int(LB[1])-h/2, image=photo)
+
 
     def update_object_coords(self, obj, verts):
         self.canvas.coords(obj, flatten(verts))
