@@ -130,6 +130,10 @@ def rand_colour():
     return rgb2hex((randint(0, 255), randint(0, 255), randint(0, 255)))
 
 
+def rand_colour3():
+    return randint(0, 255), randint(0, 255), randint(0, 255)
+
+
 def rand_pos(min=(0, 0), max=(1, 1)):
     return [min[0] + (max[0] - min[0])*random(), min[1] + (max[1] - min[1])*random()]
 

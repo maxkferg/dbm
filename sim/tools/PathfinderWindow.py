@@ -77,6 +77,7 @@ class PathfinderWindow:
         self.car_pos = [0, 0]       # The position of the car in screen coordinates
         self.car_orn = 0            # The orientation of the car in screen space
         self.car_rays = 12          # Number of rays to simulate
+        self.scale = [1, 1]         # The scale between the model and the display
         self.ray_dtheta = 2.*math.pi/self.car_rays
 
         self.visited = []           # A set of images, for each polygon, displaying the visited pixels
@@ -88,8 +89,6 @@ class PathfinderWindow:
         if not self.setup(floors, walls):
             print("Failed to initialise Display Model")
             return
-
-        self.draw_map()
 
     def run(self):
         self.on_update()
@@ -187,6 +186,8 @@ class PathfinderWindow:
         bias = [self.width/2 - centre[0]*self.width, self.height/2 - centre[1]*self.height]
         dims = self.tile_grid.get_map_dims()
         scale = [self.width/dims[0], self.height/dims[1]]
+        print("DIMS:", dims, scale)
+        #self.tile_grid.set_screen_scale([1, 1])     # Use [1, 1] and scale
         self.tile_grid.set_screen_scale(scale)
 
         for floor in range(self.tile_grid.poly_count()):
@@ -194,29 +195,28 @@ class PathfinderWindow:
             LB, TR = self.tile_grid.get_poly(floor)
             colour = m2d.rand_colour()
             print("Floor:", floor, LB, TR)
-            if not test:
-                self.canvas.create_rectangle(LB[0], LB[1], TR[0], TR[1], fill=colour)
-            else:
-                # Create an image the same size as the rectangle and map pixels 1 to 1
-                w = int(TR[0] - LB[0])
-                h = int(LB[1] - TR[1])      # Y is flipped
+            # Create an image the same size as the rectangle and map pixels 1 to 1
+            w = int(TR[0] - LB[0])
+            h = int(LB[1] - TR[1])      # Y is flipped
 
-                print("w:", w, "h:", h)
+            print("w:", w, "h:", h)
 
-                if w < 1 or h < 0:
-                    continue
+            if w < 1 or h < 0:
+                continue
 
-                img = Image.new("RGB", (w, h))
+            img = Image.new("RGB", (w, h))
 
-                pixels = [None] * (w * h)
+            pixels = [None] * (w * h)
 
-                half = w*h/2
-                for i in range(w*h):
-                    pixels[i] = (255, 0, 0) if i < half else (0, 0, 255)
-                img.putdata(pixels)
-                photo = ImageTk.PhotoImage(image=img)
-                self.visited.append(photo)
-                self.canvas.create_image(w, h, image=photo)
+            half = w*h/2
+            A = m2d.rand_colour3()
+            B = m2d.rand_colour3()
+            for i in range(w*h):
+                pixels[i] = A if i < half else B
+            img.putdata(pixels)
+            photo = ImageTk.PhotoImage(image=img)
+            self.visited.append(photo)
+            self.canvas.create_image(int(LB[0])+w/2, int(LB[1])-h/2, image=photo)
 
     def update_object_coords(self, obj, verts):
         self.canvas.coords(obj, flatten(verts))

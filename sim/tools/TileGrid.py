@@ -86,6 +86,9 @@ class TileGrid:
         ss_scale = [1, -1]                                  # Flip y axis on screen
         # Find minimum dimensions
         for floor in range(prim_count):
+            if floor % 2 == 1:
+                continue                                    # Skip odd numbered primitives (the other tri in the quad)
+
             prim = self.obj.get_prim(floor)
             if len(prim) != 3:
                 continue
