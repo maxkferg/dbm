@@ -207,7 +207,11 @@ class PathfinderWindow:
         scale = [self.width/dims[0], self.height/dims[1]]
         print("DIMS:", dims, scale)
 
-        if len(self.visited) == 0:
+        first_run = len(self.visited) == 0
+
+        if first_run:
+            # The images are stored on a 1 to 1 pixel scale and are resized if the screen is resized.
+            # TODO: Check very large images and test size reduction
             self.tile_grid.set_screen_scale([1, 1])  # Use [1, 1] and scale
             for floor in range(self.tile_grid.poly_count()):
                 test = floor == 0
@@ -217,9 +221,6 @@ class PathfinderWindow:
                 # Create an image the same size as the rectangle and map pixels 1 to 1
                 w = int(TR[0] - LB[0])
                 h = int(LB[1] - TR[1])      # Y is flipped
-
-                print("w:", w, "h:", h)
-
                 if w < 1 or h < 0:
                     continue
 
@@ -237,6 +238,8 @@ class PathfinderWindow:
                 photo = ImageTk.PhotoImage(image=img)
                 self.visited.append(photo)
                 self.canvas.create_image(int(LB[0])+w/2, int(LB[1])-h/2, image=photo)
+
+            self.draw_map()                         # Do the scaling
         else:
             self.tile_grid.set_screen_scale(scale)  # Use [1, 1] and scale
             for floor in range(self.tile_grid.poly_count()):
@@ -250,7 +253,6 @@ class PathfinderWindow:
                 photo = ImageTk.PhotoImage(image=img)
                 self.visited[floor] = photo
                 self.canvas.create_image(int(LB[0])+w/2, int(LB[1])-h/2, image=photo)
-
 
     def update_object_coords(self, obj, verts):
         self.canvas.coords(obj, flatten(verts))
