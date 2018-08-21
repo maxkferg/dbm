@@ -6,6 +6,14 @@ import math
 from random import randint, random
 
 
+def find_centre(points):
+    centre = [0, 0]
+    for x, y in points:
+        centre[0] += x
+        centre[1] += y
+    return centre[0]/len(points), centre[1]/len(points)
+
+
 def rotate(points, angle, centre):
     cos_val = math.cos(angle)
     sin_val = math.sin(angle)

@@ -1,6 +1,7 @@
 import math
 import sys
 import os
+import time
 
 sys.path.insert(1, os.path.join(sys.path[0], '../..'))
 from tools.OBJModel import OBJModel
@@ -71,17 +72,40 @@ if __name__ == "__main__":
 
     img = Image.new("RGB", (w, h))
     pixels = [(255, 255, 255)] * size
-
+    img.putdata(pixels)
+    photo = ImageTk.PhotoImage(image=img)
     vertices = [(100, 100), (200, 200), (300, 100)]
+    centre = m2d.find_centre(vertices)
 
-    def cb(coord):
+    # Check rotation & various close-to-degenerate tests
+    increment = math.pi/30.
+    angle = 0.
+
+    def callback(coord):
+        global pixels
         pixels[coord[1]*w + coord[0]] = (0, 0, 0)
 
-    rasterise(vertices, cb)
+    def update_fnc():
+        global pixels
+        global angle
+        global img
+        global photo
+        global canvas
 
-    img.putdata(pixels)
+        print(angle)
 
-    photo = ImageTk.PhotoImage(image=img)
-    canvas.create_image(w/2, h/2, image=photo)
+        canvas.delete("all")
+        pixels = [(255, 255, 255)] * size
+        new_verts = list(map(lambda x: (int(x[0]), int(x[1])), m2d.rotate(vertices, angle, centre)))
+        print(new_verts)
+        rasterise(new_verts, callback)
+        img.putdata(pixels)
+        photo = ImageTk.PhotoImage(image=img)
+        canvas.create_image(w/2, h/2, image=photo)
+        angle += increment
+        canvas.after(200, update_fnc)
 
+
+    update_fnc()
     root.mainloop()
+
