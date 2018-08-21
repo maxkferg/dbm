@@ -309,6 +309,10 @@ class PathfinderWindow:
             self.update_object_coords(self.car[i], [ray_points[i1], ray_points[i0]])
             i1 = i0
 
+
+        self.visit_tiles()
+
+    def visit_tiles(self):
         # Test each rectangle that has not been seen against the ray triangles
         #i1 = len(ray_points) - 1
         #for i0 in range(self.car_rays):
@@ -320,6 +324,7 @@ class PathfinderWindow:
         #            self.canvas.itemconfig(self.floors_id[j], fill='lightblue')
         #            self.floors_seen[j] = True
         #    i1 = i0
+        pass
 
     def has_response(self):
         """Returns whether or not there is a response for a read_var command in the response queue."""

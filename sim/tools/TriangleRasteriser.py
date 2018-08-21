@@ -17,15 +17,15 @@ import tools.Math2D as m2d
 
 
 def minmax(v0, v1, v2):
-    maxX = max(v0.x, v1.x, v2.x)
-    minX = min(v0.x, v1.x, v2.x)
-    maxY = max(v0.y, v1.y, v2.y)
-    minY = min(v0.y, v1.y, v2.y)
+    maxX = max(v0[0], v1[0], v2[0])
+    minX = min(v0[0], v1[0], v2[0])
+    maxY = max(v0[1], v1[1], v2[1])
+    minY = min(v0[1], v1[1], v2[1])
     return [[minX, maxX], [minY, maxY]]
 
 
 def kross(u, v):
-    return u[0]*v[1] - u[1]*u[0]
+    return u[0]*v[1] - u[1]*v[0]
 
 
 # Will call a callback with a integer tuple representing a visited pixel, this must be converted into screen
@@ -51,4 +51,37 @@ def rasterise(vertices, callback):
             s = float(kross(q, d1) / k)
             t = float(kross(d0, q) / k)
             if s >= 0 and t >= 0 and (s + t <= 1):
-                callback([x, y])
+                callback((x, y))
+
+
+if __name__ == "__main__":
+    # Test the triangle rasterisation routine
+    from tkinter import Tk, Canvas
+    from PIL import ImageTk, Image
+
+    root = Tk()
+    root.title("Hello")
+    root.geometry("512x512")
+    canvas = Canvas(root, width=512, height=512)
+    canvas.pack(fill="both", expand=True)
+
+    w = 512
+    h = 512
+    size = w*h
+
+    img = Image.new("RGB", (w, h))
+    pixels = [(255, 255, 255)] * size
+
+    vertices = [(100, 100), (200, 200), (300, 100)]
+
+    def cb(coord):
+        pixels[coord[1]*w + coord[0]] = (0, 0, 0)
+
+    rasterise(vertices, cb)
+
+    img.putdata(pixels)
+
+    photo = ImageTk.PhotoImage(image=img)
+    canvas.create_image(w/2, h/2, image=photo)
+
+    root.mainloop()
