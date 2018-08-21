@@ -282,11 +282,11 @@ class PathfinderWindow:
             vec = m2d.rot_vec(RAY_LINE, i*self.ray_dtheta)
             verts = flatten([self.car_pos, m2d.add(self.car_pos, vec)])
             ray_points.append(m2d.add(self.car_pos, vec))
-            car.append(self.canvas.create_line(*verts, fill="black"))
+            car.append(self.canvas.create_line(*verts, fill="blue"))
 
         i1 = len(ray_points) - 1
         for i0 in range(len(ray_points)):
-            car.append(self.canvas.create_line(*[ray_points[i1], ray_points[i0]], fill="black"))
+            car.append(self.canvas.create_line(*[ray_points[i1], ray_points[i0]], fill="blue"))
             i1 = i0
 
         return car
@@ -308,13 +308,16 @@ class PathfinderWindow:
             self.update_object_coords(self.car[i], [self.car_pos, m2d.add(self.car_pos, vec)])
             ray_points.append(m2d.add(self.car_pos, vec))
 
-        self.visit_tiles(ray_points)
-
         i1 = len(ray_points) - 1
         for i0 in range(self.car_rays):
             i = i0 + 2 + self.car_rays
             self.update_object_coords(self.car[i], [ray_points[i1], ray_points[i0]])
             i1 = i0
+
+        self.visit_tiles(ray_points)
+
+        for i in range(len(self.car)):
+            self.canvas.tag_raise(self.car[i])
 
 
     # The new visit_tiles method must do the following:
@@ -348,15 +351,16 @@ class PathfinderWindow:
                     cx = int(LB[0] + w/2)
                     cy = int(LB[1] - h/2)
 
-                    print("centre:", cx, cy)
+                    print("centre:", cx, cy, "car_pos:", self.car_pos)
 
                     def cb(coord):
-                        idx = (coord[1] - cy)*w + (coord[0] - cx)
+                        idx = (coord[1] - cy)*w + (coord[0] + cx)
                         if 0 < idx < len(pixels):
                             print(idx, coord[0], coord[1])
                             pixels[idx] = (0, 0, 0)
 
-                    itri = list(map(lambda x: [int(round(x[0], 4)), int(round(x[1], 4))], tri))
+                    itri = list(map(lambda x: [int(round(x[0] - w/2, 4)), int(round(x[1] - h/2, 4))], tri))
+                    print("TRIANGLES:", tri, itri)
 
                     tr.rasterise(itri, cb)
                     img.putdata(pixels)
@@ -366,7 +370,7 @@ class PathfinderWindow:
                     img = img.resize(new_size, Image.NEAREST)
                     photo = ImageTk.PhotoImage(image=img)
                     self.visited[tile] = photo
-                    self.canvas.create_image(cx, cy, image=photo)
+                    id = self.canvas.create_image(cx, cy, image=photo)
 
             i1 = i0
 
