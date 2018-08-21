@@ -308,13 +308,14 @@ class PathfinderWindow:
             self.update_object_coords(self.car[i], [self.car_pos, m2d.add(self.car_pos, vec)])
             ray_points.append(m2d.add(self.car_pos, vec))
 
+        self.visit_tiles(ray_points)
+
         i1 = len(ray_points) - 1
         for i0 in range(self.car_rays):
             i = i0 + 2 + self.car_rays
             self.update_object_coords(self.car[i], [ray_points[i1], ray_points[i0]])
             i1 = i0
 
-        self.visit_tiles(ray_points)
 
     # The new visit_tiles method must do the following:
     # 1) For each tile:
@@ -334,8 +335,8 @@ class PathfinderWindow:
                 tri.reverse()
 
             for tile in range(len(self.tile_polygons)):
-                if i0 == 0:
-                    print(tri, self.tile_polygons[tile])
+                #if i0 == 0:
+                #    print(tri, self.tile_polygons[tile])
 
                 if m2d.test_intersection(tri, self.tile_polygons[tile]):
                     print("Intersection")
@@ -344,16 +345,21 @@ class PathfinderWindow:
                     h = int(LB[1] - TR[1])  # Y is flipped
                     img = self.images[tile]
                     pixels = list(img.getdata())
-                    cx = int(LB[0]) + w / 2
-                    cy = int(LB[1]) - h / 2
+                    cx = int(LB[0] + w/2)
+                    cy = int(LB[1] - h/2)
+
+                    print("centre:", cx, cy)
 
                     def cb(coord):
                         idx = (coord[1] - cy)*w + (coord[0] - cx)
-                        print(idx, coord[0], coord[1])
-                        if idx < len(pixels):
+                        if 0 < idx < len(pixels):
+                            print(idx, coord[0], coord[1])
                             pixels[idx] = (0, 0, 0)
 
-                    tr.rasterise(tri, cb)
+                    itri = list(map(lambda x: [int(round(x[0], 4)), int(round(x[1], 4))], tri))
+
+                    tr.rasterise(itri, cb)
+                    img.putdata(pixels)
 
                     new_size = (int(scale[0] * img.width), int(scale[1] * img.height))
                     print(new_size)
@@ -363,7 +369,6 @@ class PathfinderWindow:
                     self.canvas.create_image(cx, cy, image=photo)
 
             i1 = i0
-        pass
 
     def has_response(self):
         """Returns whether or not there is a response for a read_var command in the response queue."""

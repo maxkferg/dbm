@@ -70,8 +70,10 @@ if __name__ == '__main__':
     sleep(.16)
     pf_queue.command_move([100, 100])
     sleep(.16)
-    pf_queue.command_move([200, 200])
-    sleep(.16)
+    for i in range(100):
+        pf_queue.command_move([100+i, 200])
+        sleep(.16)
+
     print("POS:", pf_queue.read_pos())
 
     pf_queue.join()
