@@ -61,7 +61,7 @@ if __name__ == "__main__":
     from PIL import ImageTk, Image
 
     root = Tk()
-    root.title("Hello")
+    root.title("Triangle Rasterisation Test")
     root.geometry("512x512")
     canvas = Canvas(root, width=512, height=512)
     canvas.pack(fill="both", expand=True)
@@ -108,4 +108,3 @@ if __name__ == "__main__":
 
     update_fnc()
     root.mainloop()
-

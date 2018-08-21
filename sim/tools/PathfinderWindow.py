@@ -3,12 +3,12 @@ import math
 import sys, os
 import multiprocessing as mp
 from PIL import ImageTk, Image
-import numpy as np
 
 sys.path.insert(1, os.path.join(sys.path[0], '..'))
 from tools.OBJModel import OBJModel
 import tools.Math2D as m2d
 from tools.TileGrid import TileGrid, compute_centre, AABB_to_vertices
+import tools.TriangleRasteriser as tr
 
 
 CAR_SCALE = .5
@@ -51,6 +51,10 @@ def scale_dims(dims, width, height):
         return scale_to_width(dims, width)
     else:
         return scale_to_height(dims, height)
+
+
+def verts(AABB):
+    return [[AABB[0][0], AABB[1][1]], AABB[1] , [AABB[1][0], AABB[0][1]], AABB[0]]
 
 
 class PathfinderWindow:
@@ -97,6 +101,7 @@ class PathfinderWindow:
         self.scale = [1, 1]         # The scale between the model and the display
         self.ray_dtheta = 2.*math.pi/self.car_rays
 
+        self.tile_polygons = []     # Pre-built floor polygons
         self.images = []            # The source image, used to store visited pixels in image scale
         self.visited = []           # A set of PhotoImages, for each polygon, for displaying the visited pixels
 
@@ -206,6 +211,7 @@ class PathfinderWindow:
         dims_i = [int(dims[0]), int(dims[1])]
         scale = [self.width/dims[0], self.height/dims[1]]
         print("DIMS:", dims, scale)
+        self.tile_polygons.clear()
 
         first_run = len(self.visited) == 0
 
@@ -214,10 +220,8 @@ class PathfinderWindow:
             # TODO: Check very large images and test size reduction
             self.tile_grid.set_screen_scale([1, 1])  # Use [1, 1] and scale
             for floor in range(self.tile_grid.poly_count()):
-                test = floor == 0
                 LB, TR = self.tile_grid.get_poly(floor)
-                colour = m2d.rand_colour()
-                print("Floor:", floor, LB, TR)
+                self.tile_polygons.append(verts([LB, TR]))
                 # Create an image the same size as the rectangle and map pixels 1 to 1
                 w = int(TR[0] - LB[0])
                 h = int(LB[1] - TR[1])      # Y is flipped
@@ -244,6 +248,7 @@ class PathfinderWindow:
             self.tile_grid.set_screen_scale(scale)  # Use [1, 1] and scale
             for floor in range(self.tile_grid.poly_count()):
                 LB, TR = self.tile_grid.get_poly(floor)
+                self.tile_polygons.append(verts([LB, TR]))
                 w = int(TR[0] - LB[0])
                 h = int(LB[1] - TR[1])      # Y is flipped
                 img = self.images[floor]
@@ -309,21 +314,55 @@ class PathfinderWindow:
             self.update_object_coords(self.car[i], [ray_points[i1], ray_points[i0]])
             i1 = i0
 
+        self.visit_tiles(ray_points)
 
-        self.visit_tiles()
+    # The new visit_tiles method must do the following:
+    # 1) For each tile:
+    #       a) Test if tri intersects tile
+    #       b) if intersection:
+    #            i) rasterise triangle
+    def visit_tiles(self, ray_points):
+        dims = self.tile_grid.get_map_dims()
+        dims_i = [int(dims[0]), int(dims[1])]
+        scale = [self.width/dims[0], self.height/dims[1]]
 
-    def visit_tiles(self):
         # Test each rectangle that has not been seen against the ray triangles
-        #i1 = len(ray_points) - 1
-        #for i0 in range(self.car_rays):
-        #    tri = [self.car_pos, ray_points[i1], ray_points[i0]]
-        #    if not m2d.is_ccw(tri): tri.reverse()
-        #    for j in range(len(self.floor_polys)):
-        #        if self.floors_seen[j]: continue
-        #        elif m2d.test_intersection(tri, self.floor_polys[j]):
-        #            self.canvas.itemconfig(self.floors_id[j], fill='lightblue')
-        #            self.floors_seen[j] = True
-        #    i1 = i0
+        i1 = len(ray_points) - 1
+        for i0 in range(self.car_rays):
+            tri = [self.car_pos, ray_points[i1], ray_points[i0]]
+            if not m2d.is_ccw(tri):
+                tri.reverse()
+
+            for tile in range(len(self.tile_polygons)):
+                if i0 == 0:
+                    print(tri, self.tile_polygons[tile])
+
+                if m2d.test_intersection(tri, self.tile_polygons[tile]):
+                    print("Intersection")
+                    LB, TR = self.tile_grid.get_poly(tile)
+                    w = int(TR[0] - LB[0])
+                    h = int(LB[1] - TR[1])  # Y is flipped
+                    img = self.images[tile]
+                    pixels = list(img.getdata())
+                    cx = int(LB[0]) + w / 2
+                    cy = int(LB[1]) - h / 2
+
+                    def cb(coord):
+                        idx = (coord[1] - cy)*w + (coord[0] - cx)
+                        print(idx, coord[0], coord[1])
+                        if idx < len(pixels):
+                            pixels[idx] = (0, 0, 0)
+
+                    tr.rasterise(tri, cb)
+
+                    new_size = (int(scale[0] * img.width), int(scale[1] * img.height))
+                    print(new_size)
+                    img = img.resize(new_size, Image.NEAREST)
+                    photo = ImageTk.PhotoImage(image=img)
+                    self.visited[tile] = photo
+                    self.canvas.create_image(cx, cy, image=photo)
+
+            i1 = i0
         pass
 
     def has_response(self):
