@@ -330,36 +330,41 @@ class PathfinderWindow:
         dims_i = [int(dims[0]), int(dims[1])]
         scale = [self.width/dims[0], self.height/dims[1]]
 
+        print("\n\n\nBEGIN TESTING\n\n\n")
+
         # Test each rectangle that has not been seen against the ray triangles
         i1 = len(ray_points) - 1
-        for i0 in range(self.car_rays):
+        for i0 in range(1): #self.car_rays):
             tri = [self.car_pos, ray_points[i1], ray_points[i0]]
             if not m2d.is_ccw(tri):
                 tri.reverse()
 
             for tile in range(len(self.tile_polygons)):
-                #if i0 == 0:
-                #    print(tri, self.tile_polygons[tile])
-
                 if m2d.test_intersection(tri, self.tile_polygons[tile]):
                     print("Intersection")
                     LB, TR = self.tile_grid.get_poly(tile)
                     w = int(TR[0] - LB[0])
                     h = int(LB[1] - TR[1])  # Y is flipped
+                    print("w x h:", w, h)
+
                     img = self.images[tile]
+                    img_w, img_h = img.size
+
+                    print("img size:", img.size)
                     pixels = list(img.getdata())
                     cx = int(LB[0] + w/2)
                     cy = int(LB[1] - h/2)
 
+                    print("AABB:", LB, TR)
                     print("centre:", cx, cy, "car_pos:", self.car_pos)
 
                     def cb(coord):
-                        idx = (coord[1] - cy)*w + (coord[0] + cx)
+                        idx = coord[1]*img_w + coord[0]
                         if 0 < idx < len(pixels):
                             print(idx, coord[0], coord[1])
                             pixels[idx] = (0, 0, 0)
 
-                    itri = list(map(lambda x: [int(round(x[0] - w/2, 4)), int(round(x[1] - h/2, 4))], tri))
+                    itri = list(map(lambda x: [int(round((x[0] - cx + w/2)/scale[0], 4)), int(round((x[1] - cy + h/2)/scale[1], 4))], tri))
                     print("TRIANGLES:", tri, itri)
 
                     tr.rasterise(itri, cb)

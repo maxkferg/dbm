@@ -59,8 +59,8 @@ class MPQueue:
 
 
 if __name__ == '__main__':
-    floors_file = "../output/test2_floors.obj"
-    walls_file = "../output/test2_walls.obj"
+    floors_file = "../output/test4_floors.obj"
+    walls_file = "../output/test4_walls.obj"
 
     pf_queue = MPQueue()
     pf_queue.run(floors_file, walls_file)
