@@ -11,6 +11,10 @@ from . import bullet_client
 from .config import URDF_ROOT
 import random
 from random import random, randint
+import sys
+
+sys.path.insert(1, os.path.join(sys.path[0], '../..'))
+from tools.MPQueue import MPQueue
 
 RENDER_WIDTH = 960
 RENDER_HEIGHT = 720
@@ -147,8 +151,12 @@ class SeekerSimEnv(gym.Env):
         self.isDiscrete = isDiscrete
         if self.renders:
             self.physics = bullet_client.BulletClient(connection_mode=pybullet.GUI)
+            self.mpqueue = MPQueue()
+            print(self.urdfRoot + "/output_floors.obj")
+            self.mpqueue.run(self.urdfRoot + "/output_floors.obj", self.urdfRoot + "/output_walls.obj")
         else:
             self.physics = bullet_client.BulletClient()
+            self.mpqueue = None
 
         self.seed()
         ray_count = 12                      # 12 rays of 30 degrees each
@@ -224,6 +232,10 @@ class SeekerSimEnv(gym.Env):
 
         self.observation.extend([tarPosInCar[0], tarPosInCar[1]])
 
+        #if self.mpqueue is not None:
+        #   # Sync with window
+        #   print(carpos, carorn)
+
         #dir_vec = rotate_vector(carorn, [1, 0, 0])
         #print("Car Forward:", dir_vec)
 
@@ -241,10 +253,9 @@ class SeekerSimEnv(gym.Env):
             end_pos = add_vec(lidar_pos, scale_vec(ray_len, dir_vec))
             intersection = self.physics.rayTest(start_pos, end_pos)
             if intersection[0][0] == self.targetUniqueId:
-                #print("INTERSECTION:", rotate_vector(ray, [1, 0, 0]))
                 intersections.append(1)
             elif intersection[0][0] == self.buildingIds[0]:
-                intersections.append(-.25)     # This was causing the sim to avoid the walls, set to 0.25 for now, maybe distance computation?
+                intersections.append(-.25)
             else:
                 intersections.append(0)
 

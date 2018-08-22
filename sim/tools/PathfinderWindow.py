@@ -318,7 +318,6 @@ class PathfinderWindow:
         for i in range(len(self.car)):
             self.canvas.tag_raise(self.car[i])
 
-
     # The new visit_tiles method must do the following:
     # 1) For each tile:
     #       a) Test if tri intersects tile
@@ -328,7 +327,8 @@ class PathfinderWindow:
         dims = self.tile_grid.get_map_dims()
         scale = [self.width/dims[0], self.height/dims[1]]
 
-        # Test each rectangle that has not been seen against the ray triangles
+        # Test each ray against each polygon, if intersecting, rasterise the triangle into the buffer, setting the
+        # visible flag to true (0, 0, 0), i.e. black, if the pixel has been visited
         i1 = len(ray_points) - 1
         for i0 in range(self.car_rays):
             tri = [self.car_pos, ray_points[i1], ray_points[i0]]
@@ -349,9 +349,10 @@ class PathfinderWindow:
                     cy = int(LB[1] - h/2)
 
                     def cb(coord):
-                        idx = coord[1]*img_w + coord[0]
-                        if 0 < idx < len(pixels):
-                            pixels[idx] = (0, 0, 0)
+                        if 0 <= coord[0] < img_w and 0 <= coord[1] < img_h:
+                            idx = coord[1]*img_w + coord[0]
+                            if 0 < idx < len(pixels):
+                                pixels[idx] = (0, 0, 0)
 
                     itri = list(map(lambda x: [int(round((x[0] - cx + w/2)/scale[0], 4)), int(round((x[1] - cy + h/2)/scale[1], 4))], tri))
                     tr.rasterise(itri, cb)

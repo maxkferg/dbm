@@ -16,7 +16,11 @@ class MPQueue:
     def __init__(self):
         """Simply initialises the MPQueue, really a composite of two multiprocessing.Queue() objects with some light
         wrapping to make it easier to work with."""
-        mp.set_start_method('spawn')
+        try:
+            mp.set_start_method('spawn')
+        except RuntimeError:
+            pass
+
         self.send_q = mp.Queue()
         self.resp_q = mp.Queue()
         self.proc = None
@@ -59,8 +63,8 @@ class MPQueue:
 
 
 if __name__ == '__main__':
-    floors_file = "../output/test4_floors.obj"
-    walls_file = "../output/test4_walls.obj"
+    floors_file = "../output/test2_floors.obj"
+    walls_file = "../output/test2_walls.obj"
 
     pf_queue = MPQueue()
     pf_queue.run(floors_file, walls_file)
@@ -70,8 +74,8 @@ if __name__ == '__main__':
     sleep(.16)
     pf_queue.command_move([100, 100])
     sleep(.16)
-    for i in range(100):
-        pf_queue.command_move([100+i, 100])
+    for i in range(300):
+        pf_queue.command_move([100+i, 100+i])
         sleep(.16)
 
     print("POS:", pf_queue.read_pos())
