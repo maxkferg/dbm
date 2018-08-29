@@ -1,13 +1,14 @@
 # A basic socket server used to provide a connection for the pybullet trainer to push data containing car orientation
 # position, etc and use this data to provide additional displays for debugging.
 
+import sys
 import socketserver
 from tools.MPQueue import MPQueue
 
 
 class MPQueueServer(socketserver.BaseRequestHandler):
     def command_move(self, input):
-        """Format: move 25 10"""
+        """Format: move x y"""
         command, x, y = input.split(b" ")
         if command != b"move":
             return
@@ -16,13 +17,31 @@ class MPQueueServer(socketserver.BaseRequestHandler):
         self.server.queue.command_move(pos)
 
     def command_turn(self, input):
-        """Format: turn 38.8"""
+        """Format: turn theta"""
         command, angle = input.split(b" ")
         if command != b"turn":
             return
 
         orn = float(angle)
         self.server.queue.command_turn(orn)
+
+    def command_scale(self, input):
+        """Format: scale x y"""
+        command, x, y = input.split(b" ")
+        if command != b"scale":
+            return
+
+        scale = [int(x), int(y)]
+        self.server.queue.command_scale(scale)
+
+    def read_variable(self, input):
+        """Format: read var"""
+        command, var = input.split(b" ")
+        if command != b"read":
+            return
+
+        result = self.server.queue.read_variable(var)
+        return result
 
     def handle(self):
         data = self.request.recv(128).strip()

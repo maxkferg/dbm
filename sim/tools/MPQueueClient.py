@@ -15,6 +15,10 @@ class MPQueueClient:
             self.connected = False
             print("Failed to connect to MPQueueServer at address {} on port {}".format(host, port))
 
+    def close(self):
+        self.command_shutdown()
+        self.sock.close()
+
     def command_move(self, pos):
         self.sock.sendall(bytes("move {} {}\n".format(pos[0], pos[1]), "utf-8"))
 
@@ -29,6 +33,7 @@ class MPQueueClient:
 
     def read_variable(self, var):
         self.sock.sendall(bytes("read {}\n".format(var), "utf-8"))
+        return self.sock.recv(1024)
 
 
 if __name__ == "__main__":
