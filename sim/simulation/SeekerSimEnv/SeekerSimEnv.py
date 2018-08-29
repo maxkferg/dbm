@@ -14,7 +14,7 @@ from random import random, randint
 import sys
 
 sys.path.insert(1, os.path.join(sys.path[0], '../..'))
-from tools.MPQueue import MPQueue
+from tools.Client import MPQueueClient
 
 RENDER_WIDTH = 960
 RENDER_HEIGHT = 720

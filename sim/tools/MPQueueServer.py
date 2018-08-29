@@ -4,7 +4,8 @@
 import socketserver
 from tools.MPQueue import MPQueue
 
-class MyTCPHandler(socketserver.BaseRequestHandler):
+
+class MPQueueServer(socketserver.BaseRequestHandler):
     def command_move(self, input):
         """Format: move 25 10"""
         command, x, y = input.split(b" ")
@@ -21,23 +22,26 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
             return
 
         orn = float(angle)
-        print("ORN:", orn)
         self.server.queue.command_turn(orn)
 
     def handle(self):
-        print("mp:", self.server.queue)
-        self.data = self.request.recv(128).strip()
-        print("{} wrote:".format(self.client_address[0]))
-        print(self.data, self.data[0:4])
+        data = self.request.recv(128).strip()
 
-        if self.data[0:4] == b"move":
-            print("Move")
-            self.command_move(self.data)
-        elif self.data[0:4] == b"turn":
-            print("Turn")
-            self.command_turn(self.data)
+        if data[0:4] == b"move":
+            self.command_move(data)
+        elif data[0:4] == b"turn":
+            self.command_turn(data)
 
-        self.request.sendall(self.data.upper())
+        self.request.sendall(data.upper())
+
+
+def start_server(host, port, floors_file, walls_file):
+    mp = MPQueue()
+    mp.run(floors_file, walls_file)
+
+    with socketserver.TCPServer((host, port), MPQueueServer) as server:
+        server.queue = mp
+        server.serve_forever()
 
 
 if __name__ == "__main__":
@@ -45,9 +49,4 @@ if __name__ == "__main__":
     floors_file = "../output/test2_floors.obj"
     walls_file = "../output/test2_walls.obj"
 
-    mp = MPQueue()
-    mp.run(floors_file, walls_file)
-
-    with socketserver.TCPServer((HOST, PORT), MyTCPHandler) as server:
-        server.queue = mp
-        server.serve_forever()
+    start_server(HOST, PORT, floors_file, walls_file)

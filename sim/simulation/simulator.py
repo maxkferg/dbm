@@ -5,7 +5,6 @@ from simulation.SeekerSimEnv.simulationTest import run_test
 from gym.envs.registration import registry
 from simulation.agents.train_ppo import setup_training_env
 from simulation.agents.visualize_ppo import setup_visualize_env
-from tools.MPQueue import MPQueue
 import time
 
 
@@ -61,8 +60,6 @@ if args.export_sdf:
     generator.export_to_sdf(offset, scale, args.export_sdf)
 
 if args.run_test:
-    mpq = MPQueue()
-    mpq.run('./assets/floors_output.obj', './assets/walls_output.obj')
     time.sleep(4)
     run_test()
 
