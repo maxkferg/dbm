@@ -8,7 +8,6 @@ sys.path.insert(1, os.path.join(sys.path[0], '..'))
 from tools.OBJModel import OBJModel
 import tools.Math2D as m2d
 from tools.TileGrid import TileGrid, compute_centre, AABB_to_vertices
-import tools.TriangleRasteriser as tr
 
 
 CAR_SCALE = .5
@@ -51,7 +50,6 @@ def scale_dims(dims, width, height):
         return scale_to_width(dims, width)
     else:
         return scale_to_height(dims, height)
-
 
 def verts(AABB):
     return [[AABB[0][0], AABB[1][1]], AABB[1] , [AABB[1][0], AABB[0][1]], AABB[0]]
@@ -102,7 +100,6 @@ class PathfinderWindow:
         self.ray_dtheta = 2.*math.pi/self.car_rays
 
         self.tile_polygons = []     # Pre-built floor polygons
-        self.images = []            # The source image, used to store visited pixels in image scale
         self.visited = []           # A set of PhotoImages, for each polygon, for displaying the visited pixels
 
         if not self.setup_window():
@@ -137,11 +134,14 @@ class PathfinderWindow:
         if not self.build_tiles(floor_file):
             return False
 
+        self.
+
         self.wall_model = OBJModel(wall_file)
         if not self.wall_model.parse():
             return False
 
         self.wall_bound = self.wall_model.model_AABB()
+        self.visited = self.time
 
         return True
 
@@ -205,9 +205,7 @@ class PathfinderWindow:
         """The draw_map routine should not need to be called except via the clear_map function."""
         centre = compute_centre(self.wall_bound)
 
-        bias = [self.width/2 - centre[0]*self.width, self.height/2 - centre[1]*self.height]
         dims = self.tile_grid.get_map_dims()
-        dims_i = [int(dims[0]), int(dims[1])]
         scale = [self.width/dims[0], self.height/dims[1]]
         print("DIMS:", dims, scale)
         self.tile_polygons.clear()
@@ -244,7 +242,7 @@ class PathfinderWindow:
 
             self.draw_map()                         # Do the scaling
         else:
-            self.tile_grid.set_screen_scale(scale)  # Use [1, 1] and scale
+            self.tile_grid.set_screen_scale(scale)
             for floor in range(self.tile_grid.poly_count()):
                 LB, TR = self.tile_grid.get_poly(floor)
                 self.tile_polygons.append(verts([LB, TR]))
@@ -257,6 +255,9 @@ class PathfinderWindow:
                 photo = ImageTk.PhotoImage(image=img)
                 self.visited[floor] = photo
                 self.canvas.create_image(int(LB[0])+w/2, int(LB[1])-h/2, image=photo)
+
+    def draw_map(self):
+
 
     def update_object_coords(self, obj, verts):
         self.canvas.coords(obj, flatten(verts))

@@ -1,6 +1,12 @@
 import os
 import sys
 import functools
+from PIL import ImageTk, Image
+import tools.TriangleRasteriser as tr
+
+# Move intersection, rasterisation, and image handling here so that the TileGrid can be used in parallel in
+# SeekerSimEnv.  This means that the visualiser only displays the results whereas the SeekerSimEnv uses this
+# class to maintain an internal representation of the actual visiting algorithm
 
 sys.path.insert(1, os.path.join(sys.path[0], '..'))
 from tools.OBJModel import OBJModel
@@ -27,6 +33,10 @@ def AABB_to_vertices(AABB):
     return verts, centre
 
 
+def verts(AABB):
+    return [[AABB[0][0], AABB[1][1]], AABB[1] , [AABB[1][0], AABB[0][1]], AABB[0]]
+
+
 # The TileGrid is an abstraction of the floor of the building so we can model it as a gridded surface that contains a
 # binary field indicating whether or not the tile has been "seen" by the robot (i.e. that the tile has intersected a
 # portion of the LIDAR triangles
@@ -40,6 +50,7 @@ class TileGrid:
             return
 
         self.bound = self.obj.model_AABB()
+        self.centre = compute_centre(self.bound)
         self.grid = []                                      # The AABB grid (integer)
         self.visited = []                                   # Visited flag
         self.min_dims = []                                  # The minimum dimensions of the grid in each axis
@@ -47,6 +58,7 @@ class TileGrid:
         self.poly_arr = []                                  # Polygon array (AABB)
         self.offset = [0, 0]                                # 2D offset
         self.screen_scale = [1, 1]                          # The screen scaling parameter
+        self.images = []                                    # The source image, used to store visited pixels
 
     def is_valid(self):
         return self.obj is not None
@@ -62,6 +74,9 @@ class TileGrid:
         return [
             m2d.cp_mul(poly[0], self.screen_scale),
             m2d.cp_mul(poly[1], self.screen_scale)]
+
+    def get_image(self, idx):
+        return self.images[idx]
 
     def set_screen_scale(self, scale):
         if m2d.is_vec2(scale):
@@ -128,6 +143,52 @@ class TileGrid:
         print("X Axis GCD:", xmin, x_dims)                  # Seems to be 1 in most cases... will have to be by pixel
         print("Y Axis GCD:", ymin, y_dims)
         print("Polygons:", self.poly_arr)
+
+    def build_map(self):
+        """The build_map routine takes the grid defined in build_grid, and creates the associated set of images"""
+        self.images.clear()
+        self.set_screen_scale([1, 1])
+
+        scaled = []
+
+        for floor in range(len(self.poly_arr)):
+            LB, TR = self.get_poly(floor)
+            # Create an image the same size as the rectangle and map pixels 1 to 1
+            w = int(TR[0] - LB[0])
+            h = int(LB[1] - TR[1])  # Y is flipped
+            if w < 1 or h < 0:
+                continue
+
+            img = Image.new("RGB", (w, h))
+            pixels = [None] * (w * h)
+
+            half = w * h / 2
+            A = m2d.rand_colour3()
+            B = m2d.rand_colour3()
+            for i in range(w * h):
+                pixels[i] = A if i < half else B
+            img.putdata(pixels)
+            self.images.append(img)
+            photo = ImageTk.PhotoImage(image=img)
+            scaled.append(photo)
+
+        return scaled
+
+    def scale_map(self, scale):
+        """Returns a list of images scaled to the input scale"""
+        self.set_screen_scale(scale)
+
+        scaled = []
+
+        for floor in range(self.poly_count()):
+            img = self.images[floor]
+            new_size = (int(scale[0] * img.width), int(scale[1] * img.height))
+            print(new_size)
+            img = img.resize(new_size, Image.NEAREST)
+            photo = ImageTk.PhotoImage(image=img)
+            scaled.append(photo)
+
+        return scaled
 
 
 if __name__ == '__main__':
