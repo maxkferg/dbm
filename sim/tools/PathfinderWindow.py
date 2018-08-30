@@ -134,15 +134,13 @@ class PathfinderWindow:
         if not self.build_tiles(floor_file):
             return False
 
-        self.
+        self.visited = self.tile_grid.build_map()
 
         self.wall_model = OBJModel(wall_file)
         if not self.wall_model.parse():
             return False
 
         self.wall_bound = self.wall_model.model_AABB()
-        self.visited = self.time
-
         return True
 
     def build_tiles(self, floor_file):
@@ -203,8 +201,6 @@ class PathfinderWindow:
 
     def draw_map(self):
         """The draw_map routine should not need to be called except via the clear_map function."""
-        centre = compute_centre(self.wall_bound)
-
         dims = self.tile_grid.get_map_dims()
         scale = [self.width/dims[0], self.height/dims[1]]
         print("DIMS:", dims, scale)
@@ -226,7 +222,6 @@ class PathfinderWindow:
                     continue
 
                 img = Image.new("RGB", (w, h))
-
                 pixels = [None] * (w * h)
 
                 half = w*h/2
@@ -257,7 +252,18 @@ class PathfinderWindow:
                 self.canvas.create_image(int(LB[0])+w/2, int(LB[1])-h/2, image=photo)
 
     def draw_map(self):
+        dims = self.tile_grid.get_map_dims()
+        scale = [self.width/dims[0], self.height/dims[1]]
+        print("DIMS:", dims, scale)
+        self.tile_polygons.clear()
+        self.visited = self.tile_grid.scale_map(scale)
 
+        for floor in range(self.tile_grid.poly_count()):
+            LB, TR = self.tile_grid.get_poly(floor)
+            self.tile_polygons.append(verts([LB, TR]))
+            w = int(TR[0] - LB[0])
+            h = int(LB[1] - TR[1])  # Y is flipped
+            self.canvas.create_image(int(LB[0]) + w / 2, int(LB[1]) - h / 2, image=self.visited[floor])
 
     def update_object_coords(self, obj, verts):
         self.canvas.coords(obj, flatten(verts))

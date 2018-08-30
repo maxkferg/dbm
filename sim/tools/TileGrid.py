@@ -190,6 +190,9 @@ class TileGrid:
 
         return scaled
 
+    def visit_tiles(self, scale, ray_points):
+        pass
+
 
 if __name__ == '__main__':
     filename = '/Users/otgaard/Development/dbm/sim/output/test2_floors.obj'
