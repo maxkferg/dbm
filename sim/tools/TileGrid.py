@@ -34,7 +34,7 @@ def AABB_to_vertices(AABB):
 
 
 def verts(AABB):
-    return [[AABB[0][0], AABB[1][1]], AABB[1] , [AABB[1][0], AABB[0][1]], AABB[0]]
+    return [[AABB[0][0], AABB[1][1]], AABB[1], [AABB[1][0], AABB[0][1]], AABB[0]]
 
 
 # The TileGrid is an abstraction of the floor of the building so we can model it as a gridded surface that contains a
@@ -190,8 +190,49 @@ class TileGrid:
 
         return scaled
 
-    def visit_tiles(self, scale, ray_points):
-        pass
+    def visit_tiles(self, scale, car_pos, ray_points):
+        # Test each ray against each polygon, if intersecting, rasterise the triangle into the buffer, setting the
+        # visible flag to true (0, 0, 0), i.e. black, if the pixel has been visited
+
+        # Return an index containing the tile ids updated
+        changed = []
+        car_rays = len(ray_points)
+        #self.set_screen_scale(scale)
+
+        i1 = len(ray_points) - 1
+        for i0 in range(car_rays):
+            tri = [car_pos, ray_points[i1], ray_points[i0]]
+            if not m2d.is_ccw(tri):
+                tri.reverse()
+
+            for tile in range(self.poly_count()):
+                LB, TR = self.get_poly(tile)
+                poly = verts([LB, TR])
+                if m2d.test_intersection(tri, poly):
+                    w = int(TR[0] - LB[0])
+                    h = int(LB[1] - TR[1])  # Y is flipped
+
+                    img = self.images[tile]
+                    img_w, img_h = img.size
+
+                    pixels = list(img.getdata())
+                    cx = int(LB[0] + w/2)
+                    cy = int(LB[1] - h/2)
+
+                    def cb(coord):
+                        if 0 <= coord[0] < img_w and 0 <= coord[1] < img_h:
+                            idx = coord[1]*img_w + coord[0]
+                            if 0 < idx < len(pixels):
+                                pixels[idx] = (0, 0, 0)
+
+                    itri = list(map(lambda x: [int(round((x[0] - cx + w/2)/scale[0], 4)), int(round((x[1] - cy + h/2)/scale[1], 4))], tri))
+                    tr.rasterise(itri, cb)
+                    img.putdata(pixels)
+                    changed.append(tile)
+
+            i1 = i0
+
+        return changed
 
 
 if __name__ == '__main__':

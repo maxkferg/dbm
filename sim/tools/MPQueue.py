@@ -68,7 +68,7 @@ if __name__ == '__main__':
 
     pf_queue = MPQueue()
     pf_queue.run(floors_file, walls_file)
-    sleep(1)
+    sleep(2)
 
     pf_queue.command_scale([2, 2])
     sleep(.16)

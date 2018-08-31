@@ -39,12 +39,16 @@ def rasterise(vertices, callback):
     v1 = vertices[1]
     v2 = vertices[2]
 
+    print('vertices', v0, v1, v2)
+
     d0 = m2d.sub(v1, v0)
     d1 = m2d.sub(v2, v0)
 
     mnmx = minmax(v0, v1, v2)
 
     k = kross(d0, d1)
+
+    print("range", mnmx)
 
     for x in range(mnmx[0][0], mnmx[0][1]+1):
         for y in range(mnmx[1][0], mnmx[1][1]+1):
