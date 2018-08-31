@@ -151,9 +151,13 @@ class SeekerSimEnv(gym.Env):
         self.isDiscrete = isDiscrete
         if self.renders:
             self.physics = bullet_client.BulletClient(connection_mode=pybullet.GUI)
-            self.mpqueue = MPQueue()
             print(self.urdfRoot + "/output_floors.obj")
-            self.mpqueue.run(self.urdfRoot + "/output_floors.obj", self.urdfRoot + "/output_walls.obj")
+
+            self.mpqueue = MPQueueClient()
+            self.mpqueue.start(self.urdfRoot + "/output_floors.obj", self.urdfRoot + "/output_walls.obj")
+            #self.mpqueue = MPQueue()
+            #self.mpqueue.run(self.urdfRoot + "/output_floors.obj", self.urdfRoot + "/output_walls.obj")
+
         else:
             self.physics = bullet_client.BulletClient()
             self.mpqueue = None

@@ -68,15 +68,18 @@ if __name__ == '__main__':
 
     pf_queue = MPQueue()
     pf_queue.run(floors_file, walls_file)
-    sleep(2)
+    sleep(1)
 
     pf_queue.command_scale([2, 2])
     sleep(.16)
     pf_queue.command_move([100, 100])
     sleep(.16)
+    angle = 0.
     for i in range(300):
         pf_queue.command_move([100+i, 100+i])
-        sleep(.16)
+        pf_queue.command_turn(angle)
+        angle += .02
+        sleep(.016)
 
     print("POS:", pf_queue.read_pos())
 

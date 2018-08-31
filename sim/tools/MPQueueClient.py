@@ -1,5 +1,6 @@
 import socket
 import sys
+import time
 
 HOST, PORT = "localhost", 9999
 
@@ -15,12 +16,18 @@ class MPQueueClient:
             self.connected = False
             print("Failed to connect to MPQueueServer at address {} on port {}".format(host, port))
 
+    def start(self, floors_file, walls_file):
+        self.sock.sendall(bytes("floor_file {}\n".format(floors_file), "utf-8"))
+        self.sock.sendall(bytes("wall_file {}\n".format(walls_file), "utf-8"))
+        self.sock.sendall(bytes("start\n", "utf-8"))
+
     def close(self):
         self.command_shutdown()
         self.sock.close()
 
     def command_move(self, pos):
         self.sock.sendall(bytes("move {} {}\n".format(pos[0], pos[1]), "utf-8"))
+        self.sock.recv(1024)
 
     def command_turn(self, orn):
         self.sock.sendall(bytes("turn {}\n".format(orn), "utf-8"))
@@ -38,5 +45,15 @@ class MPQueueClient:
 
 if __name__ == "__main__":
     srv = MPQueueClient(HOST, PORT)
+    #srv.start("/Users/otgaard/Development/dbm/sim/output/test2_floors.obj",
+    #          "/Users/otgaard/Development/dbm/sim/output/test2_walls.obj")
+    time.sleep(1)
     data = sys.argv[1:]
-    srv.command_move(data)
+
+    for i in range(10, 100):
+        time.sleep(1)
+        print(i)
+        srv.command_move([i, i])
+
+    #srv.command_move(data)
+

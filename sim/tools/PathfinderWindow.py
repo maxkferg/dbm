@@ -199,58 +199,6 @@ class PathfinderWindow:
         self.draw_map()
         self.car = self.build_car(self.car_pos, 12)
 
-    # def draw_map(self):
-    #     """The draw_map routine should not need to be called except via the clear_map function."""
-    #     dims = self.tile_grid.get_map_dims()
-    #     scale = [self.width/dims[0], self.height/dims[1]]
-    #     print("DIMS:", dims, scale)
-    #     self.tile_polygons.clear()
-    #
-    #     first_run = len(self.visited) == 0
-    #
-    #     if first_run:
-    #         # The images are stored on a 1 to 1 pixel scale and are resized if the screen is resized.
-    #         # TODO: Check very large images and test size reduction
-    #         self.tile_grid.set_screen_scale([1, 1])  # Use [1, 1] and scale
-    #         for floor in range(self.tile_grid.poly_count()):
-    #             LB, TR = self.tile_grid.get_poly(floor)
-    #             self.tile_polygons.append(verts([LB, TR]))
-    #             # Create an image the same size as the rectangle and map pixels 1 to 1
-    #             w = int(TR[0] - LB[0])
-    #             h = int(LB[1] - TR[1])      # Y is flipped
-    #             if w < 1 or h < 0:
-    #                 continue
-    #
-    #             img = Image.new("RGB", (w, h))
-    #             pixels = [None] * (w * h)
-    #
-    #             half = w*h/2
-    #             A = m2d.rand_colour3()
-    #             B = m2d.rand_colour3()
-    #             for i in range(w*h):
-    #                 pixels[i] = A if i < half else B
-    #             img.putdata(pixels)
-    #             self.images.append(img)
-    #             photo = ImageTk.PhotoImage(image=img)
-    #             self.visited.append(photo)
-    #             self.canvas.create_image(int(LB[0])+w/2, int(LB[1])-h/2, image=photo)
-    #
-    #         self.draw_map()                         # Do the scaling
-    #     else:
-    #         self.tile_grid.set_screen_scale(scale)
-    #         for floor in range(self.tile_grid.poly_count()):
-    #             LB, TR = self.tile_grid.get_poly(floor)
-    #             self.tile_polygons.append(verts([LB, TR]))
-    #             w = int(TR[0] - LB[0])
-    #             h = int(LB[1] - TR[1])      # Y is flipped
-    #             img = self.images[floor]
-    #             new_size = (int(scale[0] * img.width), int(scale[1] * img.height))
-    #             print(new_size)
-    #             img = img.resize(new_size, Image.NEAREST)
-    #             photo = ImageTk.PhotoImage(image=img)
-    #             self.visited[floor] = photo
-    #             self.canvas.create_image(int(LB[0])+w/2, int(LB[1])-h/2, image=photo)
-
     def draw_map(self):
         dims = self.tile_grid.get_map_dims()
         scale = [self.width/dims[0], self.height/dims[1]]
@@ -324,54 +272,6 @@ class PathfinderWindow:
 
         for i in range(len(self.car)):
             self.canvas.tag_raise(self.car[i])
-
-    # The new visit_tiles method must do the following:
-    # 1) For each tile:
-    #       a) Test if tri intersects tile
-    #       b) if intersection:
-    #            i) rasterise triangle
-    # def visit_tiles(self, ray_points):
-    #     dims = self.tile_grid.get_map_dims()
-    #     scale = [self.width/dims[0], self.height/dims[1]]
-    #
-    #     # Test each ray against each polygon, if intersecting, rasterise the triangle into the buffer, setting the
-    #     # visible flag to true (0, 0, 0), i.e. black, if the pixel has been visited
-    #     i1 = len(ray_points) - 1
-    #     for i0 in range(self.car_rays):
-    #         tri = [self.car_pos, ray_points[i1], ray_points[i0]]
-    #         if not m2d.is_ccw(tri):
-    #             tri.reverse()
-    #
-    #         for tile in range(len(self.tile_polygons)):
-    #             if m2d.test_intersection(tri, self.tile_polygons[tile]):
-    #                 LB, TR = self.tile_grid.get_poly(tile)
-    #                 w = int(TR[0] - LB[0])
-    #                 h = int(LB[1] - TR[1])  # Y is flipped
-    #
-    #                 img = self.images[tile]
-    #                 img_w, img_h = img.size
-    #
-    #                 pixels = list(img.getdata())
-    #                 cx = int(LB[0] + w/2)
-    #                 cy = int(LB[1] - h/2)
-    #
-    #                 def cb(coord):
-    #                     if 0 <= coord[0] < img_w and 0 <= coord[1] < img_h:
-    #                         idx = coord[1]*img_w + coord[0]
-    #                         if 0 < idx < len(pixels):
-    #                             pixels[idx] = (0, 0, 0)
-    #
-    #                 itri = list(map(lambda x: [int(round((x[0] - cx + w/2)/scale[0], 4)), int(round((x[1] - cy + h/2)/scale[1], 4))], tri))
-    #                 tr.rasterise(itri, cb)
-    #                 img.putdata(pixels)
-    #
-    #                 new_size = (int(scale[0] * img.width), int(scale[1] * img.height))
-    #                 img = img.resize(new_size, Image.NEAREST)
-    #                 photo = ImageTk.PhotoImage(image=img)
-    #                 self.visited[tile] = photo
-    #                 self.canvas.create_image(cx, cy, image=photo)
-    #
-    #         i1 = i0
 
     def visit_tiles(self, ray_points):
         dims = self.tile_grid.get_map_dims()
