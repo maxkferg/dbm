@@ -2,24 +2,26 @@ Building Navigation Reinforcement Learning Project
 ==================================================
 
 # Table of Contents
-0. [Important Notes](#notes)
-1. [Running the Simulator](#running)
-1. [Model Preparation](#prep)
-2. [Training](#train)
-3. [Playback](#play)
+1. [Setting Up](#settingup)
+2. [Running the Simulator](#running)
+3. [Model Preparation](#prep)
+4. [Training](#train)
+5. [Playback](#play)
+6. [Notes](#notes)
 
-## Important Notes <a name="notes"></a>
+## Setting up the Simulator Environment <a name="settingup"></a>
 
-(Notes that apply during development to keep track of unresolved issues, outstanding problems, or other relevant info)
+The simulator requires a bit of preparation to set up.  One of the main issues is that it is very difficult to output
+additional visual output from the built-in pybullet renderer.  In order to facilitate visual debugging, a client/server
+architecture had to be adopted to allow additional output from the RL algorithm.  To this end, a server has been created
+to allow asynchronous connection to additional debug output written in TkInter.  It is expected that many additional
+visual outputs can be routed this way and hopefully the server can act as a generic point to extend additional debug
+output in the RL algorithm.  Note that there is no reason the TkInter server can't be run on a different machine, but
+for the purposes here, everything is assumed to be running on localhost (127.0.0.1).
 
-1. The roboschool model of the stadium splits the geometry into three object files with one shared material file.  
-2. The models have inertial models in the SDF but are static (find out why).
-3. The lighting model in SDF is bit strange, see details here [Materials](#http://gazebosim.org/tutorials?tut=color_model&cat=)
-4. Verify details of 12 ray intersection observation
+The TkInter server 
 
-Notes on SDF file format
 
-[SDF File format in Gazebo](#https://www.youtube.com/watch?v=sHzC--X0zQE)
 
 ## Running the Simulator <a name="running"></a>
 
@@ -75,3 +77,16 @@ provide the walls and floors with a basic texture.
 ## Training <a name="train"></a>
 
 ## Playback <a name="play"></a>
+
+## Important Notes <a name="notes"></a>
+
+(Notes that apply during development to keep track of unresolved issues, outstanding problems, or other relevant info)
+
+1. The roboschool model of the stadium splits the geometry into three object files with one shared material file.  
+2. The models have inertial models in the SDF but are static (find out why).
+3. The lighting model in SDF is bit strange, see details here [Materials](#http://gazebosim.org/tutorials?tut=color_model&cat=)
+4. Verify details of 12 ray intersection observation
+
+Notes on SDF file format
+
+[SDF File format in Gazebo](#https://www.youtube.com/watch?v=sHzC--X0zQE)
