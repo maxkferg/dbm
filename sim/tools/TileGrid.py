@@ -183,7 +183,6 @@ class TileGrid:
         for floor in range(self.poly_count()):
             img = self.images[floor]
             new_size = (int(scale[0] * img.width), int(scale[1] * img.height))
-            print(new_size)
             img = img.resize(new_size, Image.NEAREST)
             photo = ImageTk.PhotoImage(image=img)
             scaled.append(photo)
@@ -197,7 +196,6 @@ class TileGrid:
         # Return an index containing the tile ids updated
         changed = []
         car_rays = len(ray_points)
-        #self.set_screen_scale(scale)
 
         i1 = len(ray_points) - 1
         for i0 in range(car_rays):

@@ -15,6 +15,8 @@ import sys
 
 sys.path.insert(1, os.path.join(sys.path[0], '../..'))
 from tools.MPQueueClient import MPQueueClient
+from tools.TileGrid import TileGrid, compute_centre, AABB_to_vertices
+import tools.Math2D as m2d
 
 RENDER_WIDTH = 960
 RENDER_HEIGHT = 720
@@ -76,6 +78,7 @@ def load_floor_file(path):
     vertices = []
     indices = []
     scale = 1
+    dims = []
 
     for line in file:
         if line[0:2] == 'v ':
@@ -87,10 +90,14 @@ def load_floor_file(path):
                 [int(els[1].split('/')[0]) - 1, int(els[2].split('/')[0]) - 1, int(els[3].split('/')[0]) - 1])
         elif line[0:7] == '#scale ':
             scale = float(line.split(' ')[1])
+        elif line[0:5] == '#dims':
+            els = line.split(' ')
+            dims = [int(els[1]), int(els[2])]
+
 
     file.close()
 
-    return [vertices, indices, scale]
+    return [vertices, indices, scale, dims]
 
 
 def gen_start_position(radius, floor):
@@ -123,6 +130,9 @@ def gen_start_position(radius, floor):
     return ret
 
 
+HOST, PORT = "localhost", 9999
+
+
 class SeekerSimEnv(gym.Env):
     metadata = {
         'render.modes': ['human', 'rgb_array'],
@@ -149,14 +159,16 @@ class SeekerSimEnv(gym.Env):
         self.envStepCounter = 0
         self.renders = renders
         self.isDiscrete = isDiscrete
+        self.tile_grid = TileGrid(self.urdfRoot + "/output_floors.obj")
+        #self.tile_grid.build_grid()
+        #self.tile_grid.build_map()
+
         if self.renders:
             self.physics = bullet_client.BulletClient(connection_mode=pybullet.GUI)
             print(self.urdfRoot + "/output_floors.obj")
 
-            self.mpqueue = MPQueueClient()
+            self.mpqueue = MPQueueClient(HOST, PORT)
             self.mpqueue.start(self.urdfRoot + "/output_floors.obj", self.urdfRoot + "/output_walls.obj")
-            #self.mpqueue = MPQueue()
-            #self.mpqueue.run(self.urdfRoot + "/output_floors.obj", self.urdfRoot + "/output_walls.obj")
 
         else:
             self.physics = bullet_client.BulletClient()
@@ -229,6 +241,17 @@ class SeekerSimEnv(gym.Env):
         self.observation = []
 
         carpos, carorn = self.physics.getBasePositionAndOrientation(self.robot.racecarUniqueId)
+
+        if self.mpqueue:
+            scale = self.floor[2]
+            dims = self.floor[3]
+            centre = compute_centre(self.tile_grid.bound)
+            pos = [int((carpos[0]+centre[0])/scale * dims[0] + dims[0]/2), int((carpos[1]+centre[1])/scale * -dims[1] + dims[1]/2)]
+
+            #print("POS, ORN:", pos, carpos, carorn)
+            self.mpqueue.command_move(pos)
+            #self.mpqueue.command_turn(carorn)
+
         carmat = self.physics.getMatrixFromQuaternion(carorn)
         tarpos, tarorn = self.physics.getBasePositionAndOrientation(self.targetUniqueId)
         invCarPos, invCarOrn = self.physics.invertTransform(carpos, carorn)

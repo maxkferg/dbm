@@ -51,6 +51,3 @@ if __name__ == "__main__":
 
     for i in range(10, 300):
         srv.command_move([i, i])
-
-    #srv.command_move(data)
-
