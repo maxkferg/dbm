@@ -27,8 +27,8 @@ Start the server by running:
 > source activate sim
 > python -m tools.MPQueueServer
 
-This will start the server on localhost:9999.  To visualise the pathfinding functionality, start the server and pass
---visualise-pathfinder to simulator.py.
+This will start the server on localhost:9999.  To visualise the pathfinding functionality, start the server and run the
+simulator against the assets/output files. (i.e. export to assets/output)
 
 ## Running the Simulator <a name="running"></a>
 
