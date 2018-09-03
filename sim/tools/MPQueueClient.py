@@ -27,7 +27,6 @@ class MPQueueClient:
 
     def command_move(self, pos):
         self.sock.sendall(bytes("move {} {}\n".format(pos[0], pos[1]), "utf-8"))
-        self.sock.recv(1024)
 
     def command_turn(self, orn):
         self.sock.sendall(bytes("turn {}\n".format(orn), "utf-8"))
@@ -45,14 +44,12 @@ class MPQueueClient:
 
 if __name__ == "__main__":
     srv = MPQueueClient(HOST, PORT)
-    #srv.start("/Users/otgaard/Development/dbm/sim/output/test2_floors.obj",
-    #          "/Users/otgaard/Development/dbm/sim/output/test2_walls.obj")
+    srv.start("/Users/otgaard/Development/dbm/sim/output/test2_floors.obj",
+              "/Users/otgaard/Development/dbm/sim/output/test2_walls.obj")
     time.sleep(1)
     data = sys.argv[1:]
 
-    for i in range(10, 100):
-        time.sleep(1)
-        print(i)
+    for i in range(10, 300):
         srv.command_move([i, i])
 
     #srv.command_move(data)

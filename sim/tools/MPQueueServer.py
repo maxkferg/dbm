@@ -98,25 +98,30 @@ class MPQueueServer(socketserver.BaseRequestHandler):
         return result
 
     def handle(self):
+        # This function should spawn a handler that operates until disconnection by the client
         data = self.request.recv(1024).strip()
 
-        print("receiving")
+        while len(data) > 0:
+            lines = data.split(b"\n")
 
-        lines = data.split(b"\n")
+            for line in lines:
+                print(line)
+                if line[:len(MOVE_COMMAND)] == MOVE_COMMAND:
+                    self.command_move(line)
+                elif line[:len(TURN_COMMAND)] == TURN_COMMAND:
+                    self.command_turn(line)
+                elif line[:len(FLOOR_FILE)] == FLOOR_FILE:
+                    self.set_floor_file(line)
+                elif line[:len(WALL_FILE)] == WALL_FILE:
+                    self.set_wall_file(line)
+                elif line[:len(START_COMMAND)] == START_COMMAND:
+                    self.command_start(line)
+                elif line[:len(SHUTDOWN_COMMAND)] == SHUTDOWN_COMMAND:
+                    self.command_shutdown(line)
+                    break
 
-        for line in lines:
-            if line[:len(MOVE_COMMAND)] == MOVE_COMMAND:
-                self.command_move(line)
-            elif line[:len(TURN_COMMAND)] == TURN_COMMAND:
-                self.command_turn(line)
-            elif line[:len(FLOOR_FILE)] == FLOOR_FILE:
-                self.set_floor_file(line)
-            elif line[:len(WALL_FILE)] == WALL_FILE:
-                self.set_wall_file(line)
-            elif line[:len(START_COMMAND)] == START_COMMAND:
-                self.command_start(line)
+            data = self.request.recv(1024).strip()
 
-        print("returning")
 
 def start_server(host, port):
     mp = MPQueue()

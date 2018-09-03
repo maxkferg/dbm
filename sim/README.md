@@ -20,8 +20,15 @@ output in the RL algorithm.  Note that there is no reason the TkInter server can
 for the purposes here, everything is assumed to be running on localhost (127.0.0.1).
 
 The TkInter server 
+------------------
 
+Start the server by running:
 
+> source activate sim
+> python -m tools.MPQueueServer
+
+This will start the server on localhost:9999.  To visualise the pathfinding functionality, start the server and pass
+--visualise-pathfinder to simulator.py.
 
 ## Running the Simulator <a name="running"></a>
 
