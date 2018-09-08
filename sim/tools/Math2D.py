@@ -166,11 +166,18 @@ def rand_tri(min=(0, 0), max=(1, 1)):
     return tri
 
 
+# Convert a 3-vec to a 2-vec normalised
+def vec3_to_vec2n(vec):
+    inv_len = 1./math.sqrt(vec[0]*vec[0] + vec[1]*vec[1])
+    return [vec[0]*inv_len, vec[1]*inv_len]
+
+
 # Note that range of atan2 is [-PI, PI], so adjust to [0, 2*PI]
 def compute_angle(vec, epsilon=.00001):
-    if math.fabs(1. - vec[0]*vec[0] + vec[1]*vec[1]) < epsilon:
+    if math.fabs(1. - (vec[0]*vec[0] + vec[1]*vec[1])) < epsilon:
         angle = math.atan2(vec[1], vec[0])
         return angle if angle >= 0 else 2.*math.pi + angle
+    return 0.
 
 
 if __name__ == "__main__":

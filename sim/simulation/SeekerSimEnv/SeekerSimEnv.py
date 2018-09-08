@@ -252,7 +252,7 @@ class SeekerSimEnv(gym.Env):
             self.mpqueue.command_move(pos)
 
             dir_vec = rotate_vector(carorn, [1, 0, 0])
-            angle = m2d.compute_angle(dir_vec[:2])
+            angle = m2d.compute_angle(m2d.vec3_to_vec2n(dir_vec))
             print("Car Forward:", angle)
 
             self.mpqueue.command_turn(angle)
