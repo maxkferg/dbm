@@ -80,7 +80,7 @@ class MPQueueServer(socketserver.BaseRequestHandler):
         scale = [int(x), int(y)]
         self.server.queue.command_scale(scale)
 
-    def command_shutdown(self, input):
+    def command_shutdown(self):
         if not self.server.started:
             print("Server not started, cannot shutdown")
             return

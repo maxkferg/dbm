@@ -166,6 +166,13 @@ def rand_tri(min=(0, 0), max=(1, 1)):
     return tri
 
 
+# Note that range of atan2 is [-PI, PI], so adjust to [0, 2*PI]
+def compute_angle(vec, epsilon=.00001):
+    if math.fabs(1. - vec[0]*vec[0] + vec[1]*vec[1]) < epsilon:
+        angle = math.atan2(vec[1], vec[0])
+        return angle if angle >= 0 else 2.*math.pi + angle
+
+
 if __name__ == "__main__":
     # Testing SAT
     tri = [[100, 100], [600, 200], [300, 300]]

@@ -248,9 +248,14 @@ class SeekerSimEnv(gym.Env):
             centre = compute_centre(self.tile_grid.bound)
             pos = [int((carpos[0]+centre[0])/scale * dims[0] + dims[0]/2), int((carpos[1]+centre[1])/scale * -dims[1] + dims[1]/2)]
 
-            #print("POS, ORN:", pos, carpos, carorn)
+            print("POS:", pos, carpos)
             self.mpqueue.command_move(pos)
-            #self.mpqueue.command_turn(carorn)
+
+            dir_vec = rotate_vector(carorn, [1, 0, 0])
+            angle = m2d.compute_angle(dir_vec[:2])
+            print("Car Forward:", angle)
+
+            self.mpqueue.command_turn(angle)
 
         carmat = self.physics.getMatrixFromQuaternion(carorn)
         tarpos, tarorn = self.physics.getBasePositionAndOrientation(self.targetUniqueId)
@@ -258,13 +263,6 @@ class SeekerSimEnv(gym.Env):
         tarPosInCar, tarOrnInCar = self.physics.multiplyTransforms(invCarPos, invCarOrn, tarpos, tarorn)
 
         self.observation.extend([tarPosInCar[0], tarPosInCar[1]])
-
-        #if self.mpqueue is not None:
-        #   # Sync with window
-        #   print(carpos, carorn)
-
-        #dir_vec = rotate_vector(carorn, [1, 0, 0])
-        #print("Car Forward:", dir_vec)
 
         # The LIDAR is assumed to be attached to the top (to avoid self-intersection)
         lidar_pos = add_vec(carpos, [0, 0, .25])
