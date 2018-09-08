@@ -218,6 +218,7 @@ class SeekerSimEnv(gym.Env):
 
         target_pos = gen_start_position(.25, self.floor) + [.25]
         car_pos = gen_start_position(.3, self.floor) + [.25]
+        #car_pos = [0, 0, .25]
         self.targetUniqueId = self.physics.loadURDF(os.path.join(self.urdfRoot, "target.urdf"), target_pos)
         self.robot = SeekerBot.SeekerBot(self.physics, urdfRootPath=self.urdfRoot, timeStep=self.timeStep, pos=car_pos)
 
@@ -246,13 +247,15 @@ class SeekerSimEnv(gym.Env):
             scale = self.floor[2]
             dims = self.floor[3]
             centre = compute_centre(self.tile_grid.bound)
-            pos = [int((carpos[0]+centre[0])/scale * dims[0] + dims[0]/2), int((carpos[1]+centre[1])/scale * -dims[1] + dims[1]/2)]
+            print("centre:", centre)
+            pos = [int((carpos[0]/scale) * dims[0] + dims[0]),
+                   int((-carpos[1]/scale) * dims[1] + dims[1])]
 
             print("POS:", pos, carpos)
             self.mpqueue.command_move(pos)
 
             dir_vec = rotate_vector(carorn, [1, 0, 0])
-            angle = m2d.compute_angle(m2d.vec3_to_vec2n(dir_vec))
+            angle = m2d.compute_angle(m2d.cp_mul(m2d.vec3_to_vec2n(dir_vec), [1, -1]))
             print("Car Forward:", angle)
 
             self.mpqueue.command_turn(angle)
@@ -291,7 +294,7 @@ class SeekerSimEnv(gym.Env):
         if self.renders:
             basePos, orn = self.physics.getBasePositionAndOrientation(self.robot.racecarUniqueId)
             # Comment out this line to prevent the camera moving with the car
-            self.physics.resetDebugVisualizerCamera(1, 30, -40, basePos)
+            #self.physics.resetDebugVisualizerCamera(1, 30, -40, basePos)
 
         if self.isDiscrete:
             fwd = [-1, -1, -1, 0, 0, 0, 1, 1, 1]
