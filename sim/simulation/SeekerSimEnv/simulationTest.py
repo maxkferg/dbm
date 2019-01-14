@@ -1,4 +1,5 @@
 # add parent dir to find package. Only needed for source code build, pip install doesn't need it.
+import time
 import os, inspect
 
 currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
@@ -39,7 +40,7 @@ def run_test():
             action = [targetVelocity, steeringAngle]
         state, reward, done, info = environment.step(action)
         obs = environment.getExtendedObservation()
-        #print("obs:", obs)
+        print("obs:", obs)
 
 if __name__ == "__main__":
     run_test()

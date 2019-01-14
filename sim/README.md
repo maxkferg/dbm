@@ -52,10 +52,10 @@ To run the model preparation, activate the conda environment:
 - source activate sim
 
 To run the test2 environment:
-python simulator.py --render-image assets/output.png --export-object assets/output.obj --export-sdf assets/output.sdf --run-test test2 assets/test2.png
+python simulation/simulator.py --render-image assets/output.png --export-object assets/output.obj --export-sdf assets/output.sdf --run-test test2 assets/test2.png
 
 To run the building environment:
-python simulator.py --render-image assets/output.png --export-object assets/output.obj --export-sdf assets/output.sdf --run-test building assets/building.png
+python -m simulation.simulator --render-image assets/output.png --export-object assets/output.obj --export-sdf assets/output.sdf --run-test building assets/building.png
 
 ### Preparing the input file (building plan)
 

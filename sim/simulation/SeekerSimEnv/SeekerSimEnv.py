@@ -6,10 +6,10 @@ from gym.utils import seeding
 import numpy as np
 import time
 import pybullet
-from . import SeekerBot
 from . import bullet_client
 from .config import URDF_ROOT
 import random
+from .robots.robot_models import Turtlebot
 from random import random, randint
 import sys
 
@@ -18,6 +18,7 @@ from tools.MPQueueClient import MPQueueClient
 from tools.TileGrid import TileGrid, compute_centre, AABB_to_vertices
 import tools.Math2D as m2d
 
+COUNT = 0
 RENDER_WIDTH = 960
 RENDER_HEIGHT = 720
 
@@ -62,6 +63,11 @@ def mul_quat(qA, qB):
         qA[3]*qB[2] + qA[2]*qB[3] + qA[0]*qB[1] - qA[1]*qB[0],
         qA[3]*qB[3] - qA[0]*qB[0] - qA[1]*qB[1] - qA[2]*qB[2],
     ]
+
+
+def positive_component(array):
+    """Replace postive values with zero"""
+    return (np.abs(array) + array)/2
 
 
 def scale_vec(scale, vec):
@@ -131,7 +137,7 @@ def gen_start_position(radius, floor):
 
 
 HOST, PORT = "localhost", 9999
-
+COUNT = 0
 
 class SeekerSimEnv(gym.Env):
     metadata = {
@@ -140,8 +146,9 @@ class SeekerSimEnv(gym.Env):
     }
 
     def __init__(self, urdfRoot=URDF_ROOT, actionRepeat=50,
-                 isEnableSelfCollision=True, isDiscrete=False, renders=False):
-        self.timeStep = .01
+                 isEnableSelfCollision=True, isDiscrete=False, renders=False, debug=0):
+        print("Initializing new SeekerSimEnv")
+        self.timeStep = .002
         self.urdfRoot = urdfRoot
         self.actionRepeat = actionRepeat
         self.isEnableSelfCollision = isEnableSelfCollision
@@ -155,6 +162,7 @@ class SeekerSimEnv(gym.Env):
         self.cam_pitch = 0.
         self.cam_yaw = 0.
         self.cam_roll = 0.
+        self.debug = debug
 
         self.envStepCounter = 0
         self.renders = renders
@@ -164,26 +172,22 @@ class SeekerSimEnv(gym.Env):
         #self.tile_grid.build_map()
 
         if self.renders:
+            print("Creating new BulletClient (GUI)")
             self.physics = bullet_client.BulletClient(connection_mode=pybullet.GUI)
             print(self.urdfRoot + "/output_floors.obj")
-
             self.mpqueue = MPQueueClient(HOST, PORT)
             self.mpqueue.start(self.urdfRoot + "/output_floors.obj", self.urdfRoot + "/output_walls.obj")
 
         else:
+            print("Creating new BulletClient")
             self.physics = bullet_client.BulletClient()
             self.mpqueue = None
 
         self.seed()
         ray_count = 12                      # 12 rays of 30 degrees each
-        observationDim = 2                  # These are positional coordinates
-
-        # print("observationDim")
-        # print(observationDim)
-        # observation_high = np.array([np.finfo(np.float32).max] * observationDim)
-
-        highs = [1000, 1000]
-        highs.extend([1]*ray_count)
+        observationDim = 4                  # These are positional coordinates
+        highs = [10, 10, 1, 1]            # Distance, angle and sine/consine of angles           
+        highs.extend([5]*ray_count)
 
         observation_high = np.array(highs)      #snp.ones(observationDim) * 1000  # np.inf
 
@@ -210,20 +214,35 @@ class SeekerSimEnv(gym.Env):
         # Load the floor file so we don't have to repeatedly read it
         self.floor = load_floor_file(self.urdfRoot + "/output_floors.obj")
         self.world_up = np.array([0, 0, 1])
+        self.build()
+        self.reset()
+        print("Initialization Complete")
 
-    def reset(self):
+
+    def build(self):
+        """
+        Build the environment. Only needs to be done once
+        """
+        print("Building simulation environment")
         self.physics.resetSimulation()
         self.physics.setTimeStep(self.timeStep)
         self.buildingIds = self.physics.loadSDF(os.path.join(self.urdfRoot, "output.sdf"))
+        self.isCrashed = False
 
         target_pos = gen_start_position(.25, self.floor) + [.25]
         car_pos = gen_start_position(.3, self.floor) + [.25]
-        #car_pos = [0, 0, .25]
         self.targetUniqueId = self.physics.loadURDF(os.path.join(self.urdfRoot, "target.urdf"), target_pos)
-        self.robot = SeekerBot.SeekerBot(self.physics, urdfRootPath=self.urdfRoot, timeStep=self.timeStep, pos=car_pos)
+        config = {
+            'power': 40,
+            'resolution': 1,
+            'is_discrete': False,
+            'target_pos': target_pos,
+            'initial_pos': car_pos
+        }
+        self.robot = Turtlebot(self.physics, config=config)
+        self.robot.set_position(car_pos) 
 
         self.physics.setGravity(0, 0, -10)
-        self.envStepCounter = 0
 
         for i in range(100):
             self.physics.stepSimulation()
@@ -231,12 +250,36 @@ class SeekerSimEnv(gym.Env):
         self.observation = self.getExtendedObservation()
         return np.array(self.observation)
 
+
+    def reset(self):
+        """Reset the environment. Move the target and the car"""
+        self.isCrashed = False
+        self.envStepCounter = 0
+
+        target_pos = gen_start_position(.25, self.floor) + [.25]
+        car_pos = gen_start_position(.3, self.floor) + [.25]
+        #self.targetUniqueId = self.physics.loadURDF(os.path.join(self.urdfRoot, "target.urdf"), target_pos)
+        _, target_orn = self.physics.getBasePositionAndOrientation(self.targetUniqueId)
+        self.physics.resetBasePositionAndOrientation(self.targetUniqueId, np.array(target_pos), target_orn)
+
+        #target set position
+        self.robot.set_position(car_pos) 
+
+        for i in range(100):
+            self.physics.stepSimulation()
+
+        self.observation = self.getExtendedObservation()
+        return np.array(self.observation)
+
+
     def __del__(self):
         self.physics = 0
+
 
     def seed(self, seed=None):
         self.np_random, seed = seeding.np_random(seed)
         return [seed]
+
 
     def getExtendedObservation(self):
         self.observation = []
@@ -247,16 +290,16 @@ class SeekerSimEnv(gym.Env):
             scale = self.floor[2]
             dims = self.floor[3]
             centre = compute_centre(self.tile_grid.bound)
-            print("centre:", centre)
+            #print("centre:", centre)
             pos = [int((carpos[0]/scale) * dims[0] + dims[0]),
                    int((-carpos[1]/scale) * dims[1] + dims[1])]
 
-            print("POS:", pos, carpos)
+            #print("POS:", pos, carpos)
             self.mpqueue.command_move(pos)
 
             dir_vec = rotate_vector(carorn, [1, 0, 0])
             angle = m2d.compute_angle(m2d.cp_mul(m2d.vec3_to_vec2n(dir_vec), [1, -1]))
-            print("Car Forward:", angle)
+            #print("Car Forward:", angle)
 
             self.mpqueue.command_turn(angle)
 
@@ -265,7 +308,16 @@ class SeekerSimEnv(gym.Env):
         invCarPos, invCarOrn = self.physics.invertTransform(carpos, carorn)
         tarPosInCar, tarOrnInCar = self.physics.multiplyTransforms(invCarPos, invCarOrn, tarpos, tarorn)
 
-        self.observation.extend([tarPosInCar[0], tarPosInCar[1]])
+        self.observation.extend([
+            tarPosInCar[0], 
+            tarPosInCar[1], 
+            math.atan(tarPosInCar[1]/tarPosInCar[0]), 
+            math.atan(tarPosInCar[0]/tarPosInCar[1]),
+        ])
+
+        if self.debug>1:
+            print("Target position:", tarPosInCar)
+            print("Target orientation:", math.sin(tarPosInCar[1]), math.cos(tarPosInCar[1]))
 
         # The LIDAR is assumed to be attached to the top (to avoid self-intersection)
         lidar_pos = add_vec(carpos, [0, 0, .25])
@@ -281,14 +333,20 @@ class SeekerSimEnv(gym.Env):
             end_pos = add_vec(lidar_pos, scale_vec(ray_len, dir_vec))
             intersection = self.physics.rayTest(start_pos, end_pos)
             if intersection[0][0] == self.targetUniqueId:
-                intersections.append(1)
+                intersections.append(-1)
             elif intersection[0][0] == self.buildingIds[0]:
-                intersections.append(-.25)
+                #print(intersection[0])
+                #print("--------------------")
+                intersections.append(intersection[0][2])
             else:
-                intersections.append(0)
+                intersections.append(ray_len)
+
+        if self.debug>1:
+            print("Lidar intersections:", intersections)
 
         self.observation.extend(intersections)
         return self.observation
+
 
     def step(self, action):
         if self.renders:
@@ -314,15 +372,18 @@ class SeekerSimEnv(gym.Env):
 
             if self.termination():
                 break
+
             self.envStepCounter += 1
         reward = self.reward()
         done = self.termination()
         if done:
-            pass
-            #print('--- reset ---')
-        #print("len=%r" % len(self.observation))
+            print('--- reset ---')
+            self.reset()
+
+        self.last_action = action
 
         return np.array(self.observation), reward, done, {}
+
 
     # This function is not being called in the test SeekerSimEnv
     def render(self, mode='human', close=False):
@@ -354,23 +415,51 @@ class SeekerSimEnv(gym.Env):
     # Note: The termination condition is specified in steps.  The step size is .01 and therefore the counter should be
     # divided by 100 to compute the number of seconds
     def termination(self):
-        # Want agent to make 20 actions. 50 physics steps per action. Total duration 1000
-        total_sim_duration = 1000  # 200 seconds for small model, 1000 for big model?
-        return self.envStepCounter > total_sim_duration
+        # Want agent to make 100 actions. 50 physics steps per action. Total duration 1000
+        total_sim_duration = 5000  # 200 seconds for small model, 1000 for big model?
+        return self.envStepCounter > total_sim_duration or self.isCrashed
 
     def reward(self):
         # Adapt the reward to:
         # 1 if target reached, else 0
         # -1 if wall collision
+        MAX_DISTANCE = 10 # Max distance to the target
+        COLLISION_DISTANCE = 0.04
+        TARGET_WEIGHT = 0.4
+        BATTERY_THRESHOLD = 0.005
+        BATTERY_WEIGHT = -50
+        CRASHED_PENALTY = -10
         closestPoints = self.physics.getClosestPoints(self.robot.racecarUniqueId, self.targetUniqueId, 10000)
 
-        #print("Closest Points:", closestPoints)
-
+        # Default reward is zero
         numPt = len(closestPoints)
-        reward = -1000
-        #print(numPt)
-        if (numPt > 0):
-            reward = -closestPoints[0][8]       # (contactFlag, bodyUniqueIdA, bodyUniqueIdB, linkIndexA, linkIndexB, positionOnA, positionOnB, contactNormalOnB, contactDistance, normalForce)
-        reward += sum(self.observation[2:])
-        #print("Reward:", reward)
+        
+        # Add positive reward if we are near the target
+        if numPt > 0:
+            target_reward = TARGET_WEIGHT*(MAX_DISTANCE - closestPoints[0][8])       # (contactFlag, bodyUniqueIdA, bodyUniqueIdB, linkIndexA, linkIndexB, positionOnA, positionOnB, contactNormalOnB, contactDistance, normalForce)
+        else:
+            target_reward = 0
+
+        # If the robot is too closs to the wall (not the target) then end the simulation with negative reward
+        crashed_reward = 0
+        for observation in self.observation[4:]:
+            if -1 < observation and observation < COLLISION_DISTANCE:
+                self.isCrashed = True
+                crashed_reward = CRASHED_PENALTY
+
+        # There is a cost to acceleration and turning
+        # We use the squared cost to incentivise careful use of battery resources
+        battery_reward = BATTERY_WEIGHT*np.sum(positive_component(np.abs(self.robot.last_action) - BATTERY_THRESHOLD))
+
+        # Total reward is the sum of components
+        reward = target_reward + crashed_reward + battery_reward
+
+        if self.debug:
+            print("---- Step Summary -----")
+            print("Action: ",self.robot.last_action)
+            print("Target Reward:  %.3f"%target_reward)
+            print("Crashed Reward: %.3f"%crashed_reward)
+            print("Battery Reward: %.3f"%battery_reward)
+            print("Total Reward:   %.3f\n"%reward)
+
         return reward

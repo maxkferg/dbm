@@ -133,7 +133,7 @@ class FrameHistory(object):
     if self._flatten:
       low = np.reshape(low, (-1,) + low.shape[2:])
       high = np.reshape(high, (-1,) + high.shape[2:])
-    return gym.spaces.Box(low, high)
+    return gym.spaces.Box(low, high, dtype=np.float32)
 
   def step(self, action):
     observ, reward, done, info = self._env.step(action)

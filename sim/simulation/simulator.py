@@ -41,7 +41,7 @@ generator.process_image(args.plan_file)
 
 # Default is for assets/building.png
 offset = [0, 0, 0]
-scale = 125.
+scale = 30
 
 if args.plan_file == "assets/test2.png":
     scale = 12.5
@@ -66,14 +66,12 @@ if args.run_test:
 if args.train:
     register(id='SeekerSimEnv-v0',
              entry_point='simulation.SeekerSimEnv:SeekerSimEnv',
-             timestep_limit=1000,
              reward_threshold=.5)
     setup_training_env()
 
 if args.visualise:
     register(id='SeekerSimEnv-v0',
              entry_point='simulation.SeekerSimEnv:SeekerSimEnv',
-             timestep_limit=1000,
              reward_threshold=.5)
     setup_visualize_env(args.visualise)
 

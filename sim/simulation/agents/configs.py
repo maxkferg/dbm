@@ -29,7 +29,7 @@ def default():
     """Default configuration for PPO."""
     # General
     algorithm = ppo.PPOAlgorithm
-    num_agents = 30
+    num_agents = 8
     eval_episodes = 30
     use_gpu = False
     # Network
@@ -50,7 +50,7 @@ def default():
     update_epochs_value = 64
     learning_rate = 1e-4
     # Losses
-    discount = 0.995
+    discount = 0.99
     kl_target = 1e-2
     kl_cutoff_factor = 2
     kl_cutoff_coef = 1000
@@ -63,7 +63,9 @@ def pybullet_seekersim():
     locals().update(default())
     # The name of the environment must conform to ~/anaconda2/envs/sim/lib/python3.6/site-packages/gym/envs/registration.py
     env = 'SeekerSimEnv-v0'
-    max_length = 1000       # Verify
+    max_length = 1000 # Verify. This appears to be the maximum number of steps for the memory buffer
+    update_every = 60
+    update_epochs = 50
     steps = 1e7
     return locals()
 
