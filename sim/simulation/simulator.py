@@ -3,8 +3,10 @@ import gym
 from tools.MeshGenerator import Generator
 from simulation.SeekerSimEnv.simulationTest import run_test
 from gym.envs.registration import registry
-from simulation.agents.train_ppo import setup_training_env
-from simulation.agents.visualize_ppo import setup_visualize_env
+from simulation.algorithms.train import train
+from tensorforce.contrib.openai_gym import OpenAIGym
+from simulation.agents_old.visualize_ppo import setup_visualize_env
+from environment.remote import EnvironmentServer
 import time
 
 
@@ -32,6 +34,7 @@ parser.add_argument("--export-object", help="Analyse the plan-file and export it
 parser.add_argument("--export-sdf", help="Export the plan to an SDF file (OBJ + Physics)")
 parser.add_argument("--run-test", help="Run the test environment")
 parser.add_argument("--train", help="Train the agent")
+parser.add_argument("--spawn", help="Spawn an environment")
 parser.add_argument("--visualise", help="Pass logdir of saved training results and visualise the learned policy")
 args = parser.parse_args()
 
@@ -67,12 +70,20 @@ if args.train:
     register(id='SeekerSimEnv-v0',
              entry_point='simulation.SeekerSimEnv:SeekerSimEnv',
              reward_threshold=.5)
-    setup_training_env()
+    train('SeekerSimEnv-v0')
 
 if args.visualise:
     register(id='SeekerSimEnv-v0',
              entry_point='simulation.SeekerSimEnv:SeekerSimEnv',
              reward_threshold=.5)
     setup_visualize_env(args.visualise)
+
+if args.spawn:
+    register(id='SeekerSimEnv-v0',
+         entry_point='simulation.SeekerSimEnv:SeekerSimEnv',
+         reward_threshold=.5)
+    EnvironmentServer(6666, 'SeekerSimEnv-v0')
+
+
 
 print("Done.")

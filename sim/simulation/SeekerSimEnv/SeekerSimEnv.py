@@ -1,5 +1,6 @@
 import os
 import gym
+import time
 import math
 from gym import spaces
 from gym.utils import seeding
@@ -167,6 +168,7 @@ class SeekerSimEnv(gym.Env):
         self.envStepCounter = 0
         self.renders = renders
         self.isDiscrete = isDiscrete
+        self.startedTime = time.time()
         self.tile_grid = TileGrid(self.urdfRoot + "/output_floors.obj")
         #self.tile_grid.build_grid()
         #self.tile_grid.build_map()
@@ -186,7 +188,7 @@ class SeekerSimEnv(gym.Env):
         self.seed()
         ray_count = 12                      # 12 rays of 30 degrees each
         observationDim = 4                  # These are positional coordinates
-        highs = [10, 10, 1, 1]            # Distance, angle and sine/consine of angles           
+        highs = [10, 10, 1, 1]            # Distance, angle and sine/consine of angles
         highs.extend([5]*ray_count)
 
         observation_high = np.array(highs)      #snp.ones(observationDim) * 1000  # np.inf
@@ -228,6 +230,7 @@ class SeekerSimEnv(gym.Env):
         self.physics.setTimeStep(self.timeStep)
         self.buildingIds = self.physics.loadSDF(os.path.join(self.urdfRoot, "output.sdf"))
         self.isCrashed = False
+        self.isAtTarget = False
 
         target_pos = gen_start_position(.25, self.floor) + [.25]
         car_pos = gen_start_position(.3, self.floor) + [.25]
@@ -240,7 +243,7 @@ class SeekerSimEnv(gym.Env):
             'initial_pos': car_pos
         }
         self.robot = Turtlebot(self.physics, config=config)
-        self.robot.set_position(car_pos) 
+        self.robot.set_position(car_pos)
 
         self.physics.setGravity(0, 0, -10)
 
@@ -253,7 +256,13 @@ class SeekerSimEnv(gym.Env):
 
     def reset(self):
         """Reset the environment. Move the target and the car"""
+        steps = self.envStepCounter / self.actionRepeat
+        duration = time.time() - self.startedTime
+        print("Reset after %i steps in %.2f seconds"%(steps,duration))
+
         self.isCrashed = False
+        self.isAtTarget = False
+        self.startedTime = time.time()
         self.envStepCounter = 0
 
         target_pos = gen_start_position(.25, self.floor) + [.25]
@@ -263,12 +272,13 @@ class SeekerSimEnv(gym.Env):
         self.physics.resetBasePositionAndOrientation(self.targetUniqueId, np.array(target_pos), target_orn)
 
         #target set position
-        self.robot.set_position(car_pos) 
+        self.robot.set_position(car_pos)
 
         for i in range(100):
             self.physics.stepSimulation()
 
         self.observation = self.getExtendedObservation()
+
         return np.array(self.observation)
 
 
@@ -309,13 +319,13 @@ class SeekerSimEnv(gym.Env):
         tarPosInCar, tarOrnInCar = self.physics.multiplyTransforms(invCarPos, invCarOrn, tarpos, tarorn)
 
         self.observation.extend([
-            tarPosInCar[0], 
-            tarPosInCar[1], 
-            math.atan(tarPosInCar[1]/tarPosInCar[0]), 
+            tarPosInCar[0],
+            tarPosInCar[1],
+            math.atan(tarPosInCar[1]/tarPosInCar[0]),
             math.atan(tarPosInCar[0]/tarPosInCar[1]),
         ])
 
-        if self.debug>1:
+        if self.debug:
             print("Target position:", tarPosInCar)
             print("Target orientation:", math.sin(tarPosInCar[1]), math.cos(tarPosInCar[1]))
 
@@ -376,10 +386,6 @@ class SeekerSimEnv(gym.Env):
             self.envStepCounter += 1
         reward = self.reward()
         done = self.termination()
-        if done:
-            print('--- reset ---')
-            self.reset()
-
         self.last_action = action
 
         return np.array(self.observation), reward, done, {}
@@ -417,15 +423,15 @@ class SeekerSimEnv(gym.Env):
     def termination(self):
         # Want agent to make 100 actions. 50 physics steps per action. Total duration 1000
         total_sim_duration = 5000  # 200 seconds for small model, 1000 for big model?
-        return self.envStepCounter > total_sim_duration or self.isCrashed
+        return self.envStepCounter > total_sim_duration or self.isCrashed or self.isAtTarget
 
     def reward(self):
         # Adapt the reward to:
         # 1 if target reached, else 0
         # -1 if wall collision
-        MAX_DISTANCE = 10 # Max distance to the target
+        TARGET_DISTANCE_THRESHOLD = 0.6 # Max distance to the target
         COLLISION_DISTANCE = 0.04
-        TARGET_WEIGHT = 0.4
+        TARGET_REWARD = 10
         BATTERY_THRESHOLD = 0.005
         BATTERY_WEIGHT = -50
         CRASHED_PENALTY = -10
@@ -433,10 +439,16 @@ class SeekerSimEnv(gym.Env):
 
         # Default reward is zero
         numPt = len(closestPoints)
-        
+
         # Add positive reward if we are near the target
-        if numPt > 0:
-            target_reward = TARGET_WEIGHT*(MAX_DISTANCE - closestPoints[0][8])       # (contactFlag, bodyUniqueIdA, bodyUniqueIdB, linkIndexA, linkIndexB, positionOnA, positionOnB, contactNormalOnB, contactDistance, normalForce)
+        # Distance based reward
+        #if numPt > 0:
+        #    target_reward = TARGET_WEIGHT*(MAX_DISTANCE - closestPoints[0][8])       # (contactFlag, bodyUniqueIdA, bodyUniqueIdB, linkIndexA, linkIndexB, positionOnA, positionOnB, contactNormalOnB, contactDistance, normalForce)
+        #else:
+        #    target_reward = 0
+        if abs(closestPoints[0][8]) < TARGET_DISTANCE_THRESHOLD:
+            target_reward = TARGET_REWARD
+            self.isAtTarget = True
         else:
             target_reward = 0
 
@@ -455,7 +467,7 @@ class SeekerSimEnv(gym.Env):
         reward = target_reward + crashed_reward + battery_reward
 
         if self.debug:
-            print("---- Step Summary -----")
+            print("---- Step %i Summary -----"%self.envStepCounter)
             print("Action: ",self.robot.last_action)
             print("Target Reward:  %.3f"%target_reward)
             print("Crashed Reward: %.3f"%crashed_reward)

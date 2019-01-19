@@ -19,7 +19,7 @@ visual outputs can be routed this way and hopefully the server can act as a gene
 output in the RL algorithm.  Note that there is no reason the TkInter server can't be run on a different machine, but
 for the purposes here, everything is assumed to be running on localhost (127.0.0.1).
 
-The TkInter server 
+The TkInter server
 ------------------
 
 Start the server by running:
