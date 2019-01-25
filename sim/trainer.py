@@ -17,11 +17,11 @@
 Asynchronous OpenAI gym execution - this currently implements A3C semantics
 but execution semantics will be changed to have more explicit control.
 
-To run this script with 3 workers on Pong-ram-v0:
-$ python examples/openai_gym_async.py Pong-ram-v0 -a examples/configs/vpg.json -n examples/configs/mlp2_network.json -e 50000 -m 2000 -W 3
+Training on a test server:
+$ python trainer.py SeekerSimEnv-v0 -a configs/ppo.json -n configs/mlp2_network.json -e 10000 -m 200 -W 3 -D
 
-Or on CartPole-v0:
-$ python examples/openai_gym_async.py CartPole-v0 -a examples/configs/vpg.json -n examples/configs/mlp2_network.json -e 10000 -m 200 -W 3
+Training Cartpole
+$ python trainer.py CartPole-v0 -a configs/ppo.json -n configs/mlp2_network.json -e 10000 -m 200 -W 3 -D
 
 You can check what the workers are doing:
 $ tmux a -t OpenAI  # `ctrl+b d` to exit tmux
