@@ -42,6 +42,7 @@ import os
 import sys
 import time
 import gym
+import atexit
 
 import tensorflow as tf
 from six.moves import xrange, shlex_quote
@@ -242,6 +243,11 @@ def main():
             logger.info("Average of last 500 rewards: {}".format(sum(r.episode_rewards[-500:]) / min(500, len(r.episode_rewards))))
             logger.info("Average of last 100 rewards: {}".format(sum(r.episode_rewards[-100:]) / min(100, len(r.episode_rewards))))
         return True
+
+    def exit_handler(name):
+        logger.info("Worker node exited early")
+    atexit.register(exit_handler)
+
 
     print("Starting runner for OpenAI Gym '{gym_id}'".format(gym_id=args.gym_id))
     runner.run(
