@@ -26,7 +26,7 @@ dependencies:
   - lxml=4.2.1=py36h7166777_0
   - ncurses=6.0=hd04f020_2
   - openssl=1.0.2o=h26aff7b_0
-  - pip=9.0.3=py36_0
+  - pip
   - python=3.6.5=hc167b69_0
   - readline=7.0=hc1231fa_4
   - setuptools=39.0.1=py36_0
