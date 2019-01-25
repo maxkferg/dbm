@@ -3,9 +3,8 @@ import gym
 from tools.MeshGenerator import Generator
 from simulation.SeekerSimEnv.simulationTest import run_test
 from gym.envs.registration import registry
-from simulation.algorithms.train import train
+from algorithms.train import train
 from tensorforce.contrib.openai_gym import OpenAIGym
-from simulation.agents_old.visualize_ppo import setup_visualize_env
 from environment.remote import EnvironmentServer
 import time
 

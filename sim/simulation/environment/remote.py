@@ -10,18 +10,13 @@ class EnvironmentHandler(tornado.web.RequestHandler):
     """
     Handler mapping urls to Gym actions
     """
-    def initialize(self, env_name, visualize):
-        self.env = OpenAIGym(env_name, visualize=visualize)
+    def initialize(self, env):
+        self.env = env
 
     def post(self):
         method = self.get_argument("method")
-        print(self.request)
-        print('-----')
-        print(self.request.arguments)
         params = self.request.arguments.get("params",[])
-        print("Got post request: ", method, params, "Done")
         if method == "states":
-            print("---> encoding states", self.env.states)
             self.write(self.env.states)
 
         elif method == "actions":
@@ -31,31 +26,27 @@ class EnvironmentHandler(tornado.web.RequestHandler):
                 "min_value": float(self.env.actions["min_value"]),
                 "max_value": float(self.env.actions["max_value"])
             }
-            print("---> encoding actions", actions)
             self.write(actions)
 
         elif method == "seed":
-            print("---> encoding seed")
             self.write(self.env.seed(params))
 
         elif method == "execute":
-            print("---> encoding execute")
-            print("----> P:",params)
             params = np.array([float(p) for p in params])
             state, done, reward = self.env.execute(params)
-            response = {"state":state.tolist(), "done": done, "reward": reward}
-            print(response)
+            response = {
+                "state":state.tolist(),
+                "done": done, 
+                "reward": reward}
             self.write(response)
 
         elif method == "reset":
-            print("---> encoding reset")
             response = {"state": self.env.reset().tolist()}
-            print(response)
             self.write(response)
 
         elif method == "close":
-            print("---> encoding close")
-            self.write(self.env.close())
+            self.env.close()
+            self.write({})
             exit()
 
         else:
@@ -63,10 +54,10 @@ class EnvironmentHandler(tornado.web.RequestHandler):
 
 
 class EnvironmentServer(tornado.web.RequestHandler):
+
     def __init__(self, port, env_name):
         args = {
-            "visualize": True,
-            "env_name": env_name,
+            "env": OpenAIGym(env_name, visualize=True),
         }
         app = tornado.web.Application([
             (r"/.*", EnvironmentHandler, args),
@@ -89,7 +80,7 @@ class EnvironmentClient():
             Returns:    (Dict of) next state(s), boolean indicating terminal, and reward signal.
             static from_spec(spec, kwargs)
         """
-        print("Action:",action,"Done")
+        print("Action:",action)
         message = {"method": "execute", "params": action.tolist()}
         response = requests.post(self.url, data=message).json()
         return response["state"], response["done"], response["reward"]
@@ -129,7 +120,6 @@ class EnvironmentClient():
     @property
     def actions(self):
         """Return the action space."""
-        print('---actions--')
         if self.action_space is not None:
             return self.action_space
         message = {"method": "actions"}
@@ -141,7 +131,6 @@ class EnvironmentClient():
     @property
     def states(self):
         """Return the state space."""
-        print('states----')
         if self.state_space is not None:
             return self.state_space
         message = {"method": "states"}
