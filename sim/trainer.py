@@ -18,10 +18,10 @@ Asynchronous OpenAI gym execution - this currently implements A3C semantics
 but execution semantics will be changed to have more explicit control.
 
 Training on a test server:
-$ python trainer.py SeekerSimEnv-v0 -a configs/ppo.json -n configs/mlp2_network.json -e 10000 -m 200 -W 3 -D
+$ python trainer.py SeekerSimEnv-v0 -a configs/ppo.json -n configs/mlp2_network.json -e 1000 -m 100 -W 4
 
 Training Cartpole
-$ python trainer.py CartPole-v0 -a configs/ppo.json -n configs/mlp2_network.json -e 10000 -m 200 -W 3 -D
+$ python trainer.py CartPole-v0 -a configs/ppo.json -n configs/mlp2_network.json -e 10000 -m 200 -W 4 -D
 
 You can check what the workers are doing:
 $ tmux a -t OpenAI  # `ctrl+b d` to exit tmux
@@ -76,6 +76,7 @@ def main():
     parser.add_argument('-K', '--kill', action='store_true', help="Kill runners")
     parser.add_argument('-L', '--logdir', default='logs_async', help="Log directory")
     parser.add_argument('-D', '--debug', action='store_true', help="Show debug outputs")
+    parser.add_argument('-H', '--human', action='store_true', help="Human control")
 
     args = parser.parse_args()
 
@@ -90,6 +91,9 @@ def main():
     register(id='SeekerSimEnv-v0',
          entry_point='simulation.SeekerSimEnv:SeekerSimEnv',
          reward_threshold=.5)
+
+    if args.human:
+        OpenAIGym(args.gym_id)
 
     if args.kill:
         os.system("\n".join(kill_cmds))
@@ -237,7 +241,7 @@ def main():
     if args.debug:  # TODO: Timestep-based reporting
         report_episodes = 1
     else:
-        report_episodes = 100
+        report_episodes = 10
 
     def episode_finished(r):
         if r.episode % report_episodes == 0:

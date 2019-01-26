@@ -322,8 +322,8 @@ class SeekerSimEnv(gym.Env):
         self.observation.extend([
             tarPosInCar[0],
             tarPosInCar[1],
+            math.sqrt(tarPosInCar[1]**2 + tarPosInCar[0]**2),
             math.atan2(tarPosInCar[1], tarPosInCar[0]),
-            0 # dummy
         ])
 
         if self.debug:
@@ -375,16 +375,18 @@ class SeekerSimEnv(gym.Env):
             realaction = action
 
         self.robot.applyAction(realaction)
+
+        # Keep the simulation loop as lean as possible.
+        # Technically we should check for crash or target state in the loop, but that is slow
         for i in range(self.actionRepeat):
             self.physics.stepSimulation()
-            if self.renders:
-                time.sleep(self.timeStep)
-            self.observation = self.getExtendedObservation()
-
             if self.termination():
+                self.observation = self.getExtendedObservation()
                 break
+        
+        self.observation = self.getExtendedObservation()
+        self.envStepCounter += 1
 
-            self.envStepCounter += 1
         reward = self.reward()
         done = self.termination()
         self.last_action = action
@@ -419,11 +421,9 @@ class SeekerSimEnv(gym.Env):
         rgb_array = rgb_array.reshape((RENDER_HEIGHT, RENDER_WIDTH, 4))
         return rgb_array
 
-    # Note: The termination condition is specified in steps.  The step size is .01 and therefore the counter should be
-    # divided by 100 to compute the number of seconds
     def termination(self):
         # Want agent to make 100 actions. 50 physics steps per action. Total duration 1000
-        total_sim_duration = 5000  # 200 seconds for small model, 1000 for big model?
+        total_sim_duration = 100  # 200 seconds for small model, 1000 for big model?
         return self.envStepCounter > total_sim_duration or self.isCrashed or self.isAtTarget
 
     def reward(self):
@@ -432,10 +432,10 @@ class SeekerSimEnv(gym.Env):
         # -1 if wall collision
         TARGET_DISTANCE_THRESHOLD = 0.6 # Max distance to the target
         COLLISION_DISTANCE = 0.04
-        TARGET_REWARD = 10
+        TARGET_REWARD = 1
         BATTERY_THRESHOLD = 0.005
-        BATTERY_WEIGHT = -50
-        CRASHED_PENALTY = -10
+        BATTERY_WEIGHT = -5
+        CRASHED_PENALTY = -1
         closestPoints = self.physics.getClosestPoints(self.robot.racecarUniqueId, self.targetUniqueId, 10000)
 
         # Default reward is zero

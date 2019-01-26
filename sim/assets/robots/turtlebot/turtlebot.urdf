@@ -60,7 +60,7 @@
   <joint name="wheel_left_joint" type="continuous">
     <parent link="base_link"/>
     <child link="wheel_left_link"/>
-    <origin rpy="-1.57079632679 0 0" xyz="0.00 0.115 0.0250"/>
+    <origin rpy="-1.57079632679 0 0" xyz="0.00 0.115 0.0550"/>
     <axis xyz="0 0 1"/>
   </joint>
   <link name="wheel_left_link">
@@ -73,7 +73,7 @@
     </visual>
     <collision>
       <geometry>
-        <cylinder length="0.0206" radius="0.0352"/>
+        <cylinder length="0.0206" radius="0.0650"/>
       </geometry>
       <material name="Grey"/>
       <origin rpy="0 0 0" xyz="0 0 0"/>
@@ -93,7 +93,7 @@
   <joint name="wheel_right_joint" type="continuous">
     <parent link="base_link"/>
     <child link="wheel_right_link"/>
-    <origin rpy="-1.57079632679 0 0" xyz="0.00 -0.115 0.0250"/>
+    <origin rpy="-1.57079632679 0 0" xyz="0.00 -0.115 0.0550"/>
     <axis xyz="0 0 1"/>
   </joint>
   <link name="wheel_right_link">
@@ -106,7 +106,7 @@
     </visual>
     <collision>
       <geometry>
-        <cylinder length="0.0206" radius="0.0350"/>
+        <cylinder length="0.0206" radius="0.0650"/>
       </geometry>
       <material name="Grey"/>
       <origin rpy="0 0 0" xyz="0 0 0"/>
