@@ -23,12 +23,6 @@
     },
     {
         "type": "nonlinearity",
-        "name": "relu"
-    },
-
-    {
-        "type": "dense",
-        "size": 64,
-        "activation": null
+        "name": "tanh"
     }
 ]

@@ -18,7 +18,11 @@ Asynchronous OpenAI gym execution - this currently implements A3C semantics
 but execution semantics will be changed to have more explicit control.
 
 Training on a test server:
-$ python trainer.py SeekerSimEnv-v0 -a configs/ppo.json -n configs/mlp2_network.json -e 1000 -m 100 -W 4
+$ python trainer.py SeekerSimEnv-v0 -a configs/ppo.json -n configs/mlp2_network.json -e 100000 -m 100 -W 24
+
+
+Training with a fancier network:
+$ python trainer.py SeekerSimEnv-v0 -a configs/ppo.json -n configs/mlp2_normalized_network.json -e 100000 -m 100 -W 4
 
 Training Cartpole
 $ python trainer.py CartPole-v0 -a configs/ppo.json -n configs/mlp2_network.json -e 10000 -m 200 -W 4 -D
@@ -47,7 +51,7 @@ import atexit
 import tensorflow as tf
 from six.moves import xrange, shlex_quote
 
-from tensorforce import TensorForceError
+from tensorforce import TensorforceError
 from tensorforce.agents import Agent
 from tensorforce.execution import Runner
 from tensorforce.contrib.openai_gym import OpenAIGym
@@ -77,6 +81,11 @@ def main():
     parser.add_argument('-L', '--logdir', default='logs_async', help="Log directory")
     parser.add_argument('-D', '--debug', action='store_true', help="Show debug outputs")
     parser.add_argument('-H', '--human', action='store_true', help="Human control")
+
+    parser.add_argument('--monitor', type=str, default=None, help="Save results to this directory")
+    parser.add_argument('--monitor-safe', action='store_true', default=False, help="Do not overwrite previous results")
+    parser.add_argument('--monitor-video', type=int, default=0, help="Save video every x steps (0 = disabled)")
+    parser.add_argument('--visualize', action='store_true', default=False, help="Enable OpenAI Gym's visualization")
 
     args = parser.parse_args()
 
@@ -177,7 +186,10 @@ def main():
     cluster = {'ps': ps_hosts, 'worker': worker_hosts}
     cluster_spec = tf.train.ClusterSpec(cluster)
 
-    environment = OpenAIGym(args.gym_id)
+    environment = OpenAIGym(
+        gym_id=args.gym_id, monitor=args.monitor, monitor_safe=args.monitor_safe,
+        monitor_video=args.monitor_video, visualize=args.visualize
+    )
 
     logger = logging.getLogger()
     logger.setLevel(logging.INFO)  # log_levels[agent.log_level])
@@ -221,11 +233,9 @@ def main():
 
     agent = Agent.from_spec(
         spec=agent,
-        kwargs=dict(
-            states=environment.states,
-            actions=environment.actions,
-            network=network
-        )
+        states=environment.states(),
+        actions=environment.actions(),
+        network=network
     )
 
     logger.info("Starting distributed agent for OpenAI Gym '{gym_id}'".format(gym_id=args.gym_id))
@@ -234,8 +244,7 @@ def main():
 
     runner = Runner(
         agent=agent,
-        environment=environment,
-        repeat_actions=1
+        environment=environment
     )
 
     if args.debug:  # TODO: Timestep-based reporting
