@@ -1,4 +1,4 @@
-# Copyright 2018 Tensorforce Team. All Rights Reserved.
+# Copyright 2018 reinforce.io. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,6 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
+
+
+from __future__ import absolute_import
+from __future__ import print_function
+from __future__ import division
 
 import retro
 import gym
@@ -74,6 +79,7 @@ class OpenAIRetro(Environment):
         next_state, rew, done, _ = self.env.step(action)
         return next_state, rew, done
 
+    @property
     def states(self):
         return OpenAIRetro.state_from_space(space=self.env.observation_space)
 
@@ -110,6 +116,7 @@ class OpenAIRetro(Environment):
         else:
             raise TensorForceError('Unknown Gym space.')
 
+    @property
     def actions(self):
         return OpenAIRetro.action_from_space(space=self.env.action_space)
 

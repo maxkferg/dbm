@@ -1,4 +1,4 @@
-# Copyright 2018 Tensorforce Team. All Rights Reserved.
+# Copyright 2017 reinforce.io. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,8 +13,9 @@
 # limitations under the License.
 # ==============================================================================
 
+import tensorflow as tf
+
 from tensorforce import util
-from tensorforce.core import parameter_modules
 from tensorforce.core.optimizers.solvers import Solver
 
 
@@ -24,7 +25,7 @@ class Iterative(Solver):
     initialization step, the iteration loop body and the termination condition.
     """
 
-    def __init__(self, name, max_iterations, unroll_loop, use_while_v2=False):
+    def __init__(self, max_iterations, unroll_loop=False):
         """
         Creates a new iterative solver instance.
 
@@ -32,19 +33,18 @@ class Iterative(Solver):
             max_iterations: Maximum number of iterations before termination.
             unroll_loop: Unrolls the TensorFlow while loop if true.
         """
-        super().__init__(name=name)
+        assert max_iterations >= 0
+        self.max_iterations = max_iterations
 
         assert isinstance(unroll_loop, bool)
         self.unroll_loop = unroll_loop
-        self.use_while_v2 = use_while_v2
 
-        if self.unroll_loop:
-            self.max_iterations = max_iterations
-        else:
-            self.max_iterations = self.add_module(
-                name='max-iterations', module=max_iterations, modules=parameter_modules,
-                dtype='int'
-            )
+        super(Iterative, self).__init__()
+
+        # TensorFlow functions
+        self.initialize = tf.make_template(name_='initialize', func_=self.tf_initialize)
+        self.step = tf.make_template(name_='step', func_=self.tf_step)
+        self.next_step = tf.make_template(name_='next-step', func_=self.tf_next_step)
 
     def tf_solve(self, fn_x, x_init, *args):
         """
@@ -61,7 +61,7 @@ class Iterative(Solver):
         self.fn_x = fn_x
 
         # Initialization step
-        args = self.start(x_init, *args)
+        args = self.initialize(x_init, *args)
         # args = util.map_tensors(fn=tf.stop_gradient, tensors=args)
 
         # Iteration loop with termination condition
@@ -71,20 +71,16 @@ class Iterative(Solver):
                 next_step = self.next_step(*args)
                 step = (lambda: self.step(*args))
                 do_nothing = (lambda: args)
-                args = self.cond(pred=next_step, true_fn=step, false_fn=do_nothing)
+                args = tf.cond(pred=next_step, true_fn=step, false_fn=do_nothing)
 
         else:
             # TensorFlow while loop
-            max_iterations = self.max_iterations.value()
-            args = self.while_loop(
-                cond=self.next_step, body=self.step, loop_vars=args,
-                maximum_iterations=max_iterations, use_while_v2=self.use_while_v2
-            )
+            args = tf.while_loop(cond=self.next_step, body=self.step, loop_vars=args)
 
         # First argument contains solution
         return args[0]
 
-    def tf_start(self, x_init, *args):
+    def tf_initialize(self, x_init, *args):
         """
         Initialization step preparing the arguments for the first iteration of the loop body  
         (default: initial solution guess and iteration counter).
@@ -96,9 +92,9 @@ class Iterative(Solver):
         Returns:
             Initial arguments for tf_step.
         """
-        raise NotImplementedError
+        return x_init, 0
 
-    def tf_step(self, x, *args):
+    def tf_step(self, x, iteration, *args):
         """
         Iteration loop body of the iterative solver (default: increment iteration step). The  
         first two loop arguments have to be the current solution estimate and the iteration step.
@@ -111,9 +107,9 @@ class Iterative(Solver):
         Returns:
             Updated arguments for next iteration.
         """
-        raise NotImplementedError
+        return (x, iteration + 1) + args
 
-    def tf_next_step(self, x, *args):
+    def tf_next_step(self, x, iteration, *args):
         """
         Termination condition (default: max number of iterations).
 
@@ -125,4 +121,4 @@ class Iterative(Solver):
         Returns:
             True if another iteration should be performed.
         """
-        raise NotImplementedError
+        return iteration < self.max_iterations

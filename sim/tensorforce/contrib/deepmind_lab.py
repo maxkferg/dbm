@@ -1,4 +1,4 @@
-# Copyright 2018 Tensorforce Team. All Rights Reserved.
+# Copyright 2017 reinforce.io. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,9 +13,13 @@
 # limitations under the License.
 # ==============================================================================
 
+from __future__ import absolute_import
+from __future__ import print_function
+from __future__ import division
+
 import numpy as np
 import deepmind_lab
-from tensorforce.environments import Environment
+from tensorforce.environments.environment import Environment
 
 
 # TODO this has not been tested since 0.3 - potentially deprecated API
@@ -128,6 +132,7 @@ class DeepMindLab(Environment):
         terminal = not self.level.is_running()
         return state, terminal, reward
 
+    @property
     def states(self):
         states = dict()
 
@@ -142,6 +147,7 @@ class DeepMindLab(Environment):
 
         return states
 
+    @property
     def actions(self):
         actions = dict()
         for action in self.level.action_spec():

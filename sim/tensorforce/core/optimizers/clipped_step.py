@@ -1,4 +1,4 @@
-# Copyright 2018 Tensorforce Team. All Rights Reserved.
+# Copyright 2017 reinforce.io. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,10 +13,12 @@
 # limitations under the License.
 # ==============================================================================
 
+from __future__ import absolute_import
+from __future__ import print_function
+from __future__ import division
+
 import tensorflow as tf
 
-from tensorforce import util
-from tensorforce.core import parameter_modules
 from tensorforce.core.optimizers import MetaOptimizer
 
 
@@ -26,7 +28,7 @@ class ClippedStep(MetaOptimizer):
     optimizer.
     """
 
-    def __init__(self, name, optimizer, clipping_value, summary_labels=None):
+    def __init__(self, optimizer, clipping_value, scope='clipped-step', summary_labels=()):
         """
         Creates a new multi-step meta optimizer instance.
 
@@ -34,34 +36,33 @@ class ClippedStep(MetaOptimizer):
             optimizer: The optimizer which is modified by this meta optimizer.
             clipping_value: Clip deltas at this value.
         """
-        super().__init__(name=name, optimizer=optimizer, summary_labels=summary_labels)
+        assert isinstance(clipping_value, float) and clipping_value > 0.0
+        self.clipping_value = clipping_value
 
-        self.clipping_value = self.add_module(
-            name='clipping-value', module=clipping_value, modules=parameter_modules, dtype='float'
-        )
+        super(ClippedStep, self).__init__(optimizer=optimizer, scope=scope, summary_labels=summary_labels)
 
-    def tf_step(self, variables, **kwargs):
+    def tf_step(self, time, variables, **kwargs):
         """
         Creates the TensorFlow operations for performing an optimization step.
 
         Args:
+            time: Time tensor.
             variables: List of variables to optimize.
             **kwargs: Additional arguments passed on to the internal optimizer.
 
         Returns:
             List of delta tensors corresponding to the updates for each optimized variable.
         """
-        deltas = self.optimizer.step(variables=variables, **kwargs)
+        deltas = self.optimizer.step(time=time, variables=variables, **kwargs)
 
         with tf.control_dependencies(control_inputs=deltas):
-            clipping_value = self.clipping_value.value()
             clipped_deltas = list()
             exceeding_deltas = list()
             for delta in deltas:
                 clipped_delta = tf.clip_by_value(
                     t=delta,
-                    clip_value_min=-clipping_value,
-                    clip_value_max=clipping_value
+                    clip_value_min=-self.clipping_value,
+                    clip_value_max=self.clipping_value
                 )
                 clipped_deltas.append(clipped_delta)
                 exceeding_deltas.append(clipped_delta - delta)
@@ -69,4 +70,4 @@ class ClippedStep(MetaOptimizer):
         applied = self.apply_step(variables=variables, deltas=exceeding_deltas)
 
         with tf.control_dependencies(control_inputs=(applied,)):
-            return [util.identity_operation(x=delta) for delta in clipped_deltas]
+            return [delta + 0.0 for delta in clipped_deltas]

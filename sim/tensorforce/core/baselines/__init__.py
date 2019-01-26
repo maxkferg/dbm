@@ -1,4 +1,4 @@
-# Copyright 2018 TensorForce Team. All Rights Reserved.
+# Copyright 2017 reinforce.io. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,19 +14,25 @@
 # ==============================================================================
 
 from tensorforce.core.baselines.baseline import Baseline
-from tensorforce.core.baselines.network_baseline import NetworkBaseline
 from tensorforce.core.baselines.aggregated_baseline import AggregatedBaseline
-
-from tensorforce.core.baselines.cnn_baseline import CNNBaseline
+from tensorforce.core.baselines.network_baseline import NetworkBaseline
 from tensorforce.core.baselines.mlp_baseline import MLPBaseline
+from tensorforce.core.baselines.cnn_baseline import CNNBaseline
 
 
-baseline_modules = dict(
-    aggregated=AggregatedBaseline, cnn=CNNBaseline, mlp=MLPBaseline, network=NetworkBaseline
+baselines = dict(
+    aggregated=AggregatedBaseline,
+    custom=NetworkBaseline,
+    mlp=MLPBaseline,
+    cnn=CNNBaseline
 )
 
 
 __all__ = [
-    'AggregatedBaseline', 'Baseline', 'baseline_modules', 'CNNBaseline', 'MLPBaseline',
-    'NetworkBaseline'
+    'baselines',
+    'Baseline',
+    'AggregatedBaseline',
+    'NetworkBaseline',
+    'MLPBaseline',
+    'CNNBaseline'
 ]

@@ -1,4 +1,4 @@
-# Copyright 2018 Tensorforce Team. All Rights Reserved.
+# Copyright 2017 reinforce.io. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,24 +13,70 @@
 # limitations under the License.
 # ==============================================================================
 
+from __future__ import absolute_import
+from __future__ import print_function
+from __future__ import division
+
 import tensorflow as tf
 
-from tensorforce.core import Module
+from tensorforce import util
+import tensorforce.core.baselines
 
 
-class Baseline(Module):
+class Baseline(object):
     """
     Base class for baseline value functions.
     """
 
-    def __init__(self, name, inputs_spec, l2_regularization=None, summary_labels=None):
-        super().__init__(
-            name=name, l2_regularization=l2_regularization, summary_labels=summary_labels
+    def __init__(self, scope='baseline', summary_labels=None):
+        """
+        Baseline.
+        """
+        self.summary_labels = set(summary_labels or ())
+
+        self.variables = dict()
+        self.all_variables = dict()
+
+        def custom_getter(getter, name, registered=False, **kwargs):
+            variable = getter(name=name, registered=True, **kwargs)
+            if registered:
+                pass
+            elif name in self.all_variables:
+                assert variable is self.all_variables[name]
+                if kwargs.get('trainable', True):
+                    assert variable is self.variables[name]
+                    if 'variables' in self.summary_labels:
+                        tf.contrib.summary.histogram(name=name, tensor=variable)
+            else:
+                self.all_variables[name] = variable
+                if kwargs.get('trainable', True):
+                    self.variables[name] = variable
+                    if 'variables' in self.summary_labels:
+                        tf.contrib.summary.histogram(name=name, tensor=variable)
+            return variable
+
+        self.predict = tf.make_template(
+            name_=(scope + '/predict'),
+            func_=self.tf_predict,
+            custom_getter_=custom_getter
+        )
+        self.reference = tf.make_template(
+            name_=(scope + '/reference'),
+            func_=self.tf_reference,
+            custom_getter_=custom_getter
+        )
+        self.loss = tf.make_template(
+            name_=(scope + '/loss'),
+            func_=self.tf_loss,
+            custom_getter_=custom_getter
+        )
+        self.regularization_loss = tf.make_template(
+            name_=(scope + '/regularization-loss'),
+            func_=self.tf_regularization_loss,
+            custom_getter_=custom_getter
         )
 
-        self.inputs_spec = inputs_spec
-
-    def tf_predict(self, states, internals):
+    def tf_predict(self, states, internals, update):
         """
         Creates the TensorFlow operations for predicting the value function of given states.
         Args:
@@ -42,7 +88,7 @@ class Baseline(Module):
         """
         raise NotImplementedError
 
-    def tf_reference(self, states, internals, reward):
+    def tf_reference(self, states, internals, reward, update):
         """
         Creates the TensorFlow operations for obtaining the reference tensor(s), in case of a
         comparative loss.
@@ -58,7 +104,7 @@ class Baseline(Module):
         """
         return None
 
-    def tf_total_loss(self, states, internals, reward):
+    def tf_loss(self, states, internals, reward, update, reference=None):
         """
         Creates the TensorFlow operations for calculating the L2 loss between predicted
         state values and actual rewards.
@@ -73,5 +119,39 @@ class Baseline(Module):
         Returns:
             Loss tensor
         """
-        prediction = self.predict(states=states, internals=internals)
-        return 0.5 * tf.reduce_sum(input_tensor=tf.square(x=(prediction - reward)))
+        prediction = self.predict(states=states, internals=internals, update=update)
+        return tf.nn.l2_loss(t=(prediction - reward))
+
+    def tf_regularization_loss(self):
+        """
+        Creates the TensorFlow operations for the baseline regularization loss/
+
+        Returns:
+            Regularization loss tensor
+        """
+        return None
+
+    def get_variables(self, include_nontrainable=False):
+        """
+        Returns the TensorFlow variables used by the baseline.
+
+        Returns:
+            List of variables
+        """
+        if include_nontrainable:
+            return [self.all_variables[key] for key in sorted(self.all_variables)]
+        else:
+            return [self.variables[key] for key in sorted(self.variables)]
+
+    @staticmethod
+    def from_spec(spec, kwargs=None):
+        """
+        Creates a baseline from a specification dict.
+        """
+        baseline = util.get_object(
+            obj=spec,
+            predefined_objects=tensorforce.core.baselines.baselines,
+            kwargs=kwargs
+        )
+        assert isinstance(baseline, Baseline)
+        return baseline

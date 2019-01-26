@@ -1,4 +1,4 @@
-# Copyright 2018 Tensorforce Team. All Rights Reserved.
+# Copyright 2017 reinforce.io. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,7 +13,12 @@
 # limitations under the License.
 # ==============================================================================
 
-from osim.env import L2RunEnv, Arm2DEnv, ProstheticsEnv
+
+from __future__ import absolute_import
+from __future__ import print_function
+from __future__ import division
+
+from osim.env import L2RunEnv,Arm2DEnv,ProstheticsEnv
 
 from tensorforce.environments import Environment
 
@@ -51,8 +56,10 @@ class OpenSim(Environment):
 		observation, reward, done, info = self.env.step(action)
 		return (observation,done,reward)
 
+	@property
 	def states(self):
 		return dict(shape=self.state_shape, type='float')
 
+	@property
 	def actions(self):
 		return dict(shape=self.num_actions, type='float')

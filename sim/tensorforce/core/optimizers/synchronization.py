@@ -1,4 +1,4 @@
-# Copyright 2018 Tensorforce Team. All Rights Reserved.
+# Copyright 2017 reinforce.io. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,10 +13,13 @@
 # limitations under the License.
 # ==============================================================================
 
+from __future__ import absolute_import
+from __future__ import print_function
+from __future__ import division
+
 import tensorflow as tf
 
 from tensorforce import util
-from tensorforce.core import Module, parameter_modules
 from tensorforce.core.optimizers import Optimizer
 
 
@@ -26,7 +29,7 @@ class Synchronization(Optimizer):
     set of source variables.
     """
 
-    def __init__(self, name, sync_frequency=1, update_weight=1.0, summary_labels=None):
+    def __init__(self, sync_frequency=1, update_weight=1.0, scope='synchronization', summary_labels=()):
         """
         Creates a new synchronization optimizer instance.
 
@@ -36,30 +39,20 @@ class Synchronization(Optimizer):
             update_weight: The update weight, 1.0 meaning a full assignment of the source  
             variables values.
         """
-        super().__init__(name=name, summary_labels=summary_labels)
+        assert isinstance(sync_frequency, int) and sync_frequency > 0
+        self.sync_frequency = sync_frequency
 
-        self.sync_frequency = self.add_module(
-            name='sync-frequency', module=sync_frequency, modules=parameter_modules, dtype='long'
-        )
+        assert isinstance(update_weight, float) and update_weight > 0.0
+        self.update_weight = update_weight
 
-        update_weight = 1.0 if update_weight is None else update_weight
-        self.update_weight = self.add_module(
-            name='update-weight', module=update_weight, modules=parameter_modules, dtype='float'
-        )
+        super(Synchronization, self).__init__(scope=scope, summary_labels=summary_labels)
 
-    def tf_initialize(self):
-        super().tf_initialize()
-
-        self.last_sync = self.add_variable(
-            name='last-sync', dtype='long', shape=(), is_trainable=False,
-            initializer=(-self.sync_frequency.value())
-        )
-
-    def tf_step(self, variables, source_variables, **kwargs):
+    def tf_step(self, time, variables, source_variables, **kwargs):
         """
         Creates the TensorFlow operations for performing an optimization step.
 
         Args:
+            time: Time tensor.
             variables: List of variables to optimize.
             source_variables: List of source variables to synchronize with.
             **kwargs: Additional arguments, not used.
@@ -67,34 +60,35 @@ class Synchronization(Optimizer):
         Returns:
             List of delta tensors corresponding to the updates for each optimized variable.
         """
-        assert all(
-            util.shape(source) == util.shape(target)
-            for source, target in zip(source_variables, variables)
+        assert all(util.shape(source) == util.shape(target) for source, target in zip(source_variables, variables))
+
+        last_sync = tf.get_variable(
+            name='last-sync',
+            shape=(),
+            dtype=tf.int64,
+            initializer=tf.constant_initializer(value=(-self.sync_frequency), dtype=tf.int64),
+            trainable=False
         )
 
-        timestep = Module.retrieve_tensor(name='timestep')
-
-        def apply_sync():
-            update_weight = self.update_weight.value()
+        def sync():
             deltas = list()
             for source_variable, target_variable in zip(source_variables, variables):
-                delta = update_weight * (source_variable - target_variable)
+                delta = self.update_weight * (source_variable - target_variable)
                 deltas.append(delta)
 
             applied = self.apply_step(variables=variables, deltas=deltas)
-            last_sync_updated = self.last_sync.assign(value=timestep)
+            last_sync_updated = last_sync.assign(value=time)
 
             with tf.control_dependencies(control_inputs=(applied, last_sync_updated)):
                 # Trivial operation to enforce control dependency
-                return [util.identity_operation(x=delta) for delta in deltas]
+                return [delta + 0.0 for delta in deltas]
 
         def no_sync():
             deltas = list()
             for variable in variables:
-                delta = tf.zeros(shape=util.shape(variable), dtype=util.tf_dtype(dtype='float'))
+                delta = tf.zeros(shape=util.shape(variable))
                 deltas.append(delta)
             return deltas
 
-        sync_frequency = self.sync_frequency.value()
-        skip_sync = (timestep - self.last_sync < sync_frequency)
-        return self.cond(pred=skip_sync, true_fn=no_sync, false_fn=apply_sync)
+        do_sync = (time - last_sync >= self.sync_frequency)
+        return tf.cond(pred=do_sync, true_fn=sync, false_fn=no_sync)

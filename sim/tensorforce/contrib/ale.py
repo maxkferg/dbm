@@ -1,4 +1,4 @@
-# Copyright 2018 Tensorforce Team. All Rights Reserved.
+# Copyright 2017 reinforce.io. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,6 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
+
+from __future__ import absolute_import
+from __future__ import print_function
+from __future__ import division
 
 import numpy as np
 from ale_python_interface import ALEInterface
@@ -106,9 +110,11 @@ class ALE(Environment):
         state_tp1 = self.current_state
         return state_tp1, terminal, rew
 
+    @property
     def states(self):
         return dict(shape=self.gamescreen.shape, type=float)
 
+    @property
     def actions(self):
         return dict(type='int', num_actions=len(self.action_inds))
 

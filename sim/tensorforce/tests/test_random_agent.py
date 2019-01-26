@@ -1,4 +1,4 @@
-# Copyright 2018 Tensorforce Team. All Rights Reserved.
+# Copyright 2017 reinforce.io. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,13 +13,24 @@
 # limitations under the License.
 # ==============================================================================
 
+from __future__ import absolute_import
+from __future__ import print_function
+from __future__ import division
+
 import unittest
 
+from tensorforce.tests.base_agent_test import BaseAgentTest
 from tensorforce.agents import RandomAgent
-from tensorforce.tests.agent_unittest import AgentUnittest
 
 
-class TestRandomAgent(AgentUnittest, unittest.TestCase):
+class TestRandomAgent(BaseAgentTest, unittest.TestCase):
 
     agent = RandomAgent
-    ignore_network = True
+    requires_network = False
+    # Random agent is not expected to pass anything.
+    pass_threshold = 0.0
+
+    config = dict()
+
+    # Not using a network so no point in testing LSTM.
+    exclude_lstm = True

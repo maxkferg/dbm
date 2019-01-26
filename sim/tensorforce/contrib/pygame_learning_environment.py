@@ -1,4 +1,4 @@
-# Copyright 2018 Tensorforce Team. All Rights Reserved.
+# Copyright 2017 reinforce.io. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,10 +13,14 @@
 # limitations under the License.
 # ==============================================================================
 
+from __future__ import absolute_import
+from __future__ import print_function
+from __future__ import division
+
 import time
 
 from tensorforce import TensorForceError
-from tensorforce.environments import Environment
+from tensorforce.environments.environment import Environment
 
 import ple
 from ple.games import *
@@ -108,6 +112,7 @@ class PLE(Environment):
         done = self.env.game_over()
         return new_state, done, reward
 
+    @property
     def states(self):
         """
         Return the state space. Might include subdicts if multiple states are
@@ -119,6 +124,7 @@ class PLE(Environment):
         screen = self.env.getScreenRGB()
         return dict(shape=screen.shape, type='int')
 
+    @property
     def actions(self):
         """
         Return the action space. Might include subdicts if multiple actions are

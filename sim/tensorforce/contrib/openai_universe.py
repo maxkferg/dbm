@@ -1,4 +1,4 @@
-# Copyright 2018 Tensorforce Team. All Rights Reserved.
+# Copyright 2017 reinforce.io. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,13 +13,17 @@
 # limitations under the License.
 # ==============================================================================
 
+from __future__ import absolute_import
+from __future__ import print_function
+from __future__ import division
+
 import gym
 import universe
 from gym.spaces.discrete import Discrete
 from universe.spaces import VNCActionSpace, VNCObservationSpace
 
 from tensorforce import TensorForceError
-from tensorforce.environments import Environment
+from tensorforce.environments.environment import Environment
 
 
 class OpenAIUniverse(Environment):
@@ -118,6 +122,7 @@ class OpenAIUniverse(Environment):
     def render(self, *args, **kwargs):
         self.env.render(*args, **kwargs)
 
+    @property
     def states(self):
         print(self.env.observation_space)
         if isinstance(self.env.observation_space, VNCObservationSpace):
@@ -133,6 +138,7 @@ class OpenAIUniverse(Environment):
         else:
             return dict(shape=tuple(self.env.observation_space.shape), type='float')
 
+    @property
     def actions(self):
         if isinstance(self.env.action_space, VNCActionSpace):
             return dict(

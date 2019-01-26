@@ -51,7 +51,7 @@ import atexit
 import tensorflow as tf
 from six.moves import xrange, shlex_quote
 
-from tensorforce import TensorforceError
+from tensorforce import TensorForceError
 from tensorforce.agents import Agent
 from tensorforce.execution import Runner
 from tensorforce.contrib.openai_gym import OpenAIGym
@@ -233,9 +233,11 @@ def main():
 
     agent = Agent.from_spec(
         spec=agent,
-        states=environment.states(),
-        actions=environment.actions(),
-        network=network
+        kwargs=dict(
+            states=environment.states,
+            actions=environment.actions,
+            network=network
+        )
     )
 
     logger.info("Starting distributed agent for OpenAI Gym '{gym_id}'".format(gym_id=args.gym_id))
@@ -272,11 +274,11 @@ def main():
 
     print("Starting runner for OpenAI Gym '{gym_id}'".format(gym_id=args.gym_id))
     runner.run(
-        num_timesteps=args.timesteps,
-        num_episodes=args.episodes,
+        timesteps=args.timesteps,
+        episodes=args.episodes,
         max_episode_timesteps=args.max_episode_timesteps,
         deterministic=args.deterministic,
-        #callback=episode_finished
+        episode_finished=episode_finished
     )
     print("Closing runner for OpenAI Gym '{gym_id}'".format(gym_id=args.gym_id))
     runner.close()

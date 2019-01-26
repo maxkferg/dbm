@@ -1,4 +1,4 @@
-# Copyright 2018 Tensorforce Team. All Rights Reserved.
+# Copyright 2017 reinforce.io. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,13 +15,23 @@
 
 from tensorforce.core.memories.memory import Memory
 from tensorforce.core.memories.queue import Queue
-
 from tensorforce.core.memories.latest import Latest
-from tensorforce.core.memories.prioritized_replay import PrioritizedReplay
 from tensorforce.core.memories.replay import Replay
+from tensorforce.core.memories.prioritized_replay import PrioritizedReplay
 
 
-memory_modules = dict(latest=Latest, prioritized_replay=PrioritizedReplay, replay=Replay)
+memories = dict(
+    latest=Latest,
+    replay=Replay,
+    prioritized_replay=PrioritizedReplay
+)
 
 
-__all__ = ['Latest', 'Memory', 'memory_modules', 'PrioritizedReplay', 'Queue', 'Replay']
+__all__ = [
+    'memories',
+    'Memory',
+    'Queue',
+    'Latest',
+    'Replay',
+    'PrioritizedReplay'
+]

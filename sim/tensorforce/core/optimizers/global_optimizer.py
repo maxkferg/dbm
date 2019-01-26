@@ -1,4 +1,4 @@
-# Copyright 2018 Tensorforce Team. All Rights Reserved.
+# Copyright 2017 reinforce.io. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,6 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
+
+from __future__ import absolute_import
+from __future__ import print_function
+from __future__ import division
 
 import tensorflow as tf
 
@@ -28,7 +32,16 @@ class GlobalOptimizer(MetaOptimizer):
     major version update.
     """
 
-    def tf_step(self, variables, **kwargs):
+    def __init__(self, optimizer, scope='global-optimizer', summary_labels=()):
+        """
+        Creates a new global optimizer instance.
+
+        Args:
+            optimizer: The optimizer which is modified by this meta optimizer.
+        """
+        super(GlobalOptimizer, self).__init__(optimizer=optimizer, scope=scope, summary_labels=summary_labels)
+
+    def tf_step(self, time, variables, **kwargs):
         """
         Keyword Args:
             global_variables: List of global variables to apply the proposed optimization step to.
@@ -44,7 +57,7 @@ class GlobalOptimizer(MetaOptimizer):
             for global_variable, local_variable in zip(global_variables, variables)
         )
 
-        local_deltas = self.optimizer.step(variables=variables, **kwargs)
+        local_deltas = self.optimizer.step(time=time, variables=variables, **kwargs)
 
         with tf.control_dependencies(control_inputs=local_deltas):
             applied = self.optimizer.apply_step(variables=global_variables, deltas=local_deltas)
@@ -60,7 +73,4 @@ class GlobalOptimizer(MetaOptimizer):
             # TODO: Update time, episode, etc (like in Synchronization)?
 
         with tf.control_dependencies(control_inputs=(applied,)):
-            return [
-                local_delta + update_delta
-                for local_delta, update_delta in zip(local_deltas, update_deltas)
-            ]
+            return [local_delta + update_delta for local_delta, update_delta in zip(local_deltas, update_deltas)]

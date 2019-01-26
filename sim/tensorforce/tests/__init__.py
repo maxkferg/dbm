@@ -1,4 +1,4 @@
-# Copyright 2018 Tensorforce Team. All Rights Reserved.
+# Copyright 2017 reinforce.io. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,9 +13,6 @@
 # limitations under the License.
 # ==============================================================================
 
-from tensorforce.tests.unittest_environment import UnittestEnvironment
-from tensorforce.tests.unittest_base import UnittestBase
-from tensorforce.tests.agent_unittest import AgentUnittest
 
-
-__all__ = ['UnittestEnvironment', 'UnittestBase', 'AgentUnittest']
+# Pass thresholds for all tests
+reward_threshold = 0.8

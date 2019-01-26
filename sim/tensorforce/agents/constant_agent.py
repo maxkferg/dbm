@@ -1,4 +1,4 @@
-# Copyright 2018 Tensorforce Team. All Rights Reserved.
+# Copyright 2017 reinforce.io. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,8 +13,13 @@
 # limitations under the License.
 # ==============================================================================
 
+from __future__ import absolute_import
+from __future__ import print_function
+from __future__ import division
+
 from tensorforce.agents import Agent
-from tensorforce.core.models import ConstantModel
+from tensorforce.models.constant_model import ConstantModel
+from tensorforce.contrib.sanity_check_specs import sanity_check_execution_spec
 
 
 class ConstantAgent(Agent):
@@ -26,19 +31,21 @@ class ConstantAgent(Agent):
         self,
         states,
         actions,
-        parallel_interactions=1,
-        buffer_observe=1000,
+        action_values,
+        batched_observe=True,
+        batching_capacity=1000,
         scope='constant',
         device=None,
         saver=None,
         summarizer=None,
-        execution=None,
-        action_values=None
+        execution=None
     ):
         """
         Initializes the constant agent.
 
         Args:
+            action_values (value, or dict of values): Action values returned by the agent
+                (required).
             scope (str): TensorFlow scope (default: name of agent).
             device: TensorFlow device (default: none)
             saver (spec): Saver specification, with the following attributes (default: none):
@@ -54,18 +61,32 @@ class ConstantAgent(Agent):
                 - labels: list of summary labels to record (default: []).
                 - meta_param_recorder_class: ???.
             execution (spec): Execution specification (see sanity_check_execution_spec for details).
-            action_values (value, or dict of values): Action values returned by the agent.
         """
-        super().__init__(
-            states=states, actions=actions, parallel_interactions=parallel_interactions,
-            buffer_observe=buffer_observe
+
+        self.scope = scope
+        self.device = device
+        self.saver = saver
+        self.summarizer = summarizer
+        self.execution = sanity_check_execution_spec(execution)
+        self.batching_capacity = batching_capacity
+        self.action_values = action_values
+
+        super(ConstantAgent, self).__init__(
+            states=states,
+            actions=actions,
+            batched_observe=batched_observe,
+            batching_capacity=batching_capacity
         )
 
-        self.model = ConstantModel(
-            # Model
-            states=self.states_spec, actions=self.actions_spec, scope=scope, device=device,
-            saver=saver, summarizer=summarizer, execution=execution,
-            parallel_interactions=self.parallel_interactions, buffer_observe=self.buffer_observe,
-            # ConstantModel
-            action_values=action_values
+    def initialize_model(self):
+        return ConstantModel(
+            states=self.states,
+            actions=self.actions,
+            scope=self.scope,
+            device=self.device,
+            saver=self.saver,
+            summarizer=self.summarizer,
+            execution=self.execution,
+            batching_capacity=self.batching_capacity,
+            action_values=self.action_values
         )

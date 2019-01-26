@@ -1,4 +1,4 @@
-# Copyright 2018 Tensorforce Team. All Rights Reserved.
+# Copyright 2017 reinforce.io. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,6 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
+
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 
 import tensorflow as tf
 
@@ -30,7 +34,7 @@ class Sequence(Preprocessor):
         Args:
             length (int): The number of states to concatenate. In the beginning, when no previous state is available,
                 concatenate the given first state with itself `length` times.
-            add_rank (bool, -1, 1): Whether to add another rank to the beginning/end of the input with dim=length-of-the-sequence.
+            add_rank (bool): Whether to add another rank to the end of the input with dim=length-of-the-sequence.
                 This could be useful if e.g. a grayscale image of w x h pixels is coming from the env
                 (no color channel). The output of the preprocessor would then be of shape [batch] x w x h x [length].
         """
@@ -69,26 +73,22 @@ class Sequence(Preprocessor):
         def later_run():
             return tf.assign(ref=states_buffer[index], value=tensor[0])
 
-        assignment = self.cond(pred=(index >= 0), true_fn=later_run, false_fn=first_run)
+        assignment = tf.cond(pred=(index >= 0), true_fn=later_run, false_fn=first_run)
 
         with tf.control_dependencies(control_inputs=(assignment,)):
             previous_states = [states_buffer[(index - n - 1) % self.length] for n in range(self.length)]
             assignment = tf.assign(ref=index, value=((tf.maximum(x=index, y=0) + 1) % self.length))
 
         with tf.control_dependencies(control_inputs=(assignment,)):
-            if not self.add_rank:
-                stack = tf.concat(values=previous_states, axis=-1)
-            elif self.add_rank == 1:
-                stack = tf.stack(values=previous_states, axis=0)
-            elif self.add_rank or self.add_rank == -1:
+            if self.add_rank:
                 stack = tf.stack(values=previous_states, axis=-1)
+            else:
+                stack = tf.concat(values=previous_states, axis=-1)
             batch_one = tf.expand_dims(input=stack, axis=0)
             return batch_one
 
     def processed_shape(self, shape):
-        if not self.add_rank:
-            return shape[:-1] + (shape[-1] * self.length,)
-        elif self.add_rank == 1:
-            return (self.length,) + shape
-        elif self.add_rank or self.add_rank == -1:
+        if self.add_rank:
             return shape + (self.length,)
+        else:
+            return shape[:-1] + (shape[-1] * self.length,)

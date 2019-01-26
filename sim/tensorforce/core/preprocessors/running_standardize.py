@@ -1,4 +1,4 @@
-# Copyright 2018 Tensorforce Team. All Rights Reserved.
+# Copyright 2017 reinforce.io. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,6 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
+
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 
 import tensorflow as tf
 from tensorforce import util
@@ -86,4 +90,4 @@ class RunningStandardize(Preprocessor):
                     # Standardize tensor
                     return (tensor - mean_estimate) / tf.maximum(x=tf.sqrt(x=variance_estimate), y=util.epsilon)
 
-            return self.cond(pred=(count > 1.0), true_fn=later_run, false_fn=first_run)
+            return tf.cond(pred=(count > 1.0), true_fn=later_run, false_fn=first_run)

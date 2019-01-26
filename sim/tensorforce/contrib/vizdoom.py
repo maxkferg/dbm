@@ -1,4 +1,4 @@
-# Copyright 2018 Tensorforce Team. All Rights Reserved.
+# Copyright 2017 reinforce.io. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,12 +13,15 @@
 # limitations under the License.
 # ==============================================================================
 
-import numpy as np
-from vizdoom import DoomGame, Button, GameVariable, ScreenFormat, ScreenResolution
+
+from __future__ import absolute_import
+from __future__ import print_function
+from __future__ import division
+
+from vizdoom import DoomGame,Button,GameVariable,ScreenFormat,ScreenResolution
 
 from tensorforce.environments import Environment
-
-
+import numpy as np
 class ViZDoom(Environment):
 	"""
 	ViZDoom Integration: https://github.com/mwydmuch/ViZDoom
@@ -91,8 +94,10 @@ class ViZDoom(Environment):
 		is_terminal = self.game.is_episode_finished()
 		return (next_state,is_terminal,reward)
 
+	@property
 	def states(self):
 		return dict(shape=self.state_shape, type='float')
 
+	@property
 	def actions(self):
 		return dict(num_actions=self.num_actions, type='int')

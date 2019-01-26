@@ -1,4 +1,4 @@
-# Copyright 2018 Tensorforce Team. All Rights Reserved.
+# Copyright 2017 reinforce.io. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,6 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
+
+
+from __future__ import absolute_import
+from __future__ import print_function
+from __future__ import division
 
 import mazeexp as mx
 
@@ -50,6 +55,7 @@ class MazeExplorer(Environment):
         state, reward, terminal, _ = self.engine.act(action)
         return state, terminal, reward
 
+    @property
     def states(self):
         # Use `observation_chans` to multichannel with `item` sensors.
         if self.engine.observation_chans > 1:
@@ -59,5 +65,6 @@ class MazeExplorer(Environment):
 
         return dict(shape=shape, type='float')
 
+    @property
     def actions(self):
         return dict(type='int', num_actions=self.engine.actions_num)

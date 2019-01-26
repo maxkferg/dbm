@@ -1,4 +1,4 @@
-# Copyright 2018 Tensorforce Team. All Rights Reserved.
+# Copyright 2017 reinforce.io. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,8 +13,11 @@
 # limitations under the License.
 # ==============================================================================
 
-import tensorflow as tf
+from __future__ import absolute_import
+from __future__ import print_function
+from __future__ import division
 
+import tensorflow as tf
 from tensorforce import util
 from tensorforce.core.memories import Memory
 
@@ -27,14 +30,15 @@ class PrioritizedReplay(Memory):
 
     def __init__(
         self,
-        name,
-        states_spec,
-        internals_spec,
-        actions_spec,
-        include_next_state,
+        states,
+        internals,
+        actions,
+        include_next_states,
         capacity,
         prioritization_weight=1.0,
-        buffer_size=100
+        buffer_size=100,
+        scope='prioritized-replay',
+        summary_labels=None
     ):
         """
         Prioritized experience replay.
@@ -51,11 +55,6 @@ class PrioritizedReplay(Memory):
                 to the frequency with which updates are performed, old experiences from the buffer
                 will be overwritten before they are moved to the main memory.
         """
-        super().__init__(
-            name=name, states_spec=states_spec, internals_spec=internals_spec,
-            actions_spec=actions_spec, include_next_state=include_next_state
-        )
-
         self.capacity = capacity
         self.buffer_size = buffer_size
         self.prioritization_weight = prioritization_weight
@@ -80,117 +79,135 @@ class PrioritizedReplay(Memory):
         self.last_batch_buffer_elems = None
         self.memory_size = None
 
-    def tf_initialize(self):
-        super().tf_initialize()
+        super(PrioritizedReplay, self).__init__(
+            states=states,
+            internals=internals,
+            actions=actions,
+            include_next_states=include_next_states,
+            scope=scope,
+            summary_labels=summary_labels
+        )
 
+    def setup_template_funcs(self, custom_getter=None):
+        custom_getter = super(PrioritizedReplay, self).setup_template_funcs(custom_getter)
+
+        self.retrieve_indices = tf.make_template(
+            name_=(self.scope + '/retrieve_indices'),
+            func_=self.tf_retrieve_indices,
+            custom_getter_=custom_getter
+        )
+
+    def tf_initialize(self):
         # States
         for name in sorted(self.states_spec):
             state = self.states_spec[name]
-            self.states_memory[name] = self.add_variable(
+            self.states_memory[name] = tf.get_variable(
                 name=('state-' + name),
-                dtype=state['type'],
                 shape=(self.capacity,) + tuple(state['shape']),
+                dtype=util.tf_dtype(state['type']),
                 trainable=False
             )
 
         # Internals
         for name in sorted(self.internals_spec):
             internal = self.internals_spec[name]
-            self.internals_memory[name] = self.add_variable(
+            self.internals_memory[name] = tf.get_variable(
                 name=('internal-' + name),
-                dtype=internal['type'],
                 shape=(self.capacity,) + tuple(internal['shape']),
+                dtype=util.tf_dtype(internal['type']),
                 trainable=False
             )
 
         # Actions
         for name in sorted(self.actions_spec):
             action = self.actions_spec[name]
-            self.actions_memory[name] = self.add_variable(
+            self.actions_memory[name] = tf.get_variable(
                 name=('action-' + name),
-                dtype=action['type'],
                 shape=(self.capacity,) + tuple(action['shape']),
+                dtype=util.tf_dtype(action['type']),
                 trainable=False
             )
 
         # Terminal
-        self.terminal_memory = self.add_variable(
+        self.terminal_memory = tf.get_variable(
             name='terminal',
-            dtype='bool',
             shape=(self.capacity,),
+            dtype=util.tf_dtype('bool'),
+            initializer=tf.constant_initializer(
+                value=tuple(n == self.capacity - 1 for n in range(self.capacity)),
+                dtype=util.tf_dtype('bool')
+            ),
             trainable=False
         )
 
         # Reward
-        self.reward_memory = self.add_variable(
+        self.reward_memory = tf.get_variable(
             name='reward',
-            dtype='float',
             shape=(self.capacity,),
+            dtype=util.tf_dtype('float'),
             trainable=False
         )
 
         # Memory index - current insertion index.
-        self.memory_index = self.add_variable(
+        self.memory_index = tf.get_variable(
             name='memory-index',
-            dtype='int',
-            shape=(),
-            trainable=False,
-            initializer='zeros'
+            dtype=util.tf_dtype('int'),
+            initializer=0,
+            trainable=False
         )
 
         # Priorities
-        self.priorities = self.add_variable(
+        self.priorities = tf.get_variable(
             name='priorities',
-            dtype='float',
             shape=(self.capacity,),
+            dtype=util.tf_dtype('float'),
             trainable=False
         )
 
         # Buffer variables. The buffer is used to insert data for which we
         # do not have priorities yet.
-        self.buffer_index = self.add_variable(
+        self.buffer_index = tf.get_variable(
             name='buffer-index',
-            dtype='int',
-            shape=(),
-            trainable=False,
-            initializer='zeros'
+            dtype=util.tf_dtype('int'),
+            initializer=0,
+            trainable=False
         )
 
         # States
         for name in sorted(self.states_spec):
             state = self.states_spec[name]
-            self.states_buffer[name] = self.add_variable(
+            self.states_buffer[name] = tf.get_variable(
                 name=('state-buffer-' + name),
-                dtype=state['type'],
                 shape=(self.buffer_size,) + tuple(state['shape']),
+                dtype=util.tf_dtype(state['type']),
                 trainable=False
             )
 
         # Internals
         for name in sorted(self.internals_spec):
             internal = self.internals_spec[name]
-            self.internals_buffer[name] = self.add_variable(
+            self.internals_buffer[name] = tf.get_variable(
                 name=('internal-buffer-' + name),
-                dtype=internal['type'],
                 shape=(self.capacity,) + tuple(internal['shape']),
+                dtype=util.tf_dtype(internal['type']),
                 trainable=False
             )
 
         # Actions
         for name in sorted(self.actions_spec):
             action = self.actions_spec[name]
-            self.actions_buffer[name] = self.add_variable(
+            self.actions_buffer[name] = tf.get_variable(
                 name=('action-buffer-' + name),
-                dtype=action['type'],
                 shape=(self.buffer_size,) + tuple(action['shape']),
+                dtype=util.tf_dtype(action['type']),
                 trainable=False
             )
 
         # Terminal
-        self.terminal_buffer = self.add_variable(
+        self.terminal_buffer = tf.get_variable(
             name='terminal-buffer',
-            dtype='bool',
             shape=(self.capacity,),
+            dtype=util.tf_dtype('bool'),
             initializer=tf.constant_initializer(
                 value=tuple(n == self.buffer_size - 1 for n in range(self.capacity)),
                 dtype=util.tf_dtype('bool')
@@ -199,35 +216,33 @@ class PrioritizedReplay(Memory):
         )
 
         # Reward
-        self.reward_buffer = self.add_variable(
+        self.reward_buffer = tf.get_variable(
             name='reward-buffer',
-            dtype='float',
             shape=(self.buffer_size,),
+            dtype=util.tf_dtype('float'),
             trainable=False
         )
 
         # Indices of batch experiences in main memory.
-        self.batch_indices = self.add_variable(
+        self.batch_indices = tf.get_variable(
             name='batch-indices',
-            dtype='int',
+            dtype=util.tf_dtype('int'),
             shape=(self.capacity,),
             trainable=False
         )
 
         # Number of elements taken from the buffer in the last batch.
-        self.last_batch_buffer_elems = self.add_variable(
+        self.last_batch_buffer_elems = tf.get_variable(
             name='last-batch-buffer-elems',
-            dtype='int',
-            shape=(),
-            trainable=False,
-            initializer='zeros'
+            dtype=util.tf_dtype('int'),
+            initializer=0,
+            trainable=False
         )
-        self.memory_size = self.add_variable(
+        self.memory_size = tf.get_variable(
             name='memory-size',
-            dtype='int',
-            shape=(),
-            trainable=False,
-            initializer='zeros'
+            dtype=util.tf_dtype('int'),
+            initializer=0,
+            trainable=False
         )
 
     def tf_store(self, states, internals, actions, terminal, reward):
@@ -236,7 +251,7 @@ class PrioritizedReplay(Memory):
         num_instances = tf.shape(input=terminal)[0]
 
         # Simple way to prevent buffer overflows.
-        start_index = self.cond(
+        start_index = tf.cond(
             # Why + 1? Because of next state, otherwise that has to be handled separately.
             pred=(self.buffer_index + num_instances + 1 >= self.buffer_size),
             true_fn=(lambda: 0),
@@ -264,13 +279,13 @@ class PrioritizedReplay(Memory):
             assignment = tf.assign(ref=self.buffer_index, value=(start_index + num_instances))
 
         with tf.control_dependencies(control_inputs=(assignment,)):
-            return util.no_operation()
+            return tf.no_op()
 
     def tf_retrieve_timesteps(self, n):
         num_buffer_elems = tf.minimum(x=self.buffer_index, y=n)
 
         # We can only sample from priority memory if buffer elements were previously inserted.
-        num_priority_elements = self.cond(
+        num_priority_elements = tf.cond(
             pred=self.memory_size > 0,
             true_fn=lambda: n - num_buffer_elems,
             false_fn=lambda: 0
@@ -295,7 +310,7 @@ class PrioritizedReplay(Memory):
 
                 return loop_index, sample
 
-            priority_indices = self.while_loop(
+            priority_indices = tf.while_loop(
                 cond=cond,
                 body=sampling_body,
                 loop_vars=(indices, sample)
@@ -308,7 +323,7 @@ class PrioritizedReplay(Memory):
             value=tf.zeros(shape=tf.shape(self.batch_indices), dtype=tf.int32)
         )
         with tf.control_dependencies(control_inputs=(assignment,)):
-            priority_indices = self.cond(
+            priority_indices = tf.cond(
                 pred=num_priority_elements > 0,
                 true_fn=sampling_fn,
                 false_fn=lambda: tf.zeros(shape=(num_priority_elements,), dtype=tf.int32)
@@ -584,7 +599,7 @@ class PrioritizedReplay(Memory):
             ))
 
         with tf.control_dependencies(control_inputs=assignments):
-            return util.no_operation()
+            return tf.no_op()
 
     # These are not supported for prioritized replay currently.
     def tf_retrieve_episodes(self, n):

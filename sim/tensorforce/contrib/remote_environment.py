@@ -1,4 +1,4 @@
-# Copyright 2018 Tensorforce Team. All Rights Reserved.
+# Copyright 2017 reinforce.io. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -194,3 +194,4 @@ class MsgPackNumpyProtocol(object):
                 raise TensorForceError("Message without field 'status' received!")
         raise TensorForceError("No message encoded in data stream (data stream had len={})".
                                format(orig_len))
+

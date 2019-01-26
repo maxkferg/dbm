@@ -1,4 +1,4 @@
-# Copyright 2018 Tensorforce Team. All Rights Reserved.
+# Copyright 2017 reinforce.io. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,9 +17,13 @@
 OpenAI Gym Integration: https://gym.openai.com/.
 """
 
+from __future__ import absolute_import
+from __future__ import print_function
+from __future__ import division
+
 import gym
 import numpy as np
-from tensorforce import TensorforceError
+from tensorforce import TensorForceError
 from tensorforce.environments import Environment
 
 class OpenAIGym(Environment):
@@ -58,9 +62,11 @@ class OpenAIGym(Environment):
     def __str__(self):
         return 'OpenAIGym({})'.format(self.gym_id)
 
+    @property
     def states(self):
         return self._states
 
+    @property
     def actions(self):
         return self._actions
 
@@ -71,24 +77,24 @@ class OpenAIGym(Environment):
     def reset(self):
         if isinstance(self.gym, gym.wrappers.Monitor):
             self.gym.stats_recorder.done = True
-        states = self.gym.reset()
-        return OpenAIGym.flatten_state(state=states)
+        state = self.gym.reset()
+        return OpenAIGym.flatten_state(state=state)
 
-    def execute(self, actions):
+    def execute(self, action):
         if self.visualize:
             self.gym.render()
-        actions = OpenAIGym.unflatten_action(action=actions)
-        states, reward, terminal, _ = self.gym.step(actions)
-        return OpenAIGym.flatten_state(state=states), terminal, reward
+        action = OpenAIGym.unflatten_action(action=action)
+        state, reward, terminal, _ = self.gym.step(action)
+        return OpenAIGym.flatten_state(state=state), terminal, reward
 
     @staticmethod
     def state_from_space(space):
         if isinstance(space, gym.spaces.Discrete):
-            return dict(shape=(), type='int', num_values=space.n)
+            return dict(shape=(), type='int')
         elif isinstance(space, gym.spaces.MultiBinary):
             return dict(shape=space.n, type='int')
         elif isinstance(space, gym.spaces.MultiDiscrete):
-            return dict(shape=space.num_discrete_space, type='int')
+            return dict(shape=len(space.nvec), type='int')
         elif isinstance(space, gym.spaces.Box):
             return dict(shape=tuple(space.shape), type='float')
         elif isinstance(space, gym.spaces.Tuple):
@@ -113,7 +119,7 @@ class OpenAIGym(Environment):
                         states['{}-{}'.format(space_name, name)] = state
             return states
         else:
-            raise TensorforceError('Unknown Gym space.')
+            raise TensorForceError('Unknown Gym space.')
 
     @staticmethod
     def flatten_state(state):
@@ -143,17 +149,17 @@ class OpenAIGym(Environment):
     @staticmethod
     def action_from_space(space):
         if isinstance(space, gym.spaces.Discrete):
-            return dict(type='int', num_values=space.n)
+            return dict(type='int', num_actions=space.n)
         elif isinstance(space, gym.spaces.MultiBinary):
             return dict(type='bool', shape=space.n)
         elif isinstance(space, gym.spaces.MultiDiscrete):
             num_discrete_space = len(space.nvec)
             if (space.nvec == space.nvec[0]).all():
-                return dict(type='int', num_values=space.nvec[0], shape=num_discrete_space)
+                return dict(type='int', num_actions=space.nvec[0], shape=num_discrete_space)
             else:
                 actions = dict()
                 for n in range(num_discrete_space):
-                    actions['gymmdc{}'.format(n)] = dict(type='int', num_values=space.nvec[n])
+                    actions['gymmdc{}'.format(n)] = dict(type='int', num_actions=space.nvec[n])
                 return actions
         elif isinstance(space, gym.spaces.Box):
             if (space.low == space.low[0]).all() and (space.high == space.high[0]).all():
@@ -190,7 +196,7 @@ class OpenAIGym(Environment):
             return actions
 
         else:
-            raise TensorforceError('Unknown Gym space.')
+            raise TensorForceError('Unknown Gym space.')
 
     @staticmethod
     def unflatten_action(action):
