@@ -775,6 +775,7 @@ class Model(object):
         if self.execution_type == "distributed":
             # if self.distributed_spec['task_index'] == 0:
             # TensorFlow chief session creator object
+            print("Session config:",self.session_config)
             session_creator = tf.train.ChiefSessionCreator(
                 scaffold=self.scaffold,
                 master=server.target,

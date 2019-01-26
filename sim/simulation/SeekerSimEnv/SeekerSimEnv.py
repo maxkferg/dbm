@@ -258,7 +258,8 @@ class SeekerSimEnv(gym.Env):
         """Reset the environment. Move the target and the car"""
         steps = self.envStepCounter / self.actionRepeat
         duration = time.time() - self.startedTime
-        print("Reset after %i steps in %.2f seconds"%(steps,duration))
+        if self.debug:
+            print("Reset after %i steps in %.2f seconds"%(steps,duration))
 
         self.isCrashed = False
         self.isAtTarget = False
@@ -321,13 +322,13 @@ class SeekerSimEnv(gym.Env):
         self.observation.extend([
             tarPosInCar[0],
             tarPosInCar[1],
-            math.atan(tarPosInCar[1]/tarPosInCar[0]),
-            math.atan(tarPosInCar[0]/tarPosInCar[1]),
+            math.atan2(tarPosInCar[1], tarPosInCar[0]),
+            0 # dummy
         ])
 
         if self.debug:
             print("Target position:", tarPosInCar)
-            print("Target orientation:", math.sin(tarPosInCar[1]), math.cos(tarPosInCar[1]))
+            print("Target orientation:", math.atan2(tarPosInCar[0], tarPosInCar[1]))
 
         # The LIDAR is assumed to be attached to the top (to avoid self-intersection)
         lidar_pos = add_vec(carpos, [0, 0, .25])

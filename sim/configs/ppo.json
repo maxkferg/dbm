@@ -3,8 +3,8 @@
 
     "update_mode": {
         "unit": "episodes",
-        "batch_size": 10,
-        "frequency": 10
+        "batch_size": 16,
+        "frequency": 16
     },
     "memory": {
         "type": "latest",
@@ -39,7 +39,7 @@
     },
 
     "saver": {
-        "directory": null,
+        "directory": "logdir",
         "seconds": 600
     },
     "summarizer": {

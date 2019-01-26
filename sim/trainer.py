@@ -119,6 +119,8 @@ def main():
                 '--child',
                 '--task-index', index
             ]
+            if index!=1:
+                cmd_args.insert(0, 'CUDA_VISIBLE_DEVICES=')
             if args.episodes is not None:
                 cmd_args.append('--episodes')
                 cmd_args.append(args.episodes)
@@ -131,6 +133,7 @@ def main():
             if args.deterministic:
                 cmd_args.append('--deterministic')
             if ps:
+                #cmd_args.insert(0, 'CUDA_VISIBLE_DEVICES=')
                 cmd_args.append('--parameter-server')
             if args.debug:
                 cmd_args.append('--debug')
@@ -197,8 +200,13 @@ def main():
     else:
         agent['device'] = '/job:worker/task:{}'.format(args.task_index)  # '/cpu:0'
 
+    session_config = tf.ConfigProto(**dict(operation_timeout_in_ms=15000))
+    #session_config.gpu_options.allow_growth = True
+    session_config.gpu_options.per_process_gpu_memory_fraction = 0.4
+
     agent['execution'] = dict(
         type='distributed',
+        session_config=session_config,
         distributed_spec=dict(
             cluster_spec=cluster_spec,
             task_index=args.task_index,
@@ -244,7 +252,7 @@ def main():
             logger.info("Average of last 100 rewards: {}".format(sum(r.episode_rewards[-100:]) / min(100, len(r.episode_rewards))))
         return True
 
-    def exit_handler(name):
+    def exit_handler():
         logger.info("Worker node exited early")
     atexit.register(exit_handler)
 
