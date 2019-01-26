@@ -95,6 +95,7 @@ class Model(Module):
         self.actions_spec = actions
         self.internals_spec = OrderedDict()
         self.internals_init = None
+        self.is_local_model = True
 
         # TensorFlow scope and device
         self.scope = scope

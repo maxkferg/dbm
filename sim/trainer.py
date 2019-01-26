@@ -272,11 +272,11 @@ def main():
 
     print("Starting runner for OpenAI Gym '{gym_id}'".format(gym_id=args.gym_id))
     runner.run(
-        timesteps=args.timesteps,
-        episodes=args.episodes,
+        num_timesteps=args.timesteps,
+        num_episodes=args.episodes,
         max_episode_timesteps=args.max_episode_timesteps,
         deterministic=args.deterministic,
-        episode_finished=episode_finished
+        #callback=episode_finished
     )
     print("Closing runner for OpenAI Gym '{gym_id}'".format(gym_id=args.gym_id))
     runner.close()

@@ -306,11 +306,13 @@ class Module(object):
             if self.is_subscope:
                 Module.global_scope.append(self.name)
             if self.device is not None:
-                self.device.__enter__()
+                pass
+                #self.device.__enter__()
             with tf.name_scope(name=name):
                 results = tf_function(*args, **kwargs)
             if self.device is not None:
-                self.device.__exit__(None, None, None)
+                pass
+                #self.device.__exit__(None, None, None)
             if self.is_subscope:
                 Module.global_scope.pop()
             return results
@@ -322,7 +324,8 @@ class Module(object):
         Module.global_scope = list()
         Module.global_tensors = OrderedDict()
         if self.device is not None:
-            self.device.__enter__()
+            pass
+            #self.device.__enter__()
         with tf.name_scope(name=name):
             results = api_function()
 

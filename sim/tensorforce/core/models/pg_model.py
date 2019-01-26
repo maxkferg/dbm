@@ -89,6 +89,7 @@ class PGModel(DistributionModel):
             )
 
         # Baseline optimizer
+        self.baseline_optimizer_spec = baseline_optimizer
         if baseline_optimizer is None:
             self.baseline_optimizer = None
         else:

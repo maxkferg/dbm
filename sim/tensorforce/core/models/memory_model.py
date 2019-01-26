@@ -145,6 +145,7 @@ class MemoryModel(Model):
         )
 
         # Optimizer
+        self.optimizer_spec = optimizer
         self.optimizer = self.add_module(
             name='optimizer', module=optimizer, modules=optimizer_modules
         )

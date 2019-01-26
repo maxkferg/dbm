@@ -403,8 +403,8 @@ def valid_value_spec(
 
     if dtype == 'float' or (accept_underspecified and dtype is not None and 'float' in dtype):
         if 'min_value' in value_spec:
-            min_value = value_spec.pop('min_value')
-            max_value = value_spec.pop('max_value')
+            min_value = float(value_spec.pop('min_value'))
+            max_value = float(value_spec.pop('max_value'))
             if not isinstance(min_value, float) or not isinstance(max_value, float):
                 raise TensorforceError.type(
                     name=(value_type + ' spec'), argument='min/max_value',
