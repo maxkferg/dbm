@@ -73,6 +73,7 @@ dependencies:
     - ruamel.yaml==0.15.37
     - scipy==1.0.1
     - six==1.11.0
+    - tensorflow==1.5.1
     - termcolor==1.1.0
     - tqdm==4.23.0
     - urllib3==1.22
