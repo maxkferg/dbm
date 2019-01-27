@@ -32,6 +32,7 @@ dependencies:
   - setuptools=39.0.1=py36_0
   - sqlite=3.23.1=hf1716c9_0
   - tk=8.6.7=h35a86e2_3
+  - yaml
   - wheel=0.31.0=py36_0
   - xz=5.2.3=h0278029_2
   - zlib=1.2.11=hf3cbc9b_2

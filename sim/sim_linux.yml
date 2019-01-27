@@ -17,6 +17,7 @@ dependencies:
   - sqlite=3.23.1=he433501_0
   - tk=8.6.7=hc745277_3
   - wheel=0.31.0=py36_0
+  - pyyaml
   - xz=5.2.3=h5e939de_4
   - zlib=1.2.11=ha838bed_2
   - pip:
@@ -44,4 +45,4 @@ dependencies:
     - termcolor==1.1.0
     - urllib3==1.22
     - werkzeug==0.14.1
-    - tensorflow
+    - tensorflow-gpu
