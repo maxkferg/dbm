@@ -1,6 +1,15 @@
-#
+# Digital Building Model Navigation
 
 A digital building model that can be used to train reinforcement learning agents.
+
+# Prerequsites:
+We rely on the most recent version of RLlib for APPO.
+On linux this can be install as follows:
+
+```sh
+wget https://s3-us-west-2.amazonaws.com/ray-wheels/latest/ray-0.6.2-cp36-cp36m-manylinux1_x86_64.whl
+pip install -U ray-0.6.2-cp36-cp36m-manylinux1_x86_64.whl
+```
 
 # Setup
 The digital building model has correct physics, implimented using PyBullet. A great tutorial for
@@ -9,26 +18,19 @@ Python is used to interact with the digital model. The conda package manager is 
 manage dependencies. To install the required packages:
 
 ```sh
-conda env create -f dbm.yml
+cd sim
+conda env create -f sim.yml
 ```
 
-# Testing the RaceCar
+# Training
 
 ```sh
-python -m pybullet_envs.examples.racecarGymEnvTest
+# Enter the conda environment
+cd sim
+conda activate sim
 ```
 
 # Training the racecar with tensorflow agents PPO:
 ```sh
-python -m pybullet_envs.agents.train_ppo --config=pybullet_racecar --logdir=racecar
-```
-
-# Training the racecar with DQN
-```sh
-python -m pybullet_envs.baselines.train_pybullet_racecar
-```
-
-# Enjoy the trained model
-```sh
-python -m pybullet_envs.baselines.enjoy_pybullet_racecar
+python train.py
 ```

@@ -146,9 +146,10 @@ class SeekerSimEnv(gym.Env):
         'video.frames_per_second': 50
     }
 
-    def __init__(self, urdfRoot=URDF_ROOT, actionRepeat=50,
-                 isEnableSelfCollision=True, isDiscrete=False, renders=False, debug=0):
+    def __init__(self, context, urdfRoot=URDF_ROOT, actionRepeat=50,
+                 isEnableSelfCollision=True, isDiscrete=False, render=False, debug=0):
         print("Initializing new SeekerSimEnv")
+        print("SimSeekerEnv Context:",context)
         self.timeStep = .002
         self.urdfRoot = urdfRoot
         self.actionRepeat = actionRepeat
@@ -166,14 +167,14 @@ class SeekerSimEnv(gym.Env):
         self.debug = debug
 
         self.envStepCounter = 0
-        self.renders = renders
+        self.render = render
         self.isDiscrete = isDiscrete
         self.startedTime = time.time()
         self.tile_grid = TileGrid(self.urdfRoot + "/output_floors.obj")
         #self.tile_grid.build_grid()
         #self.tile_grid.build_map()
 
-        if self.renders:
+        if self.render:
             print("Creating new BulletClient (GUI)")
             self.physics = bullet_client.BulletClient(connection_mode=pybullet.GUI)
             print(self.urdfRoot + "/output_floors.obj")
@@ -360,7 +361,7 @@ class SeekerSimEnv(gym.Env):
 
 
     def step(self, action):
-        if self.renders:
+        if self.render:
             basePos, orn = self.physics.getBasePositionAndOrientation(self.robot.racecarUniqueId)
             # Comment out this line to prevent the camera moving with the car
             #self.physics.resetDebugVisualizerCamera(1, 30, -40, basePos)
