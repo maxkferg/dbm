@@ -43,8 +43,17 @@
         "seconds": 600
     },
     "summarizer": {
-        "directory": null,
-        "labels": []
+        "directory": "./stats",
+        "labels": [
+            "graph", 
+            "losses",
+            "total-loss",
+            "variables",
+            "states",
+            "actions",
+            "reward",
+            "gradients",
+            "regularization"]
     },
     "execution": {
         "type": "single",
