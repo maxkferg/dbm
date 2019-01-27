@@ -1,0 +1,24 @@
+seeker-appo:
+    env: SeekerSimEnv-v0
+    run: APPO
+    checkpoint_freq: 10
+    stop:
+        episode_reward_mean: 1.0
+        timesteps_total: 25000000
+    config:
+        monitor: False
+        sample_batch_size: 50
+        train_batch_size: 750
+        num_workers: 20
+        broadcast_interval: 1
+        max_sample_requests_in_flight_per_worker: 1
+        num_data_loader_buffers: 1
+        num_envs_per_worker: 1
+        minibatch_buffer_size: 4
+        num_sgd_iter: 2
+        vf_loss_coeff: 1.0
+        clip_param: 0.3
+        grad_clip: 10
+        num_gpus: 1
+        model:
+            use_lstm: True
