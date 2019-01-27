@@ -71,9 +71,6 @@ dependencies:
     - pyopengl==3.1.0
     - python-utils==2.3.0
     - pyzmq==17.0.0
-    - ray
-    - ray[rllib]
-    - ray[debug]
     - requests==2.18.4
     - ruamel.yaml==0.15.37
     - scipy==1.0.1
