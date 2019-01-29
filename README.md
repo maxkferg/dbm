@@ -7,8 +7,13 @@ We rely on the most recent version of RLlib for APPO.
 On linux this can be install as follows:
 
 ```sh
+# Linux
 wget https://s3-us-west-2.amazonaws.com/ray-wheels/latest/ray-0.6.2-cp36-cp36m-manylinux1_x86_64.whl
 pip install -U ray-0.6.2-cp36-cp36m-manylinux1_x86_64.whl
+
+# Mac OSX
+wget https://s3-us-west-2.amazonaws.com/ray-wheels/latest/ray-0.6.2-cp36-cp36m-macosx_10_6_intel.whl
+pip install -U ray-0.6.2-cp36-cp36m-macosx_10_6_intel.whl
 ```
 
 Instructions on setting up tensorflow on Google cloud are available here:

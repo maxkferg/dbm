@@ -9,7 +9,7 @@ seeker-appo:
         monitor: False
         sample_batch_size: 50
         train_batch_size: 750
-        num_workers: 20
+        num_workers: 6
         broadcast_interval: 1
         max_sample_requests_in_flight_per_worker: 1
         num_data_loader_buffers: 1

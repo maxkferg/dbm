@@ -1,26 +1,47 @@
-"""Example of a custom gym environment. Run this for a demo."""
+"""
+Train an agent on SeekerSimEnv
+
+# For a lightweight test
+python train.py --config "configs/seeker-test.yaml"
+
+# For a GPU driven large test
+python train.py --config "configs/seeker-gpu.yaml"
+"""
 import io
+import ray
 import yaml
 import numpy as np
 import gym
+import argparse
 from pprint import pprint
 from gym.spaces import Discrete, Box
 from gym.envs.registration import EnvSpec
 from gym.envs.registration import registry
-
-import ray
 from ray.tune import run_experiments
+from ray.tune.config_parser import make_parser
 from simulation.SeekerSimEnv import SeekerSimEnv
 
-CONFIG = "configs/seeker-appo.yaml"
+def create_parser():
+    parser = argparse.ArgumentParser(
+        description='Process some integers.')
+    parser.add_argument(
+        "config",
+        default="configs/seeker-test.yaml",
+        type=str,
+        help="The configuration file to use for the RL agent.")
+    return parser
 
-with open(CONFIG, 'r') as stream:
-    experiments = yaml.load(stream)
 
-experiments["seeker-appo"]["env"] = SeekerSimEnv
+def run(args):
+    with open(args.config, 'r') as stream:
+        experiments = yaml.load(stream)
 
-pprint(experiments)
+    experiments["seeker-appo"]["env"] = SeekerSimEnv
+    pprint(experiments)
+    run_experiments(experiments)
 
 if __name__ == "__main__":
     ray.init()
-    run_experiments(experiments)
+    parser = create_parser()
+    args = parser.parse_args()
+    run(args)

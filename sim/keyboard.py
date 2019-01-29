@@ -20,8 +20,8 @@ register(id='SeekerSimEnv-v0',
      reward_threshold=.5)
 
 
-# Test yourself as a learning agent! Pass environment name as a command-line argument, for example:
 env = gym.make('SeekerSimEnv-v0')
+env.debug = True
 
 
 class mainWindow():
@@ -40,8 +40,9 @@ class mainWindow():
 
     def start(self):
         obser, r, done, info = env.step(self.action)
-        self.action[0] = -obser[3]/10 + .5
-        self.action[1] = obser[3]/10 + .5
+        print(obser,"-->")
+        self.action[0] = obser[3]/10
+        self.action[1] = 0.5
         colors = env.render(mode="rgb_array")
 
         self.im = Image.frombytes('L', (colors.shape[1], colors.shape[0]), colors.astype('b').tostring())
@@ -53,10 +54,6 @@ class mainWindow():
         if self.times%33==0:
             print("%.02f FPS"%(self.times/(time.clock()-self.timestart)))
         self.root.after(10,self.start)
-
-        print("reward:",r, "action", self.action)
-        print(obser[2:4])
-        print(obser[4:])
         if done:
             env.reset()
 

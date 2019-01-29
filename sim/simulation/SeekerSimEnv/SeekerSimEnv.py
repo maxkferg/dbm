@@ -9,6 +9,7 @@ import time
 import pybullet
 from . import bullet_client
 from .config import URDF_ROOT
+from pprint import pprint
 import random
 from .robots.robot_models import Turtlebot
 from random import random, randint
@@ -22,6 +23,7 @@ import tools.Math2D as m2d
 COUNT = 0
 RENDER_WIDTH = 960
 RENDER_HEIGHT = 720
+
 
 
 def normalize(vec):
@@ -101,7 +103,6 @@ def load_floor_file(path):
             els = line.split(' ')
             dims = [int(els[1]), int(els[2])]
 
-
     file.close()
 
     return [vertices, indices, scale, dims]
@@ -137,6 +138,13 @@ def gen_start_position(radius, floor):
     return ret
 
 
+COLLISION_DISTANCE = 0.04
+TARGET_REWARD = 1
+BATTERY_THRESHOLD = 0.005
+BATTERY_WEIGHT = -0.005
+ROTATION_COST = -0.01
+CRASHED_PENALTY = -1
+TARGET_DISTANCE_THRESHOLD = 0.6 # Max distance to the target
 HOST, PORT = "localhost", 9999
 COUNT = 0
 
@@ -154,7 +162,6 @@ class SeekerSimEnv(gym.Env):
         self.urdfRoot = urdfRoot
         self.actionRepeat = actionRepeat
         self.isEnableSelfCollision = isEnableSelfCollision
-        self.observation = []
         self.targetUniqueId = -1
         self.robot = None               # The controlled robot
         self.buildingIds = []           # Each plane is given an id
@@ -178,16 +185,15 @@ class SeekerSimEnv(gym.Env):
             print(self.urdfRoot + "/output_floors.obj")
             self.mpqueue = MPQueueClient(HOST, PORT)
             self.mpqueue.start(self.urdfRoot + "/output_floors.obj", self.urdfRoot + "/output_walls.obj")
-
         else:
             print("Creating new BulletClient")
             self.physics = bullet_client.BulletClient()
             self.mpqueue = None
 
         self.seed()
-        ray_count = 12                      # 12 rays of 30 degrees each
-        observationDim = 4                  # These are positional coordinates
-        highs = [10, 10, 1, 1]            # Distance, angle and sine/consine of angles
+        ray_count = 12                    # 12 rays of 30 degrees each
+        observationDim = 4                # These are positional coordinates
+        highs = [10, 10, 2*math.pi, 2*math.pi, 10]            # x, y, theta, t_theta, t_d
         highs.extend([5]*ray_count)
 
         observation_high = np.array(highs)      #snp.ones(observationDim) * 1000  # np.inf
@@ -205,7 +211,7 @@ class SeekerSimEnv(gym.Env):
 
         # Generate the sensor rays so we don't have to do it repeatedly
         ray_angle = 2. * np.pi / ray_count
-        print("ray_angle:", ray_angle)
+        print("Lidar Ray Angle:", ray_angle)
 
         self.rays = []
         for i in range(ray_count):
@@ -218,6 +224,10 @@ class SeekerSimEnv(gym.Env):
         self.build()
         self.reset()
         print("Initialization Complete")
+
+
+    def __del__(self):
+        self.physics = 0
 
 
     def build(self):
@@ -249,8 +259,8 @@ class SeekerSimEnv(gym.Env):
         for i in range(100):
             self.physics.stepSimulation()
 
-        self.observation = self.getExtendedObservation()
-        return np.array(self.observation)
+        state = self.get_state()
+        return self.get_observation(state)
 
 
     def reset(self):
@@ -265,79 +275,42 @@ class SeekerSimEnv(gym.Env):
         self.startedTime = time.time()
         self.envStepCounter = 0
 
-        target_pos = gen_start_position(.25, self.floor) + [.25]
-        car_pos = gen_start_position(.3, self.floor) + [.25]
-        _, target_orn = self.physics.getBasePositionAndOrientation(self.targetUniqueId)
-        self.physics.resetBasePositionAndOrientation(self.targetUniqueId, np.array(target_pos), target_orn)
-
-        #target set position
-        self.robot.set_position(car_pos)
+        # Reset the target and robot position
+        self.reset_robot_position()
+        self.reset_target_position()
 
         for i in range(100):
             self.physics.stepSimulation()
 
-        self.observation = self.getExtendedObservation()
-
-        return np.array(self.observation)
-
-
-    def __del__(self):
-        self.physics = 0
+        state = self.get_state()
+        return self.get_observation(state)
 
 
-    def seed(self, seed=None):
-        self.np_random, seed = seeding.np_random(seed)
-        return [seed]
+    def reset_robot_position(self):
+        """Move the robot to a new position"""
+        car_pos = gen_start_position(.3, self.floor) + [.25]
+        self.robot.set_position(car_pos)
 
 
-    def getExtendedObservation(self):
-        self.observation = []
+    def reset_target_position(self):
+        """Move the target to a new position"""
+        target_pos = gen_start_position(.25, self.floor) + [.25]
+        _, target_orn = self.physics.getBasePositionAndOrientation(self.targetUniqueId)
+        self.physics.resetBasePositionAndOrientation(self.targetUniqueId, np.array(target_pos), target_orn)
 
-        carpos, carorn = self.physics.getBasePositionAndOrientation(self.robot.racecarUniqueId)
 
-        if self.mpqueue:
-            scale = self.floor[2]
-            dims = self.floor[3]
-            centre = compute_centre(self.tile_grid.bound)
-            #print("centre:", centre)
-            pos = [int((carpos[0]/scale) * dims[0] + dims[0]),
-                   int((-carpos[1]/scale) * dims[1] + dims[1])]
-
-            #print("POS:", pos, carpos)
-            self.mpqueue.command_move(pos)
-
-            dir_vec = rotate_vector(carorn, [1, 0, 0])
-            angle = m2d.compute_angle(m2d.cp_mul(m2d.vec3_to_vec2n(dir_vec), [1, -1]))
-            #print("Car Forward:", angle)
-
-            self.mpqueue.command_turn(angle)
-
-        carmat = self.physics.getMatrixFromQuaternion(carorn)
-        tarpos, tarorn = self.physics.getBasePositionAndOrientation(self.targetUniqueId)
-        invCarPos, invCarOrn = self.physics.invertTransform(carpos, carorn)
-        tarPosInCar, tarOrnInCar = self.physics.multiplyTransforms(invCarPos, invCarOrn, tarpos, tarorn)
-
-        self.observation.extend([
-            tarPosInCar[0],
-            tarPosInCar[1],
-            math.sqrt(tarPosInCar[1]**2 + tarPosInCar[0]**2),
-            math.atan2(tarPosInCar[1], tarPosInCar[0]),
-        ])
-
-        if self.debug:
-            print("Target position:", tarPosInCar)
-            print("Target orientation:", math.atan2(tarPosInCar[0], tarPosInCar[1]))
-
+    def read_lidar_values(self, robot_pos, robot_orn):
+        """Read values from the laser scanner"""
         # The LIDAR is assumed to be attached to the top (to avoid self-intersection)
-        lidar_pos = add_vec(carpos, [0, 0, .25])
+        lidar_pos = add_vec(robot_pos, [0, 0, .25])
 
         # The total length of the ray emanating from the LIDAR
         ray_len = 5
-        
+
         # Rotate the ray vector and determine intersection
         intersections = []
         for ray in self.rays:
-            rot = mul_quat(carorn, ray)
+            rot = mul_quat(robot_orn, ray)
             dir_vec = rotate_vector(rot, [1, 0, 0])
             start_pos = add_vec(lidar_pos, scale_vec(.1, dir_vec))
             end_pos = add_vec(lidar_pos, scale_vec(ray_len, dir_vec))
@@ -345,21 +318,102 @@ class SeekerSimEnv(gym.Env):
             if intersection[0][0] == self.targetUniqueId:
                 intersections.append(-1)
             elif intersection[0][0] == self.buildingIds[0]:
-                #print(intersection[0])
-                #print("--------------------")
                 intersections.append(intersection[0][2])
             else:
                 intersections.append(ray_len)
+        return intersections
+
+
+    def seed(self, seed=None):
+        self.np_random, seed = seeding.np_random(seed)
+        return [seed]
+
+
+    def get_state(self):
+        """
+        Return a dict that describes the state of the car
+        Calculating the state is computationally intensive and should be done sparingly
+        """
+        state = {}
+
+        if self.mpqueue:
+            scale = self.floor[2]
+            dims = self.floor[3]
+            centre = compute_centre(self.tile_grid.bound)
+            pos = [int((carpos[0]/scale) * dims[0] + dims[0]),
+                   int((-carpos[1]/scale) * dims[1] + dims[1])]
+            self.mpqueue.command_move(pos)
+            dir_vec = rotate_vector(carorn, [1, 0, 0])
+            angle = m2d.compute_angle(m2d.cp_mul(m2d.vec3_to_vec2n(dir_vec), [1, -1]))
+            self.mpqueue.command_turn(angle)
+
+        robot_pos, robot_orn = self.physics.getBasePositionAndOrientation(self.robot.racecarUniqueId)
+        robot_theta = math.atan2(robot_orn[1], robot_orn[0])
+
+        #carmat = self.physics.getMatrixFromQuaternion(robot_orn)
+        tarpos, tarorn = self.physics.getBasePositionAndOrientation(self.targetUniqueId)
+        invCarPos, invCarOrn = self.physics.invertTransform(robot_pos, robot_orn)
+        tarPosInCar, tarOrnInCar = self.physics.multiplyTransforms(invCarPos, invCarOrn, tarpos, tarorn)
+
+        lidar = self.read_lidar_values(robot_pos, robot_orn)
+
+        state = {
+            "robot_pos": robot_pos,
+            "robot_orn": robot_orn,
+            "robot_theta": robot_theta,
+            "rel_target_orientation": math.atan2(tarPosInCar[1], tarPosInCar[0]),
+            "rel_target_distance": math.sqrt(tarPosInCar[1]**2 + tarPosInCar[0]**2),
+            "lidar": self.read_lidar_values(robot_pos, robot_orn),
+            "is_crashed": False,
+            "is_at_target": False,
+            "is_broken": False
+        }
+
+        # Check if the robot has crashed
+        for observation in lidar:
+            if -1 < observation and observation < COLLISION_DISTANCE:
+                state["is_crashed"] = True
+
+        # Check if the robot has reached the target
+        if state["rel_target_distance"] < TARGET_DISTANCE_THRESHOLD:
+            state["is_at_target"] = True
+
+        # Check if the simulation is broken
+        if robot_pos[2] < 0 or robot_pos[2] > 1:
+            print("Something went wrong with the simulation")
+            state["is_broken"] = True
+
+        if self.debug:
+            print("Target orientation:", state["rel_target_orientation"])
+            print("Target position:", state["rel_target_distance"])
 
         if self.debug>1:
-            print("Lidar intersections:", intersections)
+            print("State:")
+            pprint(state)
 
-        self.observation.extend(intersections)
-        return self.observation
+        return state
+
+
+    def get_observation(self, state):
+        """
+        Return the observation that is passed to the learning algorithm
+        """
+        observation = [
+            state["robot_pos"][0],
+            state["robot_pos"][1],
+            state["robot_theta"],
+            state["rel_target_orientation"],
+            state["rel_target_distance"]
+        ]
+        observation.extend(state["lidar"])
+        return np.array(observation)
 
 
     def step(self, action):
-        TARGET_DISTANCE_THRESHOLD = 0.6 # Max distance to the target
+        """
+        Move the simulation one step forward
+        @action is the robot action, in the form [rotation, velocity]
+        """
 
         if self.renders:
             basePos, orn = self.physics.getBasePositionAndOrientation(self.robot.racecarUniqueId)
@@ -381,28 +435,71 @@ class SeekerSimEnv(gym.Env):
         # Technically we should check for crash or target state in the loop, but that is slow
         for i in range(self.actionRepeat):
             self.physics.stepSimulation()
-            if self.termination():
-                self.observation = self.getExtendedObservation()
-                break
-        
-        robot_pos, _ = self.physics.getBasePositionAndOrientation(self.robot.racecarUniqueId)
-        target_pos, _ = self.physics.getBasePositionAndOrientation(self.robot.racecarUniqueId)
-        target_distance = np.linalg.norm(robot_pos-target_pos)
 
-        # Check if the robot has reached the target
-        if target_distance < TARGET_DISTANCE_THRESHOLD:
-            self.isAtTarget = True
+        state = self.get_state()
+        observation = self.get_observation(state)
+        reward = self.reward(state)
+        done = self.termination(state)
 
-        self.observation = self.getExtendedObservation()
         self.envStepCounter += 1
 
-        reward = self.reward()
-        done = self.termination()
+        # Respawn the target and clear the isAtTarget flag
+        if state["is_at_target"]:
+            self.reset_target_position()
 
-        return np.array(self.observation), reward, done, {}
+        return observation, reward, done, {}
+
+
+    def termination(self, state):
+        """Return True if the episode should end"""
+        return state["is_crashed"] or state["is_broken"]
+
+
+    def reward(self, state):
+        """
+        Return the reward:
+            Target Reward: 1 if target reached, else 0
+            Collision Reward: -1 if crashed, else 0
+            Battery Reward: Penalty if rotation or velocity exceeds 0.5
+            Rotation Reward: Small penalty for any rotation
+        """
+
+        # Add positive reward if we are near the target
+        if state["is_at_target"]:
+            target_reward = TARGET_REWARD
+        else:
+            target_reward = 0
+
+        # End the simulation with negative reward
+        if state["is_crashed"]:
+            crashed_reward = CRASHED_PENALTY
+        else:
+            crashed_reward = 0
+
+        # There is a cost to acceleration and turning
+        # We use the squared cost to incentivise careful use of battery resources
+        battery_reward = BATTERY_WEIGHT*np.sum(positive_component(np.abs(self.robot.last_action) - BATTERY_THRESHOLD))
+
+        # There is an additional cost due to rotation
+        rotation_reward = ROTATION_COST * abs(self.robot.last_action[0])
+
+        # Total reward is the sum of components
+        reward = target_reward + crashed_reward + battery_reward + rotation_reward
+
+        if self.debug:
+            print("---- Step %i Summary -----"%self.envStepCounter)
+            print("Action: ",self.robot.last_action)
+            print("Target Reward:  %.3f"%target_reward)
+            print("Crashed Reward: %.3f"%crashed_reward)
+            print("Battery Reward: %.3f"%battery_reward)
+            print("Rotation Reward: %.3f"%rotation_reward)
+            print("Total Reward:   %.3f\n"%reward)
+
+        return reward
 
 
     def render(self, mode='human', close=False):
+        """Render the simulation to a frame"""
         if mode != "rgb_array":
             return np.array([])
 
@@ -410,8 +507,8 @@ class SeekerSimEnv(gym.Env):
         base_pos, carorn = self.physics.getBasePositionAndOrientation(self.robot.racecarUniqueId)
 
         # Position the camera behind the car, slightly above
-        dir_vec = np.array(rotate_vector(carorn, [1, 0, 0]))
-        cam_eye = np.subtract(np.array(base_pos), np.add(dir_vec, np.array([0, 0, -.5])))
+        dir_vec = np.array(rotate_vector(carorn, [2, 0, 0]))
+        cam_eye = np.subtract(np.array(base_pos), np.add(dir_vec, np.array([0, 0, -1])))
         cam_up = normalize(self.world_up - np.multiply(np.dot(self.world_up, dir_vec), dir_vec))
 
         view_matrix = self.physics.computeViewMatrix(
@@ -428,57 +525,3 @@ class SeekerSimEnv(gym.Env):
         rgb_array = rgb_array.reshape((RENDER_HEIGHT, RENDER_WIDTH, 4))
         return rgb_array
 
-
-    def termination(self):
-        """Return True if the episode should end"""
-        return self.isCrashed
-
-
-    def reward(self):
-        """
-        Return the reward:
-            Target Reward: 1 if target reached, else 0
-            Collision Reward: -1 if crashed, else 0
-            Battery Reward: Penalty if rotation or velocity exceeds 0.5
-            Rotation Reward: Small penalty for any rotation
-        """
-        COLLISION_DISTANCE = 0.04
-        TARGET_REWARD = 1
-        BATTERY_THRESHOLD = 0.005
-        BATTERY_WEIGHT = -5
-        ROTATION_COST = -1
-        CRASHED_PENALTY = -1
-
-        # Add positive reward if we are near the target
-        if self.isAtTarget:
-            target_reward = TARGET_REWARD
-        else:
-            target_reward = 0
-
-        # If the robot is too close to the wall (not the target) then end the simulation with negative reward
-        crashed_reward = 0
-        for observation in self.observation[4:]:
-            if -1 < observation and observation < COLLISION_DISTANCE:
-                self.isCrashed = True
-                crashed_reward = CRASHED_PENALTY
-
-        # There is a cost to acceleration and turning
-        # We use the squared cost to incentivise careful use of battery resources
-        battery_reward = BATTERY_WEIGHT*np.sum(positive_component(np.abs(self.robot.last_action) - BATTERY_THRESHOLD))
-
-        # There is an additional cost due to rotation
-        rotation_reward = ROTATION_COST*self.robot.last_action
-
-        # Total reward is the sum of components
-        reward = target_reward + crashed_reward + battery_reward + rotation_reward
-
-        if self.debug:
-            print("---- Step %i Summary -----"%self.envStepCounter)
-            print("Action: ",self.robot.last_action)
-            print("Target Reward:  %.3f"%target_reward)
-            print("Crashed Reward: %.3f"%crashed_reward)
-            print("Battery Reward: %.3f"%battery_reward)
-            print("Rotation Reward: %.3f"%rotation_reward)
-            print("Total Reward:   %.3f\n"%reward)
-
-        return reward

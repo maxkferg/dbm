@@ -677,15 +677,13 @@ class Turtlebot(WalkerBase):
             realaction = action
         WalkerBase.apply_action(self, realaction)
 
-
     def applyAction(self, action):
-        velocity, rotation = action
+        rotation, velocity = action
         r = np.array([-0.01, 0.01, -0.01, 0.01])
         v = np.array([0.01, 0.01, 0.01, 0.01])
         controls = r*rotation + v*velocity
         self.last_action = action
-        self.apply_action(action)
-
+        self.apply_action(controls)
 
     def steering_cost(self, action):
         if not self.is_discrete:
