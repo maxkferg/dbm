@@ -1,6 +1,9 @@
 """
 Example of a custom gym environment. Run this for a demo.
 
+Copying checkpoint files from the server
+gcloud compute --project "stanford-projects" scp --zone "us-west1-b" --recurse "ray-trainer:~/ray_results/*" ~/ray_results
+
 
 rllib rollout --checkpoint ~/ray_results/demo/experiment_state-2019-01-26_18-46-51.json
 """
@@ -31,12 +34,13 @@ register(id=ENV_NAME,
      reward_threshold=.5)
 
 
-CHECKPOINT = "/Users/maxkferg/ray_results/seeker-local/APPO_SeekerSimEnv_0_2019-01-26_19-48-46980vc_eo/params.pkl"
+CHECKPOINT = "/Users/maxkferg/ray_results/seeker-appo/APPO_SeekerSimEnv_0_2019-01-27_23-46-38eufch4md/checkpoint_610/checkpoint-610"
 
-conf = os.path.join(os.path.dirname(CHECKPOINT),"params.json")
+conf = os.path.join(os.path.dirname(os.path.dirname(CHECKPOINT)),"params.json")
 with open(conf, 'r') as stream:
     config = json.load(stream)
 config["num_workers"] = 1
+config["monitor"] = True
 
 
 AGENT = "APPO"
@@ -50,7 +54,7 @@ OUT = "./stats"
 ray.init()
 cls = get_agent_class(AGENT)
 agent = cls(env=ENV_NAME, config=config)
-agent._restore(CHECKPOINT)
+agent.restore(CHECKPOINT)
 num_steps = int(10000)
 
 

@@ -171,8 +171,6 @@ class SeekerSimEnv(gym.Env):
         self.isDiscrete = isDiscrete
         self.startedTime = time.time()
         self.tile_grid = TileGrid(self.urdfRoot + "/output_floors.obj")
-        #self.tile_grid.build_grid()
-        #self.tile_grid.build_map()
 
         if self.renders:
             print("Creating new BulletClient (GUI)")
@@ -269,7 +267,6 @@ class SeekerSimEnv(gym.Env):
 
         target_pos = gen_start_position(.25, self.floor) + [.25]
         car_pos = gen_start_position(.3, self.floor) + [.25]
-        #self.targetUniqueId = self.physics.loadURDF(os.path.join(self.urdfRoot, "target.urdf"), target_pos)
         _, target_orn = self.physics.getBasePositionAndOrientation(self.targetUniqueId)
         self.physics.resetBasePositionAndOrientation(self.targetUniqueId, np.array(target_pos), target_orn)
 
@@ -336,6 +333,7 @@ class SeekerSimEnv(gym.Env):
 
         # The total length of the ray emanating from the LIDAR
         ray_len = 5
+        
         # Rotate the ray vector and determine intersection
         intersections = []
         for ray in self.rays:
@@ -361,6 +359,8 @@ class SeekerSimEnv(gym.Env):
 
 
     def step(self, action):
+        TARGET_DISTANCE_THRESHOLD = 0.6 # Max distance to the target
+
         if self.renders:
             basePos, orn = self.physics.getBasePositionAndOrientation(self.robot.racecarUniqueId)
             # Comment out this line to prevent the camera moving with the car
@@ -385,17 +385,23 @@ class SeekerSimEnv(gym.Env):
                 self.observation = self.getExtendedObservation()
                 break
         
+        robot_pos, _ = self.physics.getBasePositionAndOrientation(self.robot.racecarUniqueId)
+        target_pos, _ = self.physics.getBasePositionAndOrientation(self.robot.racecarUniqueId)
+        target_distance = np.linalg.norm(robot_pos-target_pos)
+
+        # Check if the robot has reached the target
+        if target_distance < TARGET_DISTANCE_THRESHOLD:
+            self.isAtTarget = True
+
         self.observation = self.getExtendedObservation()
         self.envStepCounter += 1
 
         reward = self.reward()
         done = self.termination()
-        self.last_action = action
 
         return np.array(self.observation), reward, done, {}
 
 
-    # This function is not being called in the test SeekerSimEnv
     def render(self, mode='human', close=False):
         if mode != "rgb_array":
             return np.array([])
@@ -422,39 +428,34 @@ class SeekerSimEnv(gym.Env):
         rgb_array = rgb_array.reshape((RENDER_HEIGHT, RENDER_WIDTH, 4))
         return rgb_array
 
+
     def termination(self):
-        # Want agent to make 100 actions. 50 physics steps per action. Total duration 1000
-        total_sim_duration = 100  # 200 seconds for small model, 1000 for big model?
-        return self.envStepCounter > total_sim_duration or self.isCrashed or self.isAtTarget
+        """Return True if the episode should end"""
+        return self.isCrashed
+
 
     def reward(self):
-        # Adapt the reward to:
-        # 1 if target reached, else 0
-        # -1 if wall collision
-        TARGET_DISTANCE_THRESHOLD = 0.6 # Max distance to the target
+        """
+        Return the reward:
+            Target Reward: 1 if target reached, else 0
+            Collision Reward: -1 if crashed, else 0
+            Battery Reward: Penalty if rotation or velocity exceeds 0.5
+            Rotation Reward: Small penalty for any rotation
+        """
         COLLISION_DISTANCE = 0.04
         TARGET_REWARD = 1
         BATTERY_THRESHOLD = 0.005
         BATTERY_WEIGHT = -5
+        ROTATION_COST = -1
         CRASHED_PENALTY = -1
-        closestPoints = self.physics.getClosestPoints(self.robot.racecarUniqueId, self.targetUniqueId, 10000)
-
-        # Default reward is zero
-        numPt = len(closestPoints)
 
         # Add positive reward if we are near the target
-        # Distance based reward
-        #if numPt > 0:
-        #    target_reward = TARGET_WEIGHT*(MAX_DISTANCE - closestPoints[0][8])       # (contactFlag, bodyUniqueIdA, bodyUniqueIdB, linkIndexA, linkIndexB, positionOnA, positionOnB, contactNormalOnB, contactDistance, normalForce)
-        #else:
-        #    target_reward = 0
-        if abs(closestPoints[0][8]) < TARGET_DISTANCE_THRESHOLD:
+        if self.isAtTarget:
             target_reward = TARGET_REWARD
-            self.isAtTarget = True
         else:
             target_reward = 0
 
-        # If the robot is too closs to the wall (not the target) then end the simulation with negative reward
+        # If the robot is too close to the wall (not the target) then end the simulation with negative reward
         crashed_reward = 0
         for observation in self.observation[4:]:
             if -1 < observation and observation < COLLISION_DISTANCE:
@@ -465,8 +466,11 @@ class SeekerSimEnv(gym.Env):
         # We use the squared cost to incentivise careful use of battery resources
         battery_reward = BATTERY_WEIGHT*np.sum(positive_component(np.abs(self.robot.last_action) - BATTERY_THRESHOLD))
 
+        # There is an additional cost due to rotation
+        rotation_reward = ROTATION_COST*self.robot.last_action
+
         # Total reward is the sum of components
-        reward = target_reward + crashed_reward + battery_reward
+        reward = target_reward + crashed_reward + battery_reward + rotation_reward
 
         if self.debug:
             print("---- Step %i Summary -----"%self.envStepCounter)
@@ -474,6 +478,7 @@ class SeekerSimEnv(gym.Env):
             print("Target Reward:  %.3f"%target_reward)
             print("Crashed Reward: %.3f"%crashed_reward)
             print("Battery Reward: %.3f"%battery_reward)
+            print("Rotation Reward: %.3f"%rotation_reward)
             print("Total Reward:   %.3f\n"%reward)
 
         return reward

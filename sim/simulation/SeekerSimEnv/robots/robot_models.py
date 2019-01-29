@@ -679,11 +679,10 @@ class Turtlebot(WalkerBase):
 
 
     def applyAction(self, action):
-        #velocity, rotation = action
-        # = np.array([-0.01, 0.01, -0.01, 0.01])
-        #v = np.array([0.01, 0.01, 0.01, 0.01])
-        #controls = r*rotation + v*velocity
-        action = 0.01 * np.array(action)
+        velocity, rotation = action
+        r = np.array([-0.01, 0.01, -0.01, 0.01])
+        v = np.array([0.01, 0.01, 0.01, 0.01])
+        controls = r*rotation + v*velocity
         self.last_action = action
         self.apply_action(action)
 
