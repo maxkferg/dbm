@@ -16,6 +16,9 @@ wget https://s3-us-west-2.amazonaws.com/ray-wheels/latest/ray-0.6.2-cp36-cp36m-m
 pip install -U ray-0.6.2-cp36-cp36m-macosx_10_6_intel.whl
 ```
 
+If you have problems with ROS, remove any references to python2.7 from PATH and PYTHONPATH
+
+
 Instructions on setting up tensorflow on Google cloud are available here:
 https://medium.com/google-cloud/setting-up-tensorflow-gpu-on-google-cloud-instance-with-ubuntu-16-04-53cb6749b527
 

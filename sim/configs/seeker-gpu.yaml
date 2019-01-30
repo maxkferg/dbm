@@ -7,8 +7,9 @@ seeker-appo:
         timesteps_total: 25000000
     config:
         monitor: False
-        sample_batch_size: 50
-        train_batch_size: 750
+        horizon: 400
+        sample_batch_size: 100
+        train_batch_size: 1500
         num_workers: 6
         broadcast_interval: 1
         max_sample_requests_in_flight_per_worker: 1
