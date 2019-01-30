@@ -7,7 +7,7 @@ seeker-appo:
         timesteps_total: 25000000
     config:
         monitor: False
-        horizon: 400
+        horizon: 100
         sample_batch_size: 100
         train_batch_size: 1500
         num_workers: 6

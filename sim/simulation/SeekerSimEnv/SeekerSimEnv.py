@@ -481,7 +481,6 @@ class SeekerSimEnv(gym.Env):
 
         # There is a cost to acceleration and turning
         # We use the squared cost to incentivise careful use of battery resources
-        print(positive_component(np.abs(self.robot.last_action) - BATTERY_THRESHOLD))
         battery_reward = BATTERY_WEIGHT*np.sum(positive_component(np.abs(self.last_action) - BATTERY_THRESHOLD))
 
         # There is an additional cost due to rotation
