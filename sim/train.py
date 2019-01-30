@@ -2,10 +2,10 @@
 Train an agent on SeekerSimEnv
 
 # For a lightweight test
-python train.py --config "configs/seeker-test.yaml"
+python train.py configs/seeker-test.yaml
 
 # For a GPU driven large test
-python train.py --config "configs/seeker-gpu.yaml"
+python train.py configs/seeker-gpu.yaml
 """
 import io
 import ray

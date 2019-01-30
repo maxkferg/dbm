@@ -138,11 +138,11 @@ def gen_start_position(radius, floor):
     return ret
 
 
-COLLISION_DISTANCE = 0.04
+COLLISION_DISTANCE = 0.2
 TARGET_REWARD = 1
-BATTERY_THRESHOLD = 0.005
+BATTERY_THRESHOLD = 0.5
 BATTERY_WEIGHT = -0.005
-ROTATION_COST = -0.01
+ROTATION_COST = -0.005
 CRASHED_PENALTY = -1
 TARGET_DISTANCE_THRESHOLD = 0.6 # Max distance to the target
 HOST, PORT = "localhost", 9999
@@ -193,10 +193,10 @@ class SeekerSimEnv(gym.Env):
         self.seed()
         ray_count = 12                    # 12 rays of 30 degrees each
         observationDim = 4                # These are positional coordinates
-        highs = [10, 10, 2*math.pi, 2*math.pi, 10]            # x, y, theta, t_theta, t_d
+        highs = [10, 10, math.pi, math.pi, 10]            # x, y, theta, t_theta, t_d
         highs.extend([5]*ray_count)
 
-        observation_high = np.array(highs)      #snp.ones(observationDim) * 1000  # np.inf
+        observation_high = np.array(highs)
 
         if isDiscrete:
             self.action_space = spaces.Discrete(9)
@@ -238,8 +238,6 @@ class SeekerSimEnv(gym.Env):
         self.physics.resetSimulation()
         self.physics.setTimeStep(self.timeStep)
         self.buildingIds = self.physics.loadSDF(os.path.join(self.urdfRoot, "output.sdf"))
-        self.isCrashed = False
-        self.isAtTarget = False
 
         target_pos = gen_start_position(.25, self.floor) + [.25]
         car_pos = gen_start_position(.3, self.floor) + [.25]
@@ -270,8 +268,7 @@ class SeekerSimEnv(gym.Env):
         if self.debug:
             print("Reset after %i steps in %.2f seconds"%(steps,duration))
 
-        self.isCrashed = False
-        self.isAtTarget = False
+        self.last_action = np.zeros((2,1))
         self.startedTime = time.time()
         self.envStepCounter = 0
 
@@ -314,11 +311,14 @@ class SeekerSimEnv(gym.Env):
             dir_vec = rotate_vector(rot, [1, 0, 0])
             start_pos = add_vec(lidar_pos, scale_vec(.1, dir_vec))
             end_pos = add_vec(lidar_pos, scale_vec(ray_len, dir_vec))
+            #print("lidar start:",start_pos, "lidar end:",end_pos)
+            #time.sleep(1)
             intersection = self.physics.rayTest(start_pos, end_pos)
             if intersection[0][0] == self.targetUniqueId:
                 intersections.append(-1)
             elif intersection[0][0] == self.buildingIds[0]:
-                intersections.append(intersection[0][2])
+                #print(intersection[0])
+                intersections.append(intersection[0][2]*ray_len)
             else:
                 intersections.append(ray_len)
         return intersections
@@ -363,7 +363,7 @@ class SeekerSimEnv(gym.Env):
             "robot_theta": robot_theta,
             "rel_target_orientation": math.atan2(tarPosInCar[1], tarPosInCar[0]),
             "rel_target_distance": math.sqrt(tarPosInCar[1]**2 + tarPosInCar[0]**2),
-            "lidar": self.read_lidar_values(robot_pos, robot_orn),
+            "lidar": lidar,
             "is_crashed": False,
             "is_at_target": False,
             "is_broken": False
@@ -399,11 +399,11 @@ class SeekerSimEnv(gym.Env):
         Return the observation that is passed to the learning algorithm
         """
         observation = [
+            state["rel_target_orientation"],
+            state["rel_target_distance"],
             state["robot_pos"][0],
             state["robot_pos"][1],
-            state["robot_theta"],
-            state["rel_target_orientation"],
-            state["rel_target_distance"]
+            state["robot_theta"]
         ]
         observation.extend(state["lidar"])
         return np.array(observation)
@@ -443,6 +443,9 @@ class SeekerSimEnv(gym.Env):
 
         self.envStepCounter += 1
 
+        # Store for next reward calculation
+        self.last_action = action
+
         # Respawn the target and clear the isAtTarget flag
         if state["is_at_target"]:
             self.reset_target_position()
@@ -478,7 +481,8 @@ class SeekerSimEnv(gym.Env):
 
         # There is a cost to acceleration and turning
         # We use the squared cost to incentivise careful use of battery resources
-        battery_reward = BATTERY_WEIGHT*np.sum(positive_component(np.abs(self.robot.last_action) - BATTERY_THRESHOLD))
+        print(positive_component(np.abs(self.robot.last_action) - BATTERY_THRESHOLD))
+        battery_reward = BATTERY_WEIGHT*np.sum(positive_component(np.abs(self.last_action) - BATTERY_THRESHOLD))
 
         # There is an additional cost due to rotation
         rotation_reward = ROTATION_COST * abs(self.robot.last_action[0])

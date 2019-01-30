@@ -22,4 +22,4 @@ seeker-appo:
         grad_clip: 10
         num_gpus: 1
         model:
-            use_lstm: True
+            use_lstm: False

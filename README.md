@@ -39,6 +39,7 @@ conda env create -f sim.yml
 # Enter the conda environment
 cd sim
 conda activate sim
+export PYTHONPATH=
 ```
 
 # Training the racecar with tensorflow agents PPO:

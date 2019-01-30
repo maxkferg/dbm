@@ -576,7 +576,7 @@ class HuskyClimber(Husky):
         Ant.robot_specific_reset(self)
         for j in self.jdict.keys():
             self.jdict[j].power_coef = 1.5 * self.jdict[j].power_coef
-        
+
         debugmode=0
         if debugmode:
             for k in self.jdict.keys():
@@ -645,9 +645,9 @@ class Turtlebot(WalkerBase):
         self.config = config
         print("Loading turtlebot.urdf")
         WalkerBase.__init__(self, "robots/turtlebot/turtlebot.urdf", "base_link", action_dim=4,
-                            sensor_dim=20, 
+                            sensor_dim=20,
                             scale=1,
-                            power=config['power'], 
+                            power=config['power'],
                             initial_pos=config['initial_pos'],
                             target_pos=config["target_pos"],
                             resolution=config["resolution"],
