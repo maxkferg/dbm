@@ -1,12 +1,11 @@
-# This configuration can expect to reach -160 reward in 10k-20k timesteps
-seeker-td3:
+seeker-apex-td3:
     env: SeekerSimEnv-v0
-    run: DDPG
+    run: APEX_DDPG
+    checkpoint_freq: 100
     stop:
-        episode_reward_mean: 2
-        time_total_s: 6000 # 100 minutes
+        episode_reward_mean: 1.2
     config:
-        # === Tricks ===
+        # === Tricks ====
         twin_q: True
         policy_delay: 2
         smooth_target_policy: True
@@ -23,15 +22,15 @@ seeker-td3:
         env_config: {}
 
         # === Exploration ===
-        schedule_max_timesteps: 100000
+        schedule_max_timesteps: 1000000
         timesteps_per_iteration: 600
         exploration_fraction: 0.1
         exploration_final_eps: 0.02
         noise_scale: 0.1
         exploration_theta: 0.15
         exploration_sigma: 0.2
-        target_network_update_freq: 0
-        tau: 0.001
+        target_network_update_freq: 50000
+        tau: 0.001 # 1
 
         # === Replay buffer ===
         buffer_size: 100000
@@ -48,13 +47,10 @@ seeker-td3:
         use_huber: True
         huber_threshold: 1.0
         l2_reg: 0.000001
-        learning_starts: 500
-        sample_batch_size: 1
-        train_batch_size: 64
+        learning_starts: 5000
+        sample_batch_size: 50
+        train_batch_size: 512
 
         # === Parallelism ===
-        num_workers: 0
-        num_gpus_per_worker: 0
-        optimizer_class: "SyncReplayOptimizer"
-        per_worker_exploration: False
-        worker_side_prioritization: False
+        num_gpus: 1
+        num_workers: 20

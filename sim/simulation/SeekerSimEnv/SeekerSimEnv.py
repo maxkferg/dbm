@@ -23,6 +23,7 @@ import tools.Math2D as m2d
 COUNT = 0
 RENDER_WIDTH = 960
 RENDER_HEIGHT = 720
+EPISODE_LEN = 100
 
 
 
@@ -455,7 +456,7 @@ class SeekerSimEnv(gym.Env):
 
     def termination(self, state):
         """Return True if the episode should end"""
-        return state["is_crashed"] or state["is_broken"]
+        return state["is_crashed"] or state["is_broken"] or self.envStepCounter > EPISODE_LEN
 
 
     def reward(self, state):

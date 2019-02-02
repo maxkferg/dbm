@@ -36,7 +36,9 @@ def run(args):
     with open(args.config, 'r') as stream:
         experiments = yaml.load(stream)
 
-    experiments["seeker-appo"]["env"] = SeekerSimEnv
+    for experiment, settings in experiments.items():
+        settings["env"] = SeekerSimEnv 
+
     pprint(experiments)
     run_experiments(experiments)
 
