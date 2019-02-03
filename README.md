@@ -46,3 +46,18 @@ export PYTHONPATH=
 ```sh
 python train.py
 ```
+
+
+
+# Clusters
+```sh
+# Create or update the cluster. When the command finishes, it will print
+# out the command that can be used to SSH into the cluster head node.
+$ ray up cluster.yaml
+
+# Reconfigure autoscaling behavior without interrupting running jobs
+$ ray up cluster.yaml --max-workers=N --no-restart
+
+# Teardown the cluster
+$ ray down cluster.yaml
+```

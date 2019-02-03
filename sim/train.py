@@ -29,6 +29,11 @@ def create_parser():
         default="configs/seeker-test.yaml",
         type=str,
         help="The configuration file to use for the RL agent.")
+    parser.add_argument(
+        "node",
+        default=False,
+        type=Boolean,
+        help="Just start the node.")
     return parser
 
 
@@ -46,4 +51,5 @@ if __name__ == "__main__":
     ray.init()
     parser = create_parser()
     args = parser.parse_args()
-    run(args)
+    if not args.node:
+        run(args)
