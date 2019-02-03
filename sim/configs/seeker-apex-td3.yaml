@@ -14,8 +14,8 @@ seeker-apex-td3:
         noise_clip: 0.5
 
         # === Model ===
-        actor_hiddens: [64, 64]
-        critic_hiddens: [64, 64]
+        actor_hiddens: [128, 128]
+        critic_hiddens: [128, 128]
         n_step: 1
         model: {}
         gamma: 0.99
@@ -52,5 +52,5 @@ seeker-apex-td3:
         train_batch_size: 512
 
         # === Parallelism ===
-        num_gpus: 1
-        num_workers: 20
+        num_gpus: 0
+        num_workers: 6

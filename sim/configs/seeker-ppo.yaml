@@ -1,3 +1,4 @@
+# Gets to -0.576 rew after 1.6 million
 humanoid-ppo-gae:
     env: SeekerSimEnv-v0
     run: PPO

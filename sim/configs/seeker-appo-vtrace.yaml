@@ -7,19 +7,31 @@ seeker-appo:
         timesteps_total: 25000000
     config:
         monitor: False
-        horizon: 100
-        sample_batch_size: 100
-        train_batch_size: 1500
+    
+        # == PPO surrogate loss options ==
+        vtrace": True
+        vtrace_clip_rho_threshold": 1.0
+        vtrace_clip_pg_rho_threshold": 1.0
+
+        # == PPO surrogate loss options ==
+        clip_param: 0.3
+
+        # == IMPALA optimizer params (see documentation in impala.py) ==
+        num_sgd_iter: 10
+        sample_batch_size: 500
+        train_batch_size: 5000
         num_workers: 6
         broadcast_interval: 1
         max_sample_requests_in_flight_per_worker: 1
         num_data_loader_buffers: 1
         num_envs_per_worker: 1
         minibatch_buffer_size: 4
-        num_sgd_iter: 2
         vf_loss_coeff: 1.0
         clip_param: 0.3
         grad_clip: 10
-        num_gpus: 1
+        lr: 0.0005
+
+        # === Computation ===
+        num_gpus: 0
         model:
             use_lstm: False
