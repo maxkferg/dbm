@@ -45,7 +45,7 @@ def run(args):
         settings["env"] = SeekerSimEnv 
 
     pprint(experiments)
-    run_experiments(experiments)
+    run_experiments(experiments, queue_trials=True)
 
 if __name__ == "__main__":
     ray.init()
