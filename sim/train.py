@@ -32,7 +32,7 @@ def create_parser():
     parser.add_argument(
         "node",
         default=False,
-        type=Boolean,
+        type=bool,
         help="Just start the node.")
     return parser
 
