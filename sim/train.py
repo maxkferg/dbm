@@ -30,7 +30,7 @@ def create_parser():
         type=str,
         help="The configuration file to use for the RL agent.")
     parser.add_argument(
-        "node",
+        "--node",
         default=False,
         type=bool,
         help="Just start the node.")
