@@ -459,7 +459,7 @@ class SeekerSimEnv(gym.Env):
 
     def termination(self, state):
         """Return True if the episode should end"""
-        return state["is_crashed"] or state["is_broken"] or self.envStepCounter > EPISODE_LEN or state["num_targets_found"]>1
+        return state["is_crashed"] or state["is_broken"] or self.envStepCounter > EPISODE_LEN or self.num_targets_found>1
 
 
     def reward(self, state):
