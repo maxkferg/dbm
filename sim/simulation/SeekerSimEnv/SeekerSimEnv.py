@@ -239,6 +239,7 @@ class SeekerSimEnv(gym.Env):
         self.physics.resetSimulation()
         self.physics.setTimeStep(self.timeStep)
         self.buildingIds = self.physics.loadSDF(os.path.join(self.urdfRoot, "output.sdf"))
+        self.num_targets_found = 0
 
         target_pos = gen_start_position(.25, self.floor) + [.25]
         car_pos = gen_start_position(.3, self.floor) + [.25]
@@ -270,6 +271,7 @@ class SeekerSimEnv(gym.Env):
             print("Reset after %i steps in %.2f seconds"%(steps,duration))
 
         self.last_action = np.zeros((2,1))
+        self.num_targets_found = 0
         self.startedTime = time.time()
         self.envStepCounter = 0
 
@@ -449,6 +451,7 @@ class SeekerSimEnv(gym.Env):
 
         # Respawn the target and clear the isAtTarget flag
         if state["is_at_target"]:
+            self.num_targets_found +=1
             self.reset_target_position()
 
         return observation, reward, done, {}
@@ -456,7 +459,7 @@ class SeekerSimEnv(gym.Env):
 
     def termination(self, state):
         """Return True if the episode should end"""
-        return state["is_crashed"] or state["is_broken"] or self.envStepCounter > EPISODE_LEN
+        return state["is_crashed"] or state["is_broken"] or self.envStepCounter > EPISODE_LEN or state["num_targets_found"]>1
 
 
     def reward(self, state):
