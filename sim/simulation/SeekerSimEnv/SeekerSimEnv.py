@@ -82,6 +82,20 @@ def add_vec(vA, vB):
     return [vA[0]+vB[0], vA[1]+vB[1], vA[2]+vB[2]]
 
 
+def find_nearest(array, value):
+    array = np.asarray(array)
+    idx = (np.abs(array - value)).argmin()
+    return array[idx]
+
+
+def rotation_change(theta1,theta2):
+    """Compute the change in rotation, assuming small angle change"""
+    dt = theta2 - theta1
+    dt1 = dt - 2*math.pi
+    dt2 = dt + 2*math.pi
+    return find_nearest([dt, dt1, dt2], 0)
+
+
 def load_floor_file(path):
     file = open(path)
 
@@ -143,7 +157,7 @@ COLLISION_DISTANCE = 0.2
 TARGET_REWARD = 1
 BATTERY_THRESHOLD = 0.5
 BATTERY_WEIGHT = -0.005
-ROTATION_COST = -0.001
+ROTATION_COST = -0.002
 CRASHED_PENALTY = -1
 TARGET_DISTANCE_THRESHOLD = 0.6 # Max distance to the target
 HOST, PORT = "localhost", 9999
@@ -155,7 +169,7 @@ class SeekerSimEnv(gym.Env):
         'video.frames_per_second': 50
     }
 
-    def __init__(self, config):
+    def __init__(self, config={}):
         print("Initializing new SeekerSimEnv")
         print("SimSeekerEnv Config:",config)
 
@@ -167,6 +181,7 @@ class SeekerSimEnv(gym.Env):
         self.renders = config.get("renders",False)
         self.isDiscrete = config.get("isDiscrete",False)
         self.messaging = config.get("messaging",False)
+        self.previous_state = None
 
         self.targetUniqueId = -1
         self.robot = None               # The controlled robot
@@ -199,7 +214,7 @@ class SeekerSimEnv(gym.Env):
         self.seed()
         ray_count = 12                    # 12 rays of 30 degrees each
         observationDim = 4                # These are positional coordinates
-        highs = [10, 10, math.pi, math.pi, 10]            # x, y, theta, t_theta, t_d
+        highs = [10, 10, 10, 10, math.pi, 1, 1, 1] # x, y, pos, pos, theta, vx, vy, vz
         highs.extend([5]*ray_count)
 
         observation_high = np.array(highs)
@@ -250,7 +265,7 @@ class SeekerSimEnv(gym.Env):
         car_pos = gen_start_position(.3, self.floor) + [.25]
         self.targetUniqueId = self.physics.loadURDF(os.path.join(self.urdfRoot, "target.urdf"), target_pos)
         config = {
-            'power': 40,
+            'power': 20,
             'resolution': 1,
             'is_discrete': False,
             'target_pos': target_pos,
@@ -355,7 +370,8 @@ class SeekerSimEnv(gym.Env):
             self.mpqueue.command_turn(angle)
 
         robot_pos, robot_orn = self.physics.getBasePositionAndOrientation(self.robot.racecarUniqueId)
-        robot_theta = math.atan2(robot_orn[1], robot_orn[0])
+        robot_euler = pybullet.getEulerFromQuaternion(robot_orn)
+        robot_theta = robot_euler[2]
 
         #carmat = self.physics.getMatrixFromQuaternion(robot_orn)
         tarpos, tarorn = self.physics.getBasePositionAndOrientation(self.targetUniqueId)
@@ -368,13 +384,21 @@ class SeekerSimEnv(gym.Env):
             "robot_pos": robot_pos,
             "robot_orn": robot_orn,
             "robot_theta": robot_theta,
+            "robot_vx": 0,
+            "robot_vy": 0,
+            "robot_vt": 0,
             "rel_target_orientation": math.atan2(tarPosInCar[1], tarPosInCar[0]),
             "rel_target_distance": math.sqrt(tarPosInCar[1]**2 + tarPosInCar[0]**2),
             "lidar": lidar,
             "is_crashed": self.is_crashed(),
             "is_at_target": self.is_at_target(),
-            "is_broken": False
+            "is_broken": False,
         }
+
+        if self.previous_state is not None:
+            state["robot_vx"] = robot_pos[0] - self.previous_state["robot_pos"][0]
+            state["robot_vy"] = robot_pos[1] - self.previous_state["robot_pos"][1]
+            state["robot_vt"] = rotation_change(robot_theta, self.previous_state["robot_theta"])
 
         # Check if the simulation is broken
         if robot_pos[2] < 0 or robot_pos[2] > 1:
@@ -401,7 +425,10 @@ class SeekerSimEnv(gym.Env):
             state["rel_target_distance"],
             state["robot_pos"][0],
             state["robot_pos"][1],
-            state["robot_theta"]
+            state["robot_theta"],
+            state["robot_vx"],
+            state["robot_vy"],
+            state["robot_vt"]
         ]
         observation.extend(state["lidar"])
         return np.array(observation)
@@ -442,6 +469,7 @@ class SeekerSimEnv(gym.Env):
         done = self.termination(state)
 
         self.envStepCounter += 1
+        self.previous_state = state
 
         # Respawn the target and clear the isAtTarget flag
         if state["is_at_target"]:
@@ -492,7 +520,7 @@ class SeekerSimEnv(gym.Env):
         battery_reward = BATTERY_WEIGHT*np.sum(positive_component(np.abs(action) - BATTERY_THRESHOLD))
 
         # There is an additional cost due to rotation
-        rotation_reward = ROTATION_COST * abs(action[0])
+        rotation_reward = ROTATION_COST * abs(state["robot_vt"])
 
         # Total reward is the sum of components
         reward = target_reward + crashed_reward + battery_reward + rotation_reward
