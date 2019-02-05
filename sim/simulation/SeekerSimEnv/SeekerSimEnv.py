@@ -155,14 +155,19 @@ class SeekerSimEnv(gym.Env):
         'video.frames_per_second': 50
     }
 
-    def __init__(self, context=None, urdfRoot=URDF_ROOT, actionRepeat=50,
-                 isEnableSelfCollision=True, isDiscrete=False, render=False, debug=0):
+    def __init__(self, config):
         print("Initializing new SeekerSimEnv")
-        print("SimSeekerEnv Context:",context)
-        self.timeStep = .002
-        self.urdfRoot = urdfRoot
-        self.actionRepeat = actionRepeat
-        self.isEnableSelfCollision = isEnableSelfCollision
+        print("SimSeekerEnv Config:",config)
+
+        self.timeStep = config.get("timestep", 0.1) # Simulate every 0.1 seconds
+        self.urdfRoot = config.get("urdfRoot", URDF_ROOT)
+        self.actionRepeat = config.get("actionRepeat", 4) # Choose an action every 0.4 seconds
+        self.isEnableSelfCollision = config.get("isEnableSelfCollision", False)
+        self.debug = config.get("debug", False)
+        self.renders = config.get("renders",False)
+        self.isDiscrete = config.get("isDiscrete",False)
+        self.messaging = config.get("messaging",False)
+
         self.targetUniqueId = -1
         self.robot = None               # The controlled robot
         self.buildingIds = []           # Each plane is given an id
@@ -172,24 +177,24 @@ class SeekerSimEnv(gym.Env):
         self.cam_pitch = 0.
         self.cam_yaw = 0.
         self.cam_roll = 0.
-        self.debug = debug
 
         self.envStepCounter = 0
-        self.renders = render
-        self.isDiscrete = isDiscrete
         self.startedTime = time.time()
         self.tile_grid = TileGrid(self.urdfRoot + "/output_floors.obj")
+        self.mpqueue = None
 
         if self.renders:
             print("Creating new BulletClient (GUI)")
             self.physics = bullet_client.BulletClient(connection_mode=pybullet.GUI)
             print(self.urdfRoot + "/output_floors.obj")
-            self.mpqueue = MPQueueClient(HOST, PORT)
-            self.mpqueue.start(self.urdfRoot + "/output_floors.obj", self.urdfRoot + "/output_walls.obj")
         else:
             print("Creating new BulletClient")
             self.physics = bullet_client.BulletClient()
             self.mpqueue = None
+
+        if self.messaging:
+            self.mpqueue = MPQueueClient(HOST, PORT)
+            self.mpqueue.start(self.urdfRoot + "/output_floors.obj", self.urdfRoot + "/output_walls.obj")
 
         self.seed()
         ray_count = 12                    # 12 rays of 30 degrees each
@@ -199,7 +204,7 @@ class SeekerSimEnv(gym.Env):
 
         observation_high = np.array(highs)
 
-        if isDiscrete:
+        if self.isDiscrete:
             self.action_space = spaces.Discrete(9)
         else:
             action_dim = 2
@@ -238,6 +243,7 @@ class SeekerSimEnv(gym.Env):
         print("Building simulation environment")
         self.physics.resetSimulation()
         self.physics.setTimeStep(self.timeStep)
+        self.physics.setPhysicsEngineParameter(numSubSteps=50) # Adjust until stable
         self.buildingIds = self.physics.loadSDF(os.path.join(self.urdfRoot, "output.sdf"))
 
         target_pos = gen_start_position(.25, self.floor) + [.25]
@@ -269,7 +275,6 @@ class SeekerSimEnv(gym.Env):
         if self.debug:
             print("Reset after %i steps in %.2f seconds"%(steps,duration))
 
-        self.last_action = np.zeros((2,1))
         self.startedTime = time.time()
         self.envStepCounter = 0
 
@@ -277,7 +282,8 @@ class SeekerSimEnv(gym.Env):
         self.reset_robot_position()
         self.reset_target_position()
 
-        for i in range(100):
+        # Allow all the objects to reach equilibrium
+        for i in range(10):
             self.physics.stepSimulation()
 
         state = self.get_state()
@@ -365,19 +371,10 @@ class SeekerSimEnv(gym.Env):
             "rel_target_orientation": math.atan2(tarPosInCar[1], tarPosInCar[0]),
             "rel_target_distance": math.sqrt(tarPosInCar[1]**2 + tarPosInCar[0]**2),
             "lidar": lidar,
-            "is_crashed": False,
-            "is_at_target": False,
+            "is_crashed": self.is_crashed(),
+            "is_at_target": self.is_at_target(),
             "is_broken": False
         }
-
-        # Check if the robot has crashed
-        for observation in lidar:
-            if -1 < observation and observation < COLLISION_DISTANCE:
-                state["is_crashed"] = True
-
-        # Check if the robot has reached the target
-        if state["rel_target_distance"] < TARGET_DISTANCE_THRESHOLD:
-            state["is_at_target"] = True
 
         # Check if the simulation is broken
         if robot_pos[2] < 0 or robot_pos[2] > 1:
@@ -436,16 +433,15 @@ class SeekerSimEnv(gym.Env):
         # Technically we should check for crash or target state in the loop, but that is slow
         for i in range(self.actionRepeat):
             self.physics.stepSimulation()
+            if self.is_crashed() or self.is_at_target():
+                break
 
         state = self.get_state()
         observation = self.get_observation(state)
-        reward = self.reward(state)
+        reward = self.reward(state, action)
         done = self.termination(state)
 
         self.envStepCounter += 1
-
-        # Store for next reward calculation
-        self.last_action = action
 
         # Respawn the target and clear the isAtTarget flag
         if state["is_at_target"]:
@@ -454,12 +450,23 @@ class SeekerSimEnv(gym.Env):
         return observation, reward, done, {}
 
 
+    def is_crashed(self):
+        walls = self.buildingIds[0];
+        contact = self.physics.getContactPoints(self.robot.racecarUniqueId, walls)
+        return len(contact)>0
+
+
+    def is_at_target(self):
+        contact = self.physics.getContactPoints(self.robot.racecarUniqueId, self.targetUniqueId)
+        return len(contact)>0
+
+
     def termination(self, state):
         """Return True if the episode should end"""
         return state["is_crashed"] or state["is_broken"]
 
 
-    def reward(self, state):
+    def reward(self, state, action):
         """
         Return the reward:
             Target Reward: 1 if target reached, else 0
@@ -482,17 +489,17 @@ class SeekerSimEnv(gym.Env):
 
         # There is a cost to acceleration and turning
         # We use the squared cost to incentivise careful use of battery resources
-        battery_reward = BATTERY_WEIGHT*np.sum(positive_component(np.abs(self.last_action) - BATTERY_THRESHOLD))
+        battery_reward = BATTERY_WEIGHT*np.sum(positive_component(np.abs(action) - BATTERY_THRESHOLD))
 
         # There is an additional cost due to rotation
-        rotation_reward = ROTATION_COST * abs(self.robot.last_action[0])
+        rotation_reward = ROTATION_COST * abs(action[0])
 
         # Total reward is the sum of components
         reward = target_reward + crashed_reward + battery_reward + rotation_reward
 
         if self.debug:
             print("---- Step %i Summary -----"%self.envStepCounter)
-            print("Action: ",self.robot.last_action)
+            print("Action: ", action)
             print("Target Reward:  %.3f"%target_reward)
             print("Crashed Reward: %.3f"%crashed_reward)
             print("Battery Reward: %.3f"%battery_reward)

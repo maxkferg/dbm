@@ -42,7 +42,7 @@ def run(args):
         experiments = yaml.load(stream)
 
     for experiment, settings in experiments.items():
-        settings["env"] = SeekerSimEnv 
+        settings["env"] = SeekerSimEnv
 
     pprint(experiments)
     run_experiments(experiments, queue_trials=True)

@@ -53,11 +53,11 @@ python train.py
 ```sh
 # Create or update the cluster. When the command finishes, it will print
 # out the command that can be used to SSH into the cluster head node.
-$ ray up cluster.yaml
+$ ray up configs/cluster.yaml
 
 # Reconfigure autoscaling behavior without interrupting running jobs
-$ ray up cluster.yaml --max-workers=N --no-restart
+$ ray up configs/cluster.yaml --max-workers=N --no-restart
 
 # Teardown the cluster
-$ ray down cluster.yaml
+$ ray down configs/cluster.yaml
 ```

@@ -6,6 +6,8 @@ gcloud compute --project "stanford-projects" scp --zone "us-west1-b" --recurse "
 
 
 rllib rollout --checkpoint ~/ray_results/demo/experiment_state-2019-01-26_18-46-51.json
+
+python rollout.py
 """
 import io
 import os
@@ -20,40 +22,47 @@ from gym.envs.registration import registry
 from ray.rllib.rollout import rollout
 from ray.rllib.agents.registry import get_agent_class
 from simulation.SeekerSimEnv import SeekerSimEnv
-from gym.envs.registration import registry
+from ray.tune.registry import register_env
 
-def register(id, *args, **kvargs):
-    if id in registry.env_specs:
-        return
-    else:
-        return gym.envs.registration.register(id, *args, **kvargs)
+CHECKPOINT = "~/ray_results/seeker-ppo-gae/PPO_SeekerSimEnv_0_2019-02-04_08-34-32qf6patqm/checkpoint_780/checkpoint-780"
+CHECKPOINT = os.path.expanduser(CHECKPOINT)
+ENVIRONMENT = "SimSeekerEnv-v0"
 
-ENV_NAME = 'SeekerSimEnv-v0'
-register(id=ENV_NAME,
-     entry_point='simulation.SeekerSimEnv:SeekerSimEnv',
-     reward_threshold=.5)
+def get_params(checkpoint):
+    config_dir = os.path.dirname(checkpoint)
+    config_path = os.path.join(config_dir, "params.json")
+    if not os.path.exists(config_path):
+        config_path = os.path.join(config_dir, "../params.json")
+    if not os.path.exists(config_path):
+        raise ValueError(
+            "Could not find params.json in either the checkpoint dir or "
+            "its parent directory.")
+    with open(config_path, 'r') as stream:
+        return json.load(stream)
 
 
-CHECKPOINT = "/Users/maxkferg/ray_results/seeker-appo/APPO_SeekerSimEnv_0_2019-01-27_23-46-38eufch4md/checkpoint_610/checkpoint-610"
-
-conf = os.path.join(os.path.dirname(os.path.dirname(CHECKPOINT)),"params.json")
-with open(conf, 'r') as stream:
-    config = json.load(stream)
+config = get_params(CHECKPOINT)
 config["num_workers"] = 1
 config["monitor"] = True
+config["env"] = ENVIRONMENT
 
 
-AGENT = "APPO"
+AGENT = "PPO"
 RENDER = True
-OUT = "./stats"
+OUT = "./stats/output.json"
 
 
+def seeker_env_creator(env_config):
+    env_config["renders"] = True
+    return SeekerSimEnv(env_config)
 
+
+register_env(ENVIRONMENT, seeker_env_creator)
 
 
 ray.init()
 cls = get_agent_class(AGENT)
-agent = cls(env=ENV_NAME, config=config)
+agent = cls(env=ENVIRONMENT, config=config)
 agent.restore(CHECKPOINT)
 num_steps = int(10000)
 
@@ -61,4 +70,4 @@ num_steps = int(10000)
 
 
 if __name__ == "__main__":
-    rollout(agent, ENV_NAME, num_steps, OUT, RENDER)
+    rollout(agent, ENVIRONMENT, num_steps, OUT, RENDER)
