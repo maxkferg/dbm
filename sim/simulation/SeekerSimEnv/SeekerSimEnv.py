@@ -175,7 +175,7 @@ class SeekerSimEnv(gym.Env):
 
         self.timeStep = config.get("timestep", 0.1) # Simulate every 0.1 seconds
         self.urdfRoot = config.get("urdfRoot", URDF_ROOT)
-        self.actionRepeat = config.get("actionRepeat", 4) # Choose an action every 0.4 seconds
+        self.actionRepeat = config.get("actionRepeat", 2) # Choose an action every 0.2 seconds
         self.isEnableSelfCollision = config.get("isEnableSelfCollision", False)
         self.debug = config.get("debug", False)
         self.renders = config.get("renders",False)
@@ -258,7 +258,7 @@ class SeekerSimEnv(gym.Env):
         print("Building simulation environment")
         self.physics.resetSimulation()
         self.physics.setTimeStep(self.timeStep)
-        self.physics.setPhysicsEngineParameter(numSubSteps=50) # Adjust until stable
+        self.physics.setPhysicsEngineParameter(numSubSteps=20) # Adjust until stable
         self.buildingIds = self.physics.loadSDF(os.path.join(self.urdfRoot, "output.sdf"))
 
         target_pos = gen_start_position(.25, self.floor) + [.25]
@@ -273,10 +273,9 @@ class SeekerSimEnv(gym.Env):
         }
         self.robot = Turtlebot(self.physics, config=config)
         self.robot.set_position(car_pos)
-
         self.physics.setGravity(0, 0, -10)
 
-        for i in range(100):
+        for i in range(10):
             self.physics.stepSimulation()
 
         state = self.get_state()
@@ -458,9 +457,13 @@ class SeekerSimEnv(gym.Env):
 
         # Keep the simulation loop as lean as possible.
         # Technically we should check for crash or target state in the loop, but that is slow
+        is_crashed = False
+        is_at_target = False
         for i in range(self.actionRepeat):
             self.physics.stepSimulation()
-            if self.is_crashed() or self.is_at_target():
+            is_crashed = self.is_crashed()
+            is_at_target = self.is_at_target()
+            if is_crashed or is_at_target:
                 break
 
         state = self.get_state()

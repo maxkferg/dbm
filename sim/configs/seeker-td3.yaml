@@ -1,10 +1,10 @@
 # This configuration can expect to reach -160 reward in 10k-20k timesteps
 seeker-td3:
     env: SeekerSimEnv-v0
+    checkpoint_freq: 100
     run: DDPG
     stop:
         episode_reward_mean: 2
-        time_total_s: 6000 # 100 minutes
     config:
         # === Tricks ===
         twin_q: True
@@ -13,28 +13,37 @@ seeker-td3:
         act_noise: 0.1
         target_noise: 0.2
         noise_clip: 0.5
+        horizon: 100
 
         # === Model ===
-        actor_hiddens: [64, 64]
-        critic_hiddens: [64, 64]
-        n_step: 1
+        actor_hiddens: [400, 300]
+        critic_hiddens: [400, 300]
+        n_step: 4
         model: {}
         gamma: 0.99
         env_config: {}
 
+        # === Evaluation ===
+        # Evaluate with epsilon=0 every `evaluation_interval` training iterations.
+        # The evaluation stats will be reported under the "evaluation" metric key.
+        # Note that evaluation is currently not parallelized, and that for Ape-X
+        # metrics are already only reported for the lowest epsilon workers.
+        #evaluation_interval: 5
+        #evaluation_num_episodes: 10
+
         # === Exploration ===
         schedule_max_timesteps: 100000
-        timesteps_per_iteration: 600
-        exploration_fraction: 0.1
+        timesteps_per_iteration: 1000
+        exploration_fraction: 0.2
         exploration_final_eps: 0.02
-        noise_scale: 0.1
+        noise_scale: 0.2
         exploration_theta: 0.15
         exploration_sigma: 0.2
         target_network_update_freq: 0
-        tau: 0.001
+        tau: 0.005
 
         # === Replay buffer ===
-        buffer_size: 100000
+        buffer_size: 5000000
         prioritized_replay: True
         prioritized_replay_alpha: 0.6
         prioritized_replay_beta: 0.4
@@ -42,10 +51,10 @@ seeker-td3:
         clip_rewards: False
 
         # === Optimization ===
-        lr: 0.0001
+        lr: 0.00001
         actor_loss_coeff: 0.1
         critic_loss_coeff: 1.0
-        use_huber: True
+        use_huber: False
         huber_threshold: 1.0
         l2_reg: 0.000001
         learning_starts: 500
@@ -53,7 +62,7 @@ seeker-td3:
         train_batch_size: 64
 
         # === Parallelism ===
-        num_workers: 0
+        num_workers: 6
         num_gpus_per_worker: 0
         optimizer_class: "SyncReplayOptimizer"
         per_worker_exploration: False
