@@ -56,12 +56,12 @@ def experimental_config(config):
             'episode_reward_mean': 1,
             'time_total_s': 3600,
         },
-        'buffer_size': grid_search(500000, 5000000), 
-        'train_batch_size': grid_search(64,128,512),
-        'lr': grid_search(0.00001, 0.0005, 0.0001),
-        'tau': grid_search(0.005, 0.001),
-        'n_step': grid_search(1,2,4),
-        'noise_scale': grid_search(0.1,0.2,0.4)
+        'buffer_size': grid_search([500000, 5000000]), 
+        'train_batch_size': grid_search([64, 128, 512]),
+        'lr': grid_search([0.00001, 0.0005, 0.0001]),
+        'tau': grid_search([0.005, 0.001]),
+        'n_step': grid_search([1, 2, 4]),
+        'noise_scale': grid_search([0.1, 0.2, 0.4])
     }
     for k,v in modify.items():
         config['seeker-td3'][k] = v
