@@ -5,6 +5,7 @@ seeker-td3:
     run: DDPG
     stop:
         episode_reward_mean: 2
+    num_samples: 10
     config:
         # === Tricks ===
         twin_q: True
