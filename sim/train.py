@@ -62,8 +62,8 @@ def run_pbt(args):
             "tau": [0.005, 0.001],
             "gamma": [0.99, 0.995],
             "n_step": [1, 2, 3, 4],
-            "act_noise": [0.05, 0.1]
-            "target_noise": [0.1, 0.2]
+            "act_noise": [0.05, 0.1],
+            "target_noise": [0.1, 0.2],
             "train_batch_size": [64, 128, 512],
             "l2_reg": [1e-5, 1e-6, 1e-7],
             "noise_scale": lambda: random.uniform(0.0, 0.5),
