@@ -18,7 +18,7 @@ from pprint import pprint
 from gym.spaces import Discrete, Box
 from gym.envs.registration import EnvSpec
 from gym.envs.registration import registry
-from ray import tune
+from ray.tune.schedulers import PopulationBasedTraining
 from ray.tune import run_experiments
 from ray.tune.config_parser import make_parser
 from ray.tune import grid_search
@@ -52,25 +52,32 @@ def run(args):
     run_experiments(experiments, queue_trials=True, resume="prompt")
 
 
-def experimental_config(config):
-    changes = {
-        'stop': {
-            'episode_reward_mean': 1,
-            'time_total_s': 3600,
-        },
-        'config': {
-            'buffer_size': tune.sample_from([500000, 5000000]), 
-            'train_batch_size': tune.sample_from([64, 128, 512]),
-            'lr': tune.sample_from([0.00001, 0.0005, 0.0001]),
-            'tau': tune.sample_from([0.005, 0.001]),
-            'n_step': tune.sample_from([1, 2, 4]),
-            'noise_scale': tune.sample_from([0.1, 0.2, 0.4])
-        },
-    }
-    for context in changes.keys():
-        for k,v in changes[context].items():
-            config['seeker-td3'][context][k] = v
-    return config
+def run_pbt(args):
+    pbt_scheduler = PopulationBasedTraining(
+        time_attr='time_total_s',
+        reward_attr='episode_reward_mean',
+        perturbation_interval=1800.0,
+        hyperparam_mutations={
+            "lr": [1e-3, 5e-4, 1e-4, 5e-5, 1e-5],
+            "tau": [0.005, 0.001],
+            "gamma": [0.99, 0.995],
+            "n_step": [1, 2, 3, 4],
+            "act_noise": [0.05, 0.1]
+            "target_noise": [0.1, 0.2]
+            "train_batch_size": [64, 128, 512],
+            "l2_reg": [1e-5, 1e-6, 1e-7],
+            "noise_scale": lambda: random.uniform(0.0, 0.5),
+        })
+    # Prepare the default settings
+    with open(args.config, 'r') as stream:
+        experiments = yaml.load(stream)
+
+    for experiment, settings in experiments.items():
+        settings["env"] = SeekerSimEnv
+
+    run_experiments(experiments, scheduler=pbt_scheduler)
+
+
 
 
 if __name__ == "__main__":
@@ -78,4 +85,4 @@ if __name__ == "__main__":
     parser = create_parser()
     args = parser.parse_args()
     if not args.node:
-        run(args)
+        run_pbt(args)

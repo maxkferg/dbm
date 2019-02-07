@@ -1,7 +1,7 @@
 # This configuration can expect to reach -160 reward in 10k-20k timesteps
 seeker-td3:
     env: SeekerSimEnv-v0
-    checkpoint_freq: 100
+    checkpoint_freq: 10
     run: DDPG
     stop:
         episode_reward_mean: 2
@@ -44,7 +44,7 @@ seeker-td3:
         tau: 0.005
 
         # === Replay buffer ===
-        buffer_size: 5000000
+        buffer_size: 500000
         prioritized_replay: True
         prioritized_replay_alpha: 0.6
         prioritized_replay_beta: 0.4
@@ -63,7 +63,7 @@ seeker-td3:
         train_batch_size: 64
 
         # === Parallelism ===
-        num_workers: 6
+        num_workers: 0
         num_gpus_per_worker: 0
         optimizer_class: "SyncReplayOptimizer"
         per_worker_exploration: False
