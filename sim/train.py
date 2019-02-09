@@ -37,6 +37,11 @@ def create_parser():
         default=False,
         type=bool,
         help="Run population based training.")
+        parser.add_argument(
+        "--dev",
+        default=False,
+        type=bool,
+        help="Use development cluster with local redis server")
     return parser
 
 
@@ -76,9 +81,12 @@ def run_pbt(args):
 
 
 if __name__ == "__main__":
-    ray.init()
     parser = create_parser()
     args = parser.parse_args()
+    if args.dev:
+        ray.init()
+    else:
+        ray.init("localhost:6379")
     if args.pbt:
         run_pbt(args)
     else:
