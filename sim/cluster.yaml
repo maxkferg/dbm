@@ -1,5 +1,5 @@
 # An unique identifier for the head node and workers of this cluster.
-cluster_name: gpu
+cluster_name: gpu-cluster
 
 # The minimum number of workers nodes to launch in addition to the head
 # node. This number should be >= 0.
@@ -51,7 +51,7 @@ auth:
 # For more documentation on available fields, see:
 # http://boto3.readthedocs.io/en/latest/reference/services/ec2.html#EC2.ServiceResource.create_instances
 head_node:
-    InstanceType: m5.4xlarge
+    InstanceType: p3.2xlarge
     ImageId: ami-3b6bce43  # Amazon Deep Learning AMI (Ubuntu)
 
     # You can provision additional disk space with a conf as follows
@@ -91,8 +91,6 @@ setup_commands:
     # Note: if you're developing Ray, you probably want to create an AMI that
     # has your Ray repo pre-cloned. Then, you can replace the pip installs
     # below with a git checkout <your_sha> (and possibly a recompile).
-    - echo 'export PATH="$HOME/anaconda3/envs/tensorflow_p36/bin:$PATH"' >> ~/.bashrc
-    - echo 'source activate tensorflow_p36 && cd dbm/sim' >> ~/.bashrc
     # - pip install -U https://s3-us-west-2.amazonaws.com/ray-wheels/latest/ray-0.6.2-cp27-cp27mu-manylinux1_x86_64.whl
     # - pip install -U https://s3-us-west-2.amazonaws.com/ray-wheels/latest/ray-0.6.2-cp35-cp35m-manylinux1_x86_64.whl
     # Consider uncommenting these if you also want to run apt-get commands during setup
@@ -100,7 +98,8 @@ setup_commands:
     #- sudo pkill -9 dpkg || true
     #- sudo dpkg --configure -a
 
-    - git clone https://github.com/maxkferg/dbm.git
+    - if cd dbm; then git pull; else git clone https://github.com/maxkferg/dbm.git
+    - echo 'source activate tensorflow_p36 && cd dbm/sim' >> ~/.bashrc
 
     - source activate tensorflow_p36
     - pip install -U https://s3-us-west-2.amazonaws.com/ray-wheels/latest/ray-0.6.2-cp36-cp36m-manylinux1_x86_64.whl
