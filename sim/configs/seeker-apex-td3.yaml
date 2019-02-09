@@ -3,7 +3,7 @@ seeker-apex-td3:
     run: APEX_DDPG
     checkpoint_freq: 100
     stop:
-        episode_reward_mean: 1.2
+        episode_reward_mean: 5
     config:
         # === Tricks ====
         twin_q: True
@@ -23,7 +23,7 @@ seeker-apex-td3:
         env_config: {}
 
         # === Exploration ===
-        schedule_max_timesteps: 5000000
+        schedule_max_timesteps: 50000000
         timesteps_per_iteration: 600
         exploration_fraction: 0.1
         exploration_final_eps: 0.02
@@ -55,5 +55,5 @@ seeker-apex-td3:
         min_iter_time_s: 1
 
         # === Parallelism ===
-        num_gpus: 1
-        num_workers: 200
+        num_gpus: 4
+        num_workers: 256

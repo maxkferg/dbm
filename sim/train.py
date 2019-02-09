@@ -37,7 +37,7 @@ def create_parser():
         default=False,
         type=bool,
         help="Run population based training.")
-        parser.add_argument(
+    parser.add_argument(
         "--dev",
         default=False,
         type=bool,
