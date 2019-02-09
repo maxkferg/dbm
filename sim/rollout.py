@@ -30,7 +30,7 @@ from ray.tune.registry import register_env
 #CHECKPOINT = "~/ray_results/seeker-appo/APPO_SeekerSimEnv_0_2019-01-27_23-46-38eufch4md/checkpoint_860/checkpoint-860"
 #CHECKPOINT = "~/ray_results/seeker-apex-td3/APEX_DDPG_SeekerSimEnv_0_2019-02-05_09-48-37s38jziex/checkpoint_700/checkpoint-700"
 CHECKPOINT = "~/ray_results/humanoid-ppo-gae/PPO_SeekerSimEnv_0_2019-02-04_08-34-32qf6patqm/checkpoint_780/checkpoint-780"
-
+CHECKPOINT = "~/Google Drive/seeker-apex-td3/ray_results/APEX_DDPG_SeekerSimEnv_0_2019-02-09_03-26-01ze5dseda/checkpoint_100/checkpoint-100"
 
 CHECKPOINT = os.path.expanduser(CHECKPOINT)
 ENVIRONMENT = "SimSeekerEnv-v0"

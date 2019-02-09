@@ -51,7 +51,7 @@ auth:
 # For more documentation on available fields, see:
 # http://boto3.readthedocs.io/en/latest/reference/services/ec2.html#EC2.ServiceResource.create_instances
 head_node:
-    InstanceType: p3.2xlarge
+    InstanceType: g3.8xlarge #p3.2xlarge
     ImageId: ami-3b6bce43  # Amazon Deep Learning AMI (Ubuntu)
 
     # You can provision additional disk space with a conf as follows
@@ -67,7 +67,7 @@ head_node:
 # For more documentation on available fields, see:
 # http://boto3.readthedocs.io/en/latest/reference/services/ec2.html#EC2.ServiceResource.create_instances
 worker_nodes:
-    InstanceType: m4.16xlarge
+    InstanceType: m5.24xlarge
     ImageId: ami-3b6bce43  # Amazon Deep Learning AMI (Ubuntu)
 
     # Run workers on spot by default. Comment this out to use on-demand.
@@ -102,7 +102,6 @@ setup_commands:
     
     - echo 'export PATH="$HOME/anaconda3/envs/tensorflow_p36/bin:$PATH"' >> ~/.bashrc
     - echo 'source activate tensorflow_p36 && cd ~/dbm/sim' >> ~/.bashrc
-
 
     - source activate tensorflow_p36
     - pip install -U https://s3-us-west-2.amazonaws.com/ray-wheels/latest/ray-0.6.2-cp36-cp36m-manylinux1_x86_64.whl
