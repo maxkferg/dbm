@@ -63,7 +63,7 @@ seeker-td3:
         train_batch_size: 64
 
         # === Parallelism ===
-        num_workers: 6
+        num_workers: 24
         num_gpus_per_worker: 0
         optimizer_class: "SyncReplayOptimizer"
         per_worker_exploration: False
