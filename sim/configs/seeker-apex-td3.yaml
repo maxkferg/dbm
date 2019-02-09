@@ -1,7 +1,7 @@
 seeker-apex-td3:
     env: SeekerSimEnv-v0
     run: APEX_DDPG
-    checkpoint_freq: 100
+    checkpoint_freq: 50
     stop:
         episode_reward_mean: 5
     config:
@@ -55,5 +55,5 @@ seeker-apex-td3:
         min_iter_time_s: 1
 
         # === Parallelism ===
-        num_gpus: 4
+        num_gpus: 2
         num_workers: 256
