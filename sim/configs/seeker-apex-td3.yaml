@@ -15,25 +15,25 @@ seeker-apex-td3:
         horizon: 100
 
         # === Model ===
-        actor_hiddens: [128, 64]
-        critic_hiddens: [128, 64]
+        actor_hiddens: [400, 300]
+        critic_hiddens: [400, 300]
         n_step: 4
         model: {}
         gamma: 0.99
         env_config: {}
 
         # === Exploration ===
-        schedule_max_timesteps: 50000000
-        exploration_fraction: 0.4
-        exploration_final_eps: 0.02
-        noise_scale: 0.1
+        schedule_max_timesteps: 200000000 # 200 million
+        exploration_fraction: 0.5
+        exploration_final_eps: 0.1
+        noise_scale: 0.3
         exploration_theta: 0.15
         exploration_sigma: 0.2
         target_network_update_freq: 50000
         tau: 0.001 # 1
 
         # === Replay buffer ===
-        buffer_size: 2000000
+        buffer_size: 8000000
         prioritized_replay: True
         prioritized_replay_alpha: 0.6
         prioritized_replay_beta: 0.4
@@ -49,7 +49,7 @@ seeker-apex-td3:
         use_huber: True
         huber_threshold: 1.0
         l2_reg: 0.000001
-        learning_starts: 100000
+        learning_starts: 4000000
         sample_batch_size: 50
         train_batch_size: 2048
         min_iter_time_s: 30
