@@ -1,5 +1,5 @@
 # An unique identifier for the head node and workers of this cluster.
-cluster_name: gpu-explore
+cluster_name: gpu-cluster
 
 # The minimum number of workers nodes to launch in addition to the head
 # node. This number should be >= 0.
@@ -51,7 +51,7 @@ auth:
 # For more documentation on available fields, see:
 # http://boto3.readthedocs.io/en/latest/reference/services/ec2.html#EC2.ServiceResource.create_instances
 head_node:
-    InstanceType: g3.8xlarge #p3.2xlarge
+    InstanceType: p3.2xlarge #p3.2xlarge
     ImageId: ami-3b6bce43  # Amazon Deep Learning AMI (Ubuntu)
 
     # You can provision additional disk space with a conf as follows
@@ -104,7 +104,7 @@ setup_commands:
     - echo 'export PATH="$HOME/anaconda3/envs/tensorflow_p36/bin:$PATH"' >> ~/.bashrc
 
     - source activate tensorflow_p36
-    - pip install -U https://s3-us-west-2.amazonaws.com/ray-wheels/latest/ray-0.6.2-cp36-cp36m-manylinux1_x86_64.whl
+    - pip install -U https://s3-us-west-2.amazonaws.com/ray-wheels/latest/ray-0.6.3-cp36-cp36m-manylinux1_x86_64.whl
     - pip install lz4 pyyaml opencv-python gym pillow pybullet
     - pip install psutil
 
