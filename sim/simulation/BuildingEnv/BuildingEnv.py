@@ -82,8 +82,14 @@ class SearchGrid(AStar):
         """
         Return the node closest to v0
         """
+
         cx = int((v0[0]-self.min_x)/self.size)
         cy = int((v0[1]-self.min_y)/self.size)
+        # Clip at the edges
+        nx = len(self.nodes)
+        ny = len(self.nodes[0])
+        cx = max(min(cx, nx-1), 0)
+        cy = max(min(cy, ny-1), 0)
         return self.nodes[cx][cy]
 
 

@@ -76,7 +76,7 @@ class ViewWindow():
 
 class MapWindow():
     times = 1
-    timestart=time.clock()
+    timestart = time.clock()
 
     def __init__(self, width, height):
         self.action = [0,0]
