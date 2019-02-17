@@ -6,8 +6,7 @@ seeker-appo:
         episode_reward_mean: 1.0
         timesteps_total: 25000000
     config:
-        monitor: True
-        horizon: 100
+        monitor: False
         sample_batch_size: 100
         train_batch_size: 1500
         num_workers: 4

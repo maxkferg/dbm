@@ -2,7 +2,7 @@
 Train an agent on SeekerSimEnv
 
 # For a lightweight test
-python train.py configs/seeker-test.yaml
+python train.py configs/seeker-test.yaml --dev=True
 
 # For a GPU driven large test
 python train.py configs/seeker-gpu.yaml
@@ -22,7 +22,7 @@ from ray.tune.schedulers import PopulationBasedTraining
 from ray.tune import run_experiments
 from ray.tune.config_parser import make_parser
 from ray.tune import grid_search
-from simulation.SeekerSimEnv import SeekerSimEnv
+from simulation.BuildingEnv import BuildingEnv
 
 def create_parser():
     parser = argparse.ArgumentParser(
@@ -50,7 +50,7 @@ def run(args):
         experiments = yaml.load(stream)
 
     for experiment, settings in experiments.items():
-        settings["env"] = SeekerSimEnv
+        settings["env"] = BuildingEnv
 
     pprint(experiments)
     run_experiments(experiments, queue_trials=True, resume="prompt")
@@ -73,7 +73,7 @@ def run_pbt(args):
         experiments = yaml.load(stream)
 
     for experiment, settings in experiments.items():
-        settings["env"] = SeekerSimEnv
+        settings["env"] = BuildingSimEnv
 
     run_experiments(experiments, scheduler=pbt_scheduler)
 
