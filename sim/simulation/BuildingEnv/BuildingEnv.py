@@ -82,7 +82,6 @@ class SearchGrid(AStar):
         """
         Return the node closest to v0
         """
-
         cx = int((v0[0]-self.min_x)/self.size)
         cy = int((v0[1]-self.min_y)/self.size)
         # Clip at the edges
@@ -184,9 +183,12 @@ class BuildingEnvBase(SeekerSimEnv):
         nodes = self.grid.get_path(base_pos, target_pos)
 
         # Create new checkpoints
-        for i,node in enumerate(nodes):
-            if i>0 and i%3 == 0:
-                self.checkpoints.append(self.physics.loadURDF(path, (node.x, node.y, 0.25)))
+        if nodes is None:
+            print("AStar Failed")
+        else:
+            for i,node in enumerate(nodes):
+                if i>0 and i%3 == 0:
+                    self.checkpoints.append(self.physics.loadURDF(path, (node.x, node.y, 0.25)))
 
 
 
