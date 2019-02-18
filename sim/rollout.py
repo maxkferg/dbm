@@ -4,7 +4,7 @@ Example of a custom gym environment. Run this for a demo.
 Copying checkpoint files from the server
 gcloud compute --project "stanford-projects" scp --zone "us-west1-b" --recurse "ray-trainer:~/ray_results/*" ~/ray_results
 
-ray rsync-down ray_results ~/ray_results  
+ray rsync-down cluster.yaml ray_results ~/  
 
 
 python rollout.py --run APEX_DDPG --env BuildingEnv-v0 --steps 10000
@@ -27,28 +27,23 @@ from ray.tune.registry import register_env
 
 EXAMPLE_USAGE = """
 Example Usage via RLlib CLI:
-    python rollout.py --run DDPG_APEX --env BuildingEnv-v0 --steps 100 --no-render
+    python rollout.py --run APEX_DDPG --env BuildingEnv-v0 --steps 1000
 """
 
-#CHECKPOINT = "~/ray_results/seeker-ppo-gae/PPO_SeekerSimEnv_0_2019-02-04_08-34-32qf6patqm/checkpoint_780/checkpoint-780"
-#CHECKPOINT = "~/ray_results/seeker-appo/APPO_SeekerSimEnv_0_2019-01-27_23-46-38eufch4md/checkpoint_860/checkpoint-860"
-#CHECKPOINT = "~/ray_results/seeker-apex-td3/APEX_DDPG_SeekerSimEnv_0_2019-02-05_09-48-37s38jziex/checkpoint_700/checkpoint-700"
-#CHECKPOINT = "~/ray_results/humanoid-ppo-gae/PPO_SeekerSimEnv_0_2019-02-04_08-34-32qf6patqm/checkpoint_780/checkpoint-780"
-#CHECKPOINT = "~/Google Drive/seeker-apex-td3/ray_results/APEX_DDPG_SeekerSimEnv_0_2019-02-09_03-26-01ze5dseda/checkpoint_100/checkpoint-100"
-CHECKPOINT = "~/ray_results/ray_results/seeker-apex-td3/APEX_DDPG_BuildingEnv_0_2019-02-17_10-28-35dht3zbpt/checkpoint_450/checkpoint-450"
+CHECKPOINT = "~/ray_results/seeker-apex-td3/APEX_DDPG_BuildingEnv_0_2019-02-18_04-51-11e4pm2tph/checkpoint_350/checkpoint-350"
 
 
 CHECKPOINT = os.path.expanduser(CHECKPOINT)
 ENVIRONMENT = "BuildingEnv-v0"
 
-RESET_ON_TARGET = False
+RESET_ON_TARGET = True
 DEFAULT_TIMESTEP = 0.1
 FRAME_MULTIPLIER = 1
 EVAL_TIMESTEP = DEFAULT_TIMESTEP/FRAME_MULTIPLIER
 
 
 def building_env_creator(env_config):
-    env_config['timestep'] = EVAL_TIMESTEP
+    #env_config['timestep'] = EVAL_TIMESTEP
     env_config['resetOnTarget'] = RESET_ON_TARGET
     return BuildingEnv(env_config)
 

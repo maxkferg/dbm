@@ -145,10 +145,9 @@ class BuildingEnvBase(SeekerSimEnv):
         path = os.path.join(self.urdf_root, "checkpoint.urdf")
 
         # Remove old checkpoints
-        for ckpt in reversed(self.checkpoints):
-            self.physics.removeBody(ckpt)
-            self.checkpoints.remove(ckpt)
-        
+        [self.physics.removeBody(ckpt) for ckpt in self.checkpoints]
+        self.checkpoints.clear()
+
         # Use AStar to find checkpoint locations
         base_pos, carorn = self.physics.getBasePositionAndOrientation(self.robot.racecarUniqueId)
         target_pos, target_orn = self.physics.getBasePositionAndOrientation(self.targetUniqueId)
@@ -161,7 +160,6 @@ class BuildingEnvBase(SeekerSimEnv):
             for i,node in enumerate(nodes):
                 if i>0 and i%3 == 0:
                     self.checkpoints.append(self.physics.loadURDF(path, (node.x, node.y, 0.25)))
-
 
 
 
@@ -208,7 +206,6 @@ class BuildingEnv(BuildingEnvBase):
             #xmin, ymin, zmin = np.min([v0, v1, v2], axis=0).tolist()
             #xmax, ymax, zmax = np.max([v0, v1, v2], axis=0).tolist()
             draw.rectangle([(xmin,ymin), (xmax,ymax)], fill="#ff0000")
-        print("ROBOT:",base_pos)
         draw.ellipse(robot, fill = 'blue', outline ='blue')
         draw.ellipse(target, fill = 'green', outline ='green')
 

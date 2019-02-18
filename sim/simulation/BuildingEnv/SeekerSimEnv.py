@@ -57,7 +57,7 @@ class SeekerSimEnv(Maze):
 
         self.targetUniqueId = -1
         self.robot = None               # The controlled robot
-        self.checkpoints = []           # Each checkpoint is given an id
+        self.checkpoints = []           # Each checkpoint is given an id. Closest checkpoints are near zero index
         self.buildingIds = []           # Each plane is given an id
         self.width = 320                # The resolution of the sensor image (320x240)
         self.height = 240
@@ -244,16 +244,25 @@ class SeekerSimEnv(Maze):
 
         lidar = self.read_lidar_values(robot_pos, robot_orn)
 
-        # Checkpoint distances
+        # Iterate through checkpoints appending them to the distance list
+        # Delete any checkpoints close to the robot, and the subsequent checkpoints
         ckpt_positions = []
-        for i,ckpt in enumerate(self.checkpoints):
+        is_at_checkpoint = False
+        for ckpt in reversed(self.checkpoints):
             pos, _ = self.physics.getBasePositionAndOrientation(ckpt)
             rel_pos = np.array(pos) - np.array(robot_pos)
-            ckpt_positions.append(tuple(rel_pos[0:2]))
+            rel_distance = np.linalg.norm(rel_pos)
+            if rel_distance < CHECKPOINT_DISTANCE:
+                is_at_checkpoint = True
+            if is_at_checkpoint:
+                self.checkpoints.remove(ckpt)
+                self.physics.removeBody(ckpt)
+            else:
+                ckpt_positions.append(tuple(rel_pos[0:2]))
 
         # Sort checkpoints. Pad with zeros until length n_ckpt
-        ckpt_positions.sort(key = lambda p: np.linalg.norm(ckpt_positions))
-        ckpt_positions += [(0,0)]*self.ckpt_count
+        # ckpt_positions.sort(key = lambda p: -np.linalg.norm(ckpt_positions))
+        ckpt_positions = list(reversed(ckpt_positions)) + [(0,0)]*self.ckpt_count
         ckpt_positions = ckpt_positions[:self.ckpt_count]
 
         state = {
@@ -267,6 +276,7 @@ class SeekerSimEnv(Maze):
             "rel_target_orientation": math.atan2(tarPosInCar[1], tarPosInCar[0]),
             "rel_target_distance": math.sqrt(tarPosInCar[1]**2 + tarPosInCar[0]**2),
             "lidar": lidar,
+            "is_at_checkpoint": is_at_checkpoint,
             "is_crashed": self.is_crashed(),
             "is_at_target": self.is_at_target(),
             "is_broken": False,
@@ -394,16 +404,11 @@ class SeekerSimEnv(Maze):
         else:
             crashed_reward = 0
 
-        # Checkpoint reward
-        checkpoint_reward = 0
-        for checkpoint in reversed(self.checkpoints):
-            ckpt_pos, _ = self.physics.getBasePositionAndOrientation(checkpoint)
-            rel_ckpt_pos = np.array(ckpt_pos) - np.array(state["robot_pos"])
-            ckpt_distance = np.linalg.norm(rel_ckpt_pos)
-            if ckpt_distance < CHECKPOINT_DISTANCE:
-                checkpoint_reward += CHECKPOINT_REWARD
-                self.checkpoints.remove(checkpoint)
-                self.physics.removeBody(checkpoint)
+        # Reward for reaching a checkpoint
+        if state["is_at_checkpoint"]:
+            checkpoint_reward = CHECKPOINT_REWARD
+        else:
+            checkpoint_reward = 0
 
         # There is a cost to acceleration and turning
         # We use the squared cost to incentivise careful use of battery resources
