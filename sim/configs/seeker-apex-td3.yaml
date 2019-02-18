@@ -3,7 +3,7 @@ seeker-apex-td3:
     run: APEX_DDPG
     checkpoint_freq: 50
     stop:
-        episode_reward_mean: 5
+        episode_reward_mean: 1.2
     config:
         # === Tricks ====
         twin_q: True
@@ -17,7 +17,7 @@ seeker-apex-td3:
         # === Model ===
         actor_hiddens: [400, 300]
         critic_hiddens: [400, 300]
-        n_step: 2
+        n_step: 4
         model: {}
         gamma: 0.99
         env_config: {}
@@ -26,14 +26,14 @@ seeker-apex-td3:
         schedule_max_timesteps: 100000000 # 100 million
         exploration_fraction: 0.5
         exploration_final_eps: 0.1
-        noise_scale: 0.3
+        noise_scale: 0.1
         exploration_theta: 0.15
         exploration_sigma: 0.2
         target_network_update_freq: 50000
         tau: 0.001 # 1
 
         # === Replay buffer ===
-        buffer_size: 4000000
+        buffer_size: 2400000
         prioritized_replay: True
         prioritized_replay_alpha: 0.6
         prioritized_replay_beta: 0.4

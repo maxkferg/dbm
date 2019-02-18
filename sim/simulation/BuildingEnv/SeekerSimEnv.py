@@ -261,7 +261,6 @@ class SeekerSimEnv(Maze):
                 ckpt_positions.append(tuple(rel_pos[0:2]))
 
         # Sort checkpoints. Pad with zeros until length n_ckpt
-        # ckpt_positions.sort(key = lambda p: -np.linalg.norm(ckpt_positions))
         ckpt_positions = list(reversed(ckpt_positions)) + [(0,0)]*self.ckpt_count
         ckpt_positions = ckpt_positions[:self.ckpt_count]
 

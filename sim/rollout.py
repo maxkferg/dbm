@@ -172,6 +172,9 @@ def run(args, parser):
             parser.error("the following arguments are required: --env")
         args.env = config.get("env")
 
+    # Stop all the actor noise
+    config['noise_scale'] = 0
+
     if not args.env:
         raise("No environment")
 
