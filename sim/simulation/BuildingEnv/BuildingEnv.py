@@ -30,12 +30,15 @@ class SearchGrid(AStar):
         self.ny = int((self.max_y - self.min_y)/size)
 
         self.nodes = []
+        print("Creating AStar nodes")
         for x in np.arange(self.min_x, self.max_x, self.size):
             row = []
             for y in np.arange(self.min_y, self.max_y, self.size):
                 row.append(Node(x,y))
             self.nodes.append(row); 
 
+        print("Created %i Astar nodes"%len(self.nodes))
+        print("Creating AStar neighbors")
         ni = len(self.nodes)
         nj = len(self.nodes[0])
         for i in range(ni):
@@ -127,50 +130,19 @@ class BuildingEnvBase(SeekerSimEnv):
     """
 
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        top_left, bottom_right = self.get_map_size(padding=0.5)
-        self.min_x = top_left[0]
-        self.max_x = bottom_right[0]
-        self.min_y = top_left[1]
-        self.max_y = bottom_right[1]
+        # Compute heavy tasks
         # Setup the AStar search grid
+        super().__init__(*args, **kwargs)
+        top_left = (self.min_x, self.min_y)
+        bottom_right = (self.max_x, self.max_y)
         tiles = list(self.get_quads())
         self.grid = SearchGrid(top_left, bottom_right, tiles, size=0.2)
         self.reset_checkpoints()
 
 
-    def get_quads(self):
-        """
-        Return the floor quads
-        """
-        floor = self.floor
-        for quad in range(int(len(floor[1])/2)):
-            qidx = 2 * quad
-            f0, f1, f2 = floor[1][qidx]
-            v0, v1, v2 = floor[0][f0], floor[0][f1], floor[0][f2]
-            yield v0, v1, v2
-
-
-    def get_map_size(self, padding=1):
-        """
-        Return map extent in PyBullet coordinates
-        Return (min_x, min_y) and (max_x, max_y)
-        """
-        min_x = np.Inf
-        max_x = np.NINF
-        min_y = np.Inf
-        max_y = np.NINF
-        for v0, v1, v2 in self.get_quads():
-            min_x = np.min((min_x, v0[0], v1[0], v2[0]))
-            max_x = np.max((max_x, v0[0], v1[0], v2[0]))
-            min_y = np.min((min_y, v0[1], v1[1], v2[1]))
-            max_y = np.max((max_y, v0[1], v1[1], v2[1]))
-        return (min_x-padding, min_y-padding), (max_x+padding, max_y+padding)
-
-
     def reset_checkpoints(self):
         """Create new checkpoints at [(vx,yy)...] locations"""
-        path = os.path.join(self.urdfRoot, "checkpoint.urdf")
+        path = os.path.join(self.urdf_root, "checkpoint.urdf")
 
         # Remove old checkpoints
         for ckpt in reversed(self.checkpoints):
@@ -204,8 +176,8 @@ class BuildingEnv(BuildingEnvBase):
         Scale a PyBullet vertex to pixel coordinates 
         """
         x,y,_ = v
-        x = int(0.05*width + 0.9*width * (x-self.min_x) / (self.max_x - self.min_x))
-        y = int(0.05*height + 0.9*height * (y-self.min_y) / (self.max_y - self.min_y))
+        x = int(width * (x-self.min_x) / (self.max_x - self.min_x))
+        y = int(height * (y-self.min_y) / (self.max_y - self.min_y))
         return (x,y)
 
 
@@ -223,17 +195,20 @@ class BuildingEnv(BuildingEnvBase):
         target_pos_pixels = self.scale(target_pos, width, height)
         robot = [base_pos_pixels[0]-20, base_pos_pixels[1]-20, base_pos_pixels[0]+20, base_pos_pixels[1]+20]
         target = [target_pos_pixels[0]-20, target_pos_pixels[1]-20, target_pos_pixels[0]+20, target_pos_pixels[1]+20]
-        i = 0
 
         for v0, v1, v2 in self.get_quads():
-            i+=1
-
-            if i>3:
-                continue
             v0 = self.scale(v0, width, height)
             v1 = self.scale(v1, width, height)
             v2 = self.scale(v2, width, height)
-            draw.rectangle([v0, v2], fill="#ff0000")
+            #print(np.min([v0, v1, v2]))
+            xmin = min(v0[0], v1[0], v2[0])
+            xmax = max(v0[0], v1[0], v2[0])
+            ymin = min(v0[1], v1[1], v2[1])
+            ymax = max(v0[1], v1[1], v2[1])
+            #xmin, ymin, zmin = np.min([v0, v1, v2], axis=0).tolist()
+            #xmax, ymax, zmax = np.max([v0, v1, v2], axis=0).tolist()
+            draw.rectangle([(xmin,ymin), (xmax,ymax)], fill="#ff0000")
+        print("ROBOT:",base_pos)
         draw.ellipse(robot, fill = 'blue', outline ='blue')
         draw.ellipse(target, fill = 'green', outline ='green')
 
@@ -243,7 +218,6 @@ class BuildingEnv(BuildingEnvBase):
             for node in nodes:
                 point = self.scale((node.x, node.y, 0), width, height)
                 draw.text(point, "x", fill=(255,255,255,128))
-
 
         del draw
         return np.array(im)

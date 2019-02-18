@@ -81,32 +81,6 @@ def rotation_change(theta1,theta2):
     return find_nearest([dt, dt1, dt2], 0)
 
 
-def load_floor_file(path):
-    file = open(path)
-
-    vertices = []
-    indices = []
-    scale = 1
-    dims = []
-
-    for line in file:
-        if line[0:2] == 'v ':
-            els = line.split(' ')
-            vertices.append([scale*float(els[1]), scale*float(els[2]), scale*float(els[3].strip('\n'))])
-        elif line[0:2] == 'f ':
-            els = line.split(' ')
-            indices.append(
-                [int(els[1].split('/')[0]) - 1, int(els[2].split('/')[0]) - 1, int(els[3].split('/')[0]) - 1])
-        elif line[0:7] == '#scale ':
-            scale = float(line.split(' ')[1])
-        elif line[0:5] == '#dims':
-            els = line.split(' ')
-            dims = [int(els[1]), int(els[2])]
-
-    file.close()
-
-    return [vertices, indices, scale, dims]
-
 
 def gen_start_position(radius, floor):
     def lerp(A, B, t):
@@ -134,5 +108,4 @@ def gen_start_position(radius, floor):
                 ret = [x, y]
                 done = True
                 break
-
     return ret

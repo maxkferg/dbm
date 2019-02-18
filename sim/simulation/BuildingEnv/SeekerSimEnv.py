@@ -14,10 +14,9 @@ from .utils import *
 from .config import URDF_ROOT
 from .robots.robot_models import Turtlebot
 from .bullet_client import BulletClient
+from ..Worlds.worlds import Y2E2, Building, Playground, Maze
 
 sys.path.insert(1, os.path.join(sys.path[0], '../..'))
-from tools.MPQueueClient import MPQueueClient
-from tools.TileGrid import TileGrid, compute_centre, AABB_to_vertices
 import tools.Math2D as m2d
 
 
@@ -39,20 +38,16 @@ HOST, PORT = "localhost", 9999
 COUNT = 0
 
 
-class SeekerSimEnv(gym.Env):
-    metadata = {
-        'render.modes': ['human', 'rgb_array'],
-        'video.frames_per_second': 50
-    }
+class SeekerSimEnv(Maze):
 
     def __init__(self, config={}):
         print("Initializing new SeekerSimEnv")
         print("SimSeekerEnv Config:",config)
+        super().__init__()
 
         self.timeStep = config.get("timestep", 0.1) # Simulate every 0.1 seconds
-        self.urdfRoot = config.get("urdfRoot", URDF_ROOT)
         self.actionRepeat = config.get("actionRepeat", 2) # Choose an action every 0.2 seconds
-        self.isEnableSelfCollision = config.get("isEnableSelfCollision", False)
+        self.resetOnTarget = config.get("resetOnTarget", True)
         self.debug = config.get("debug", False)
         self.renders = config.get("renders",False)
         self.isDiscrete = config.get("isDiscrete",False)
@@ -73,21 +68,15 @@ class SeekerSimEnv(gym.Env):
 
         self.envStepCounter = 0
         self.startedTime = time.time()
-        self.tile_grid = TileGrid(self.urdfRoot + "/output_floors.obj")
         self.mpqueue = None
 
         if self.renders:
             print("Creating new BulletClient (GUI)")
             self.physics = BulletClient(connection_mode=pybullet.GUI)
-            print(self.urdfRoot + "/output_floors.obj")
         else:
             print("Creating new BulletClient")
             self.physics = BulletClient()
             self.mpqueue = None
-
-        if self.messaging:
-            self.mpqueue = MPQueueClient(HOST, PORT)
-            self.mpqueue.start(self.urdfRoot + "/output_floors.obj", self.urdfRoot + "/output_walls.obj")
 
         self.seed()
         ray_count = 12                    # 12 rays of 30 degrees each
@@ -119,8 +108,6 @@ class SeekerSimEnv(gym.Env):
             self.rays.append(q)
 
         # Load the floor file so we don't have to repeatedly read it
-        self.floor = load_floor_file(self.urdfRoot + "/output_floors.obj")
-        self.world_up = np.array([0, 0, 1])
         self.build()
         print("Initialization Complete")
 
@@ -134,14 +121,14 @@ class SeekerSimEnv(gym.Env):
         Build the environment. Only needs to be done once
         """
         print("Building simulation environment")
-        self.physics.resetSimulation()
+        super().build()
         self.physics.setTimeStep(self.timeStep)
         self.physics.setPhysicsEngineParameter(numSubSteps=20) # Adjust until stable
-        self.buildingIds = self.physics.loadSDF(os.path.join(self.urdfRoot, "output.sdf"))
 
         target_pos = gen_start_position(.25, self.floor) + [.25]
         car_pos = gen_start_position(.3, self.floor) + [.25]
-        self.targetUniqueId = self.physics.loadURDF(os.path.join(self.urdfRoot, "target.urdf"), target_pos)
+        self.targetUniqueId = self.physics.loadURDF(os.path.join(self.urdf_root, "target.urdf"), target_pos)
+        
         config = {
             'power': 20,
             'resolution': 1,
@@ -149,15 +136,13 @@ class SeekerSimEnv(gym.Env):
             'target_pos': target_pos,
             'initial_pos': car_pos
         }
+        
         self.robot = Turtlebot(self.physics, config=config)
         self.robot.set_position(car_pos)
-        self.physics.setGravity(0, 0, -10)
+        pybullet.configureDebugVisualizer(pybullet.COV_ENABLE_RENDERING, 1)
 
         for i in range(10):
             self.physics.stepSimulation()
-
-        state = self.get_state()
-        return self.get_observation(state)
 
 
     def reset(self):
@@ -178,7 +163,6 @@ class SeekerSimEnv(gym.Env):
         # Allow all the objects to reach equilibrium
         for i in range(10):
             self.physics.stepSimulation()
-
         state = self.get_state()
         return self.get_observation(state)
 
@@ -333,7 +317,6 @@ class SeekerSimEnv(gym.Env):
         Move the simulation one step forward
         @action is the robot action, in the form [rotation, velocity]
         """
-
         if self.renders:
             basePos, orn = self.physics.getBasePositionAndOrientation(self.robot.racecarUniqueId)
             # Comment out this line to prevent the camera moving with the car
@@ -347,7 +330,6 @@ class SeekerSimEnv(gym.Env):
             realaction = [forward, steer]
         else:
             realaction = action
-
         self.robot.applyAction(realaction)
 
         # Keep the simulation loop as lean as possible.
@@ -370,15 +352,15 @@ class SeekerSimEnv(gym.Env):
         self.previous_state = state
 
         # Respawn the target and clear the isAtTarget flag
-        if state["is_at_target"]:
+        if not self.resetOnTarget and state["is_at_target"]:
             self.reset_target_position()
+            self.reset_checkpoints()
 
         return observation, reward, done, {}
 
 
     def is_crashed(self):
-        walls = self.buildingIds[0];
-        contact = self.physics.getContactPoints(self.robot.racecarUniqueId, walls)
+        contact = self.physics.getContactPoints(self.robot.racecarUniqueId, self.wallId)
         return len(contact)>0
 
 
@@ -389,7 +371,7 @@ class SeekerSimEnv(gym.Env):
 
     def termination(self, state):
         """Return True if the episode should end"""
-        return state["is_crashed"] or state["is_broken"] or state["is_at_target"]
+        return state["is_crashed"] or state["is_broken"] or (self.resetOnTarget and state["is_at_target"])
 
 
     def reward(self, state, action):
@@ -400,7 +382,6 @@ class SeekerSimEnv(gym.Env):
             Battery Reward: Penalty if rotation or velocity exceeds 0.5
             Rotation Reward: Small penalty for any rotation
         """
-
         # Add positive reward if we are near the target
         if state["is_at_target"]:
             target_reward = TARGET_REWARD

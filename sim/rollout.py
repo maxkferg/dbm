@@ -4,12 +4,11 @@ Example of a custom gym environment. Run this for a demo.
 Copying checkpoint files from the server
 gcloud compute --project "stanford-projects" scp --zone "us-west1-b" --recurse "ray-trainer:~/ray_results/*" ~/ray_results
 
-
-rllib rollout --checkpoint ~/ray_results/demo/experiment_state-2019-01-26_18-46-51.json
-rllib rollout --checkpoint ~/ray_results/demo/experiment_state-2019-01-26_18-46-51.json
+ray rsync-down ray_results ~/ray_results  
 
 
-python rollout.py
+python rollout.py --run APEX_DDPG --env BuildingEnv-v0 --steps 10000
+
 """
 import io
 import os
@@ -22,14 +21,13 @@ from pprint import pprint
 from gym.spaces import Discrete, Box
 from gym.envs.registration import EnvSpec
 from gym.envs.registration import registry
-from ray.rllib.rollout import rollout
 from ray.rllib.agents.registry import get_agent_class
-from simulation.SeekerSimEnv import SeekerSimEnv
+from simulation.BuildingEnv import BuildingEnv
 from ray.tune.registry import register_env
 
 EXAMPLE_USAGE = """
 Example Usage via RLlib CLI:
-    python rollout.py --run DDPG_APEX --env SimSeekerEnv-v0 --steps 100 --no-render
+    python rollout.py --run DDPG_APEX --env BuildingEnv-v0 --steps 100 --no-render
 """
 
 #CHECKPOINT = "~/ray_results/seeker-ppo-gae/PPO_SeekerSimEnv_0_2019-02-04_08-34-32qf6patqm/checkpoint_780/checkpoint-780"
@@ -37,17 +35,24 @@ Example Usage via RLlib CLI:
 #CHECKPOINT = "~/ray_results/seeker-apex-td3/APEX_DDPG_SeekerSimEnv_0_2019-02-05_09-48-37s38jziex/checkpoint_700/checkpoint-700"
 #CHECKPOINT = "~/ray_results/humanoid-ppo-gae/PPO_SeekerSimEnv_0_2019-02-04_08-34-32qf6patqm/checkpoint_780/checkpoint-780"
 #CHECKPOINT = "~/Google Drive/seeker-apex-td3/ray_results/APEX_DDPG_SeekerSimEnv_0_2019-02-09_03-26-01ze5dseda/checkpoint_100/checkpoint-100"
-CHECKPOINT = "~/ray_results/seeker-apex-td3/APEX_DDPG_SeekerSimEnv_0_2019-02-10_01-47-50j4pfi3d3/checkpoint_300/checkpoint-300"
+CHECKPOINT = "~/ray_results/ray_results/seeker-apex-td3/APEX_DDPG_BuildingEnv_0_2019-02-17_10-28-35dht3zbpt/checkpoint_450/checkpoint-450"
 
 
 CHECKPOINT = os.path.expanduser(CHECKPOINT)
-ENVIRONMENT = "SimSeekerEnv-v0"
+ENVIRONMENT = "BuildingEnv-v0"
+
+RESET_ON_TARGET = False
+DEFAULT_TIMESTEP = 0.1
+FRAME_MULTIPLIER = 1
+EVAL_TIMESTEP = DEFAULT_TIMESTEP/FRAME_MULTIPLIER
 
 
-def seeker_env_creator(env_config):
-    return SeekerSimEnv(env_config)
+def building_env_creator(env_config):
+    env_config['timestep'] = EVAL_TIMESTEP
+    env_config['resetOnTarget'] = RESET_ON_TARGET
+    return BuildingEnv(env_config)
 
-register_env(ENVIRONMENT, seeker_env_creator)
+register_env(ENVIRONMENT, building_env_creator)
 
 
 def create_parser(parser_creator=None):
@@ -94,6 +99,55 @@ def create_parser(parser_creator=None):
     return parser
 
 
+def rollout(agent, env_name, num_steps, out=None, no_render=True):
+    if hasattr(agent, "local_evaluator"):
+        env = agent.local_evaluator.env
+    else:
+        env = gym.make(env_name)
+
+    if hasattr(agent, "local_evaluator"):
+        state_init = agent.local_evaluator.policy_map[
+            "default"].get_initial_state()
+    else:
+        state_init = []
+    if state_init:
+        use_lstm = True
+    else:
+        use_lstm = False
+
+    if out is not None:
+        rollouts = []
+    steps = 0
+    while steps < (num_steps or steps + 1):
+        if out is not None:
+            rollout = []
+        state = env.reset()
+        done = False
+        reward_total = 0.0
+        while not done and steps < (num_steps or steps + 1):
+            if use_lstm:
+                action, state_init, logits = agent.compute_action(
+                    state, state=state_init)
+            else:
+                action = agent.compute_action(state)
+            # Repeat this action n times, rendering each time
+            for i in range(FRAME_MULTIPLIER):
+                next_state, reward, done, _ = env.step(action)
+                reward_total += reward
+                if not no_render:
+                    env.render()
+                if done:
+                    break
+            if out is not None:
+                rollout.append([state, action, next_state, reward, done])
+            steps += 1
+            state = next_state
+        if out is not None:
+            rollouts.append(rollout)
+        print("Episode reward", reward_total)
+    if out is not None:
+        pickle.dump(rollouts, open(out, "wb"))
+
 
 def run(args, parser):
     config = args.config
@@ -114,6 +168,9 @@ def run(args, parser):
             config = json.load(f)
         if "num_workers" in config:
             config["num_workers"] = min(2, config["num_workers"])
+        if "horizon" in config:
+            print("DEL")
+            del config["horizon"]
 
     if not args.env:
         if not config.get("env"):
@@ -128,7 +185,7 @@ def run(args, parser):
     if not args.no_render:
         config["monitor"] = True
 
-    config["exploration_final_eps"] = 0.5
+    config["exploration_final_eps"] = 0
 
     cls = get_agent_class(args.run)
     agent = cls(env=args.env, config=config)

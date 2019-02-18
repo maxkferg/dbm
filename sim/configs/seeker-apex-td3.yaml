@@ -17,7 +17,7 @@ seeker-apex-td3:
         # === Model ===
         actor_hiddens: [400, 300]
         critic_hiddens: [400, 300]
-        n_step: 4
+        n_step: 2
         model: {}
         gamma: 0.99
         env_config: {}
@@ -40,7 +40,7 @@ seeker-apex-td3:
         prioritized_replay_eps: 0.000001
         clip_rewards: False
         optimizer:
-            num_replay_buffer_shards: 8
+            num_replay_buffer_shards: 6
 
         # === Optimization ===
         lr: 0.001
