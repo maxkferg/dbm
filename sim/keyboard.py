@@ -1,12 +1,12 @@
 #!/usr/bin/env python
-from __future__ import print_function
 import math
 import sys, gym, time
 import numpy as np
 import tkinter
 from PIL import Image, ImageTk
 from gym.envs.registration import registry
-from simulation.BuildingEnv import BuildingEnv
+from simulation.BuildingEnv import MultiRobot
+from simulation.Worlds.worlds import Y2E2, Building, Playground, Maze
 tkinter.NoDefaultRoot()
 
 RENDER_WIDTH = 640
@@ -21,18 +21,20 @@ def register(id, *args, **kvargs):
         return gym.envs.registration.register(id, *args, **kvargs)
 
 
-register(id='BuildingEnv-v0',
-    entry_point='simulation.BuildingEnv:BuildingEnv',
-    reward_threshold=.5)
+#register(id='BuildingEnv-v0',
+#    entry_point='simulation.BuildingEnv:MultipleRobot',
+#    reward_threshold=.5)
 
-env = gym.make('BuildingEnv-v0')
-env.debug = 2
-
+env = MultiRobot({
+    "debug": 0,
+    "num_robots": 2,
+    "world": Playground()
+})
 
 
 class ViewWindow():
-    times=1
-    timestart=time.clock()
+    times = 1
+    timestart = time.clock()
 
     def __init__(self, mapw, width, height):
         self.action = [0,0]
@@ -44,6 +46,7 @@ class ViewWindow():
         self.canvas = tkinter.Canvas(self.frame, width=width, height=height)
         self.canvas.place(x=-2, y=-2)
         self.map = mapw
+        self.obser = env.reset()
 
     def start(self):
         self.root.after(0, self.step) # INCREASE THE 0 TO SLOW IT DOWN
@@ -55,11 +58,13 @@ class ViewWindow():
         self.canvas.create_image(0, 0, image=self.photo, anchor=tkinter.NW)
 
     def step(self):
-        obser, r, done, info = env.step(self.action)
-        #print("Observation:", obser)
-
-        self.action[0] = obser[0]/math.pi / 4
-        self.action[1] = 0.6
+        action = {}
+        for robot, obser in self.obser.items():
+            steering = obser[0]/math.pi / 4
+            throttle = 0.6
+            action[robot] = [steering, throttle]
+        self.obser, r, done, info = env.step(action)
+        # Render current state
         self.render(env.render(mode="rgb_array", width=self.width, height=self.height))
         self.map.render(env.render_map(mode="rgb_array", width=self.width, height=self.height))
         self.root.update()
@@ -67,8 +72,8 @@ class ViewWindow():
         if self.times%33==0:
             print("%.02f FPS"%(self.times/(time.clock()-self.timestart)))
         self.root.after(10, self.step)
-        time.sleep(.5)
-        if done:
+        time.sleep(0.3)
+        if all(done.values()):
             print("--- Resetting ---")
             env.reset()
 

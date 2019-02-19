@@ -1,6 +1,6 @@
 # Gets to -0.576 rew after 1.6 million
-seeker-ppo-gae:
-    env: SeekerSimEnv-v0
+seeker-ppo:
+    env: MultiRobot-v0
     run: PPO
     checkpoint_freq: 10
     stop:
@@ -17,6 +17,6 @@ seeker-ppo-gae:
         train_batch_size: 32000
         model:
             free_log_std: true
-        num_workers: 22
-        num_gpus: 1
+        num_workers: 2
+        num_gpus: 0
         batch_mode: complete_episodes

@@ -1,24 +1,59 @@
-seeker-appo:
-    env: SeekerSimEnv-v0
-    run: APPO
-    checkpoint_freq: 10
+seeker-test:
+    env: SeekerTest-v0
+    run: APEX_DDPG
+    checkpoint_freq: 50
     stop:
-        episode_reward_mean: 1.0
-        timesteps_total: 25000000
+        episode_reward_mean: 1.2
     config:
-        monitor: False
-        sample_batch_size: 100
-        train_batch_size: 1500
-        num_workers: 4
-        broadcast_interval: 1
-        max_sample_requests_in_flight_per_worker: 1
-        num_data_loader_buffers: 1
-        num_envs_per_worker: 1
-        minibatch_buffer_size: 4
-        num_sgd_iter: 2
-        vf_loss_coeff: 1.0
-        clip_param: 0.3
-        grad_clip: 10
+        # === Tricks ====
+        twin_q: True
+        policy_delay: 2
+        smooth_target_policy: True
+        act_noise: 0.1
+        target_noise: 0.2
+        noise_clip: 0.5
+        horizon: 100
+
+        # === Model ===
+        actor_hiddens: [40, 30]
+        critic_hiddens: [40, 30]
+        n_step: 4
+        model: {}
+        gamma: 0.99
+        env_config: {}
+
+        # === Exploration ===
+        schedule_max_timesteps: 100000000 # 100 million
+        exploration_fraction: 0.5
+        exploration_final_eps: 0.1
+        noise_scale: 0.1
+        exploration_theta: 0.15
+        exploration_sigma: 0.2
+        target_network_update_freq: 50000
+        tau: 0.001 # 1
+
+        # === Replay buffer ===
+        buffer_size: 24000
+        prioritized_replay: True
+        prioritized_replay_alpha: 0.6
+        prioritized_replay_beta: 0.4
+        prioritized_replay_eps: 0.000001
+        clip_rewards: False
+        optimizer:
+            num_replay_buffer_shards: 6
+
+        # === Optimization ===
+        lr: 0.001
+        actor_loss_coeff: 0.2
+        critic_loss_coeff: 1.0
+        use_huber: True
+        huber_threshold: 1.0
+        l2_reg: 0.0000001
+        learning_starts: 1000000
+        sample_batch_size: 50
+        train_batch_size: 2048
+        min_iter_time_s: 30
+
+        # === Parallelism ===
         num_gpus: 0
-        model:
-            use_lstm: False
+        num_workers: 4

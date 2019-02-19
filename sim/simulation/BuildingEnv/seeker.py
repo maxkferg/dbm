@@ -10,11 +10,11 @@ import numpy as np
 from gym import spaces
 from gym.utils import seeding
 from pprint import pprint
+from PIL import Image, ImageDraw
 from .utils import *
 from .config import URDF_ROOT
 from .robots.robot_models import Turtlebot
-from .bullet_client import BulletClient
-from ..Worlds.worlds import Y2E2, Building, Playground, Maze
+
 
 sys.path.insert(1, os.path.join(sys.path[0], '../..'))
 import tools.Math2D as m2d
@@ -38,14 +38,17 @@ HOST, PORT = "localhost", 9999
 COUNT = 0
 
 
-class SeekerSimEnv(Maze):
 
-    def __init__(self, config={}):
-        print("Initializing new SeekerSimEnv")
+class Seeker():
+
+    def __init__(self, world, config={}):
+        print("Initializing new SeekerEnv")
         print("SimSeekerEnv Config:",config)
         super().__init__()
 
-        self.timeStep = config.get("timestep", 0.1) # Simulate every 0.1 seconds
+        self.world = world
+        self.physics = world.physics
+        self.color = random_color()
         self.actionRepeat = config.get("actionRepeat", 2) # Choose an action every 0.2 seconds
         self.resetOnTarget = config.get("resetOnTarget", True)
         self.debug = config.get("debug", False)
@@ -55,9 +58,11 @@ class SeekerSimEnv(Maze):
         self.previous_state = None
         self.ckpt_count = 5
 
+        self.urdf_root = URDF_ROOT
         self.targetUniqueId = -1
         self.robot = None               # The controlled robot
         self.checkpoints = []           # Each checkpoint is given an id. Closest checkpoints are near zero index
+        self.dead_checkpoints = []      # List of checkpoints that are not active
         self.buildingIds = []           # Each plane is given an id
         self.width = 320                # The resolution of the sensor image (320x240)
         self.height = 240
@@ -68,17 +73,8 @@ class SeekerSimEnv(Maze):
 
         self.envStepCounter = 0
         self.startedTime = time.time()
-        self.mpqueue = None
-
-        if self.renders:
-            print("Creating new BulletClient (GUI)")
-            self.physics = BulletClient(connection_mode=pybullet.GUI)
-        else:
-            print("Creating new BulletClient")
-            self.physics = BulletClient()
-            self.mpqueue = None
-
         self.seed()
+
         ray_count = 12                    # 12 rays of 30 degrees each
         observationDim = 4                # These are positional coordinates
         highs = [10, 10, 10, 10, math.pi, 1, 1, 1] # x, y, pos, pos, theta, vx, vy, vz
@@ -109,6 +105,7 @@ class SeekerSimEnv(Maze):
 
         # Load the floor file so we don't have to repeatedly read it
         self.build()
+        self.reset_checkpoints()
         print("Initialization Complete")
 
 
@@ -120,14 +117,10 @@ class SeekerSimEnv(Maze):
         """
         Build the environment. Only needs to be done once
         """
-        print("Building simulation environment")
-        super().build()
-        self.physics.setTimeStep(self.timeStep)
-        self.physics.setPhysicsEngineParameter(numSubSteps=20) # Adjust until stable
-
-        target_pos = gen_start_position(.25, self.floor) + [.25]
-        car_pos = gen_start_position(.3, self.floor) + [.25]
-        self.targetUniqueId = self.physics.loadURDF(os.path.join(self.urdf_root, "target.urdf"), target_pos)
+        target_pos = gen_start_position(.25, self.world.floor) + [.25]
+        car_pos = gen_start_position(.3, self.world.floor) + [.25]
+        self.targetUniqueId = self.world.create_shape(pybullet.GEOM_BOX, target_pos, size=0.2, color=self.color)
+        #self.targetUniqueId = self.physics.loadURDF(os.path.join(self.urdf_root, "target.urdf"), target_pos)
         
         config = {
             'power': 20,
@@ -169,20 +162,70 @@ class SeekerSimEnv(Maze):
 
     def reset_robot_position(self):
         """Move the robot to a new position"""
-        car_pos = gen_start_position(.3, self.floor) + [.25]
+        car_pos = gen_start_position(.3, self.world.floor) + [.25]
         self.robot.set_position(car_pos)
 
 
     def reset_target_position(self):
         """Move the target to a new position"""
-        target_pos = gen_start_position(.25, self.floor) + [.25]
+        target_pos = gen_start_position(.25, self.world.floor) + [.25]
         _, target_orn = self.physics.getBasePositionAndOrientation(self.targetUniqueId)
         self.physics.resetBasePositionAndOrientation(self.targetUniqueId, np.array(target_pos), target_orn)
 
 
     def reset_checkpoints(self):
         """Create new checkpoints at [(vx,yy)...] locations"""
-        pass
+        path = os.path.join(self.urdf_root, "checkpoint.urdf")
+
+        # Remove old checkpoints
+        for ckpt in self.checkpoints:
+            self.remove_checkpoint(ckpt)
+
+        # Use AStar to find checkpoint locations
+        base_pos, carorn = self.physics.getBasePositionAndOrientation(self.robot.racecarUniqueId)
+        target_pos, target_orn = self.physics.getBasePositionAndOrientation(self.targetUniqueId)
+        nodes = self.world.grid.get_path(base_pos, target_pos)
+
+        # Create new checkpoints
+        if nodes is None:
+            print("AStar Failed")
+        else:
+            for i,node in enumerate(nodes):
+                if i>0 and i%3 == 0:
+                    position = (node.x, node.y, 0.25)
+                    self.create_checkpoint(position)
+                    
+
+    def create_checkpoint(self, position):
+        """
+        Create a new checkpoint object
+        May take the checkpoint from the dead checkpoints list
+        """
+        orientation = (0,0,0,1)
+        if len(self.dead_checkpoints):
+            ckpt = self.dead_checkpoints.pop()
+            self.physics.resetBasePositionAndOrientation(ckpt, position, orientation)
+        else:
+            ckpt = self.world.create_shape(pybullet.GEOM_CYLINDER,
+                position,
+                color=self.color,
+                radius=0.15,
+                length=0.04,
+                specular=[0.3,0.3,0.3,0.3]
+            )
+        self.checkpoints.append(ckpt)
+        return ckpt
+
+
+    def remove_checkpoint(self, ckpt):
+        """
+        Remove a checkpoint from the map, and self.checkpoints
+        Also moves the ckpt from self.checkpoints to self.dead_checkpoints
+        """
+        orientation = (0,0,0,1)
+        self.checkpoints.remove(ckpt)
+        self.physics.resetBasePositionAndOrientation(ckpt, (10,10,10), orientation)
+        self.dead_checkpoints.append(ckpt)
 
 
     def read_lidar_values(self, robot_pos, robot_orn):
@@ -203,7 +246,7 @@ class SeekerSimEnv(Maze):
             intersection = self.physics.rayTest(start_pos, end_pos)
             if intersection[0][0] == self.targetUniqueId:
                 intersections.append(-1)
-            elif intersection[0][0] == self.buildingIds[0]:
+            elif intersection[0][0] == self.world.wallId:
                 intersections.append(intersection[0][2]*ray_len)
             else:
                 intersections.append(ray_len)
@@ -221,18 +264,6 @@ class SeekerSimEnv(Maze):
         Calculating the state is computationally intensive and should be done sparingly
         """
         state = {}
-
-        if self.mpqueue:
-            scale = self.floor[2]
-            dims = self.floor[3]
-            centre = compute_centre(self.tile_grid.bound)
-            pos = [int((carpos[0]/scale) * dims[0] + dims[0]),
-                   int((-carpos[1]/scale) * dims[1] + dims[1])]
-            self.mpqueue.command_move(pos)
-            dir_vec = rotate_vector(carorn, [1, 0, 0])
-            angle = m2d.compute_angle(m2d.cp_mul(m2d.vec3_to_vec2n(dir_vec), [1, -1]))
-            self.mpqueue.command_turn(angle)
-
         robot_pos, robot_orn = self.physics.getBasePositionAndOrientation(self.robot.racecarUniqueId)
         robot_euler = pybullet.getEulerFromQuaternion(robot_orn)
         robot_theta = robot_euler[2]
@@ -255,8 +286,7 @@ class SeekerSimEnv(Maze):
             if rel_distance < CHECKPOINT_DISTANCE:
                 is_at_checkpoint = True
             if is_at_checkpoint:
-                self.checkpoints.remove(ckpt)
-                self.physics.removeBody(ckpt)
+                self.remove_checkpoint(ckpt)
             else:
                 ckpt_positions.append(tuple(rel_pos[0:2]))
 
@@ -321,7 +351,8 @@ class SeekerSimEnv(Maze):
         return np.array(observation)
 
 
-    def step(self, action):
+
+    def act(self, action):
         """
         Move the simulation one step forward
         @action is the robot action, in the form [rotation, velocity]
@@ -339,19 +370,13 @@ class SeekerSimEnv(Maze):
             realaction = [forward, steer]
         else:
             realaction = action
+        self.action = action
         self.robot.applyAction(realaction)
 
-        # Keep the simulation loop as lean as possible.
-        # Technically we should check for crash or target state in the loop, but that is slow
-        is_crashed = False
-        is_at_target = False
-        for i in range(self.actionRepeat):
-            self.physics.stepSimulation()
-            is_crashed = self.is_crashed()
-            is_at_target = self.is_at_target()
-            if is_crashed or is_at_target:
-                break
 
+    def observe(self):
+        # Keep the simulation loop as lean as possible.
+        action = self.action
         state = self.get_state()
         observation = self.get_observation(state)
         reward = self.reward(state, action)
@@ -369,13 +394,14 @@ class SeekerSimEnv(Maze):
 
 
     def is_crashed(self):
-        contact = self.physics.getContactPoints(self.robot.racecarUniqueId, self.wallId)
+        contact = self.physics.getContactPoints(self.robot.racecarUniqueId, self.world.wallId)
         return len(contact)>0
 
 
     def is_at_target(self):
-        contact = self.physics.getContactPoints(self.robot.racecarUniqueId, self.targetUniqueId)
-        return len(contact)>0
+        basePos, _ = self.physics.getBasePositionAndOrientation(self.robot.racecarUniqueId)
+        targetPos, _ = self.physics.getBasePositionAndOrientation(self.targetUniqueId)
+        return np.linalg.norm(np.array(basePos) - np.array(targetPos)) < TARGET_DISTANCE_THRESHOLD
 
 
     def termination(self, state):
@@ -443,7 +469,7 @@ class SeekerSimEnv(Maze):
         # Position the camera behind the car, slightly above
         dir_vec = np.array(rotate_vector(carorn, [2, 0, 0]))
         cam_eye = np.subtract(np.array(base_pos), np.add(dir_vec, np.array([0, 0, -1])))
-        cam_up = normalize(self.world_up - np.multiply(np.dot(self.world_up, dir_vec), dir_vec))
+        cam_up = normalize(self.world.world_up - np.multiply(np.dot(self.world.world_up, dir_vec), dir_vec))
 
         view_matrix = self.physics.computeViewMatrix(
             cameraEyePosition=cam_eye,
@@ -459,3 +485,40 @@ class SeekerSimEnv(Maze):
         rgb_array = rgb_array.reshape((height, width, 4))
         return rgb_array
 
+
+    def render_map(self, mode, width=640, height=480):
+        """
+        Render the map to a pixel buffer
+        """
+        im = Image.new('RGB', (width,height))
+        draw = ImageDraw.Draw(im)
+
+        base_pos, carorn = self.physics.getBasePositionAndOrientation(self.robot.racecarUniqueId)
+        target_pos, target_orn = self.physics.getBasePositionAndOrientation(self.targetUniqueId)
+
+        base_pos_pixels = self.world.scale(base_pos, width, height)
+        target_pos_pixels = self.world.scale(target_pos, width, height)
+        robot = [base_pos_pixels[0]-20, base_pos_pixels[1]-20, base_pos_pixels[0]+20, base_pos_pixels[1]+20]
+        target = [target_pos_pixels[0]-20, target_pos_pixels[1]-20, target_pos_pixels[0]+20, target_pos_pixels[1]+20]
+
+        for v0, v1, v2 in self.world.get_quads():
+            v0 = self.world.scale(v0, width, height)
+            v1 = self.world.scale(v1, width, height)
+            v2 = self.world.scale(v2, width, height)
+            xmin = min(v0[0], v1[0], v2[0])
+            xmax = max(v0[0], v1[0], v2[0])
+            ymin = min(v0[1], v1[1], v2[1])
+            ymax = max(v0[1], v1[1], v2[1])
+            draw.rectangle([(xmin,ymin), (xmax,ymax)], fill="#ff0000")
+        draw.ellipse(robot, fill = 'blue', outline ='blue')
+        draw.ellipse(target, fill = 'green', outline ='green')
+
+        # Create the fastest path
+        nodes = self.world.grid.get_path(base_pos, target_pos)
+        if nodes is not None:
+            for node in nodes:
+                point = self.world.scale((node.x, node.y, 0), width, height)
+                draw.text(point, "x", fill=(255,255,255,128))
+
+        del draw
+        return np.array(im)

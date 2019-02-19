@@ -7,7 +7,7 @@ gcloud compute --project "stanford-projects" scp --zone "us-west1-b" --recurse "
 ray rsync-down cluster.yaml ray_results ~/  
 
 
-python rollout.py --run APEX_DDPG --env BuildingEnv-v0 --steps 10000
+python rollout.py --run APEX_DDPG --env BuildingEnv-v0 --steps 10000 --no-render
 
 """
 import io
@@ -31,7 +31,7 @@ Example Usage via RLlib CLI:
 """
 
 CHECKPOINT = "~/ray_results/seeker-apex-td3/APEX_DDPG_BuildingEnv_0_2019-02-18_04-51-11e4pm2tph/checkpoint_350/checkpoint-350"
-
+CHECKPOINT = "~/ray_results/seeker-apex-td3/APEX_DDPG_BuildingEnv_0_2019-02-18_11-42-201ouvwc85/checkpoint_150/checkpoint-150"
 
 CHECKPOINT = os.path.expanduser(CHECKPOINT)
 ENVIRONMENT = "BuildingEnv-v0"
@@ -162,9 +162,8 @@ def run(args, parser):
         with open(config_path) as f:
             config = json.load(f)
         if "num_workers" in config:
-            config["num_workers"] = min(2, config["num_workers"])
+            config["num_workers"] = min(1, config["num_workers"])
         if "horizon" in config:
-            print("DEL")
             del config["horizon"]
 
     if not args.env:
@@ -174,6 +173,8 @@ def run(args, parser):
 
     # Stop all the actor noise
     config['noise_scale'] = 0
+    config['per_worker_exploration'] = False
+    config['schedule_max_timesteps'] = 0
 
     if not args.env:
         raise("No environment")
