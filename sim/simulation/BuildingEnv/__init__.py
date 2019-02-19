@@ -1,2 +1,2 @@
-from simulation.BuildingEnv.environments import SingleRobot
-from simulation.BuildingEnv.environments import MultiRobot
+from .environments import SingleRobot
+from .environments import MultiRobot
