@@ -3,7 +3,7 @@ seeker-apex-td3:
     run: APEX_DDPG
     checkpoint_freq: 50
     stop:
-        episode_reward_mean: 1.2
+        episode_reward_mean: 5
     config:
         # === Tricks ====
         twin_q: True
