@@ -403,7 +403,6 @@ class Seeker():
             robot_position, _ = self.physics.getBasePositionAndOrientation(i)
             robot_distance = np.linalg.norm(np.array(pos) - np.array(robot_position))
             robot_collision = robot_collision or robot_distance<ROBOT_CRASH_DISTANCE
-        if robot_collision:
         contact = self.physics.getContactPoints(self.robot.racecarUniqueId, self.world.wallId)
         return len(contact)>0 or robot_collision
 
