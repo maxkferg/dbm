@@ -12,7 +12,9 @@ python rollout.py --run APEX_DDPG --env BuildingEnv-v0 --steps 10000 --no-render
 """
 import io
 import os
+import cv2
 import json
+import datetime
 import numpy as np
 import gym
 import ray
@@ -39,7 +41,7 @@ CHECKPOINT = os.path.expanduser(CHECKPOINT)
 ENVIRONMENT = "MultiRobot-v0"
 
 RESET_ON_TARGET = True
-DEFAULT_TIMESTEP = 0.02
+DEFAULT_TIMESTEP = 0.1
 FRAME_MULTIPLIER = 5
 EVAL_TIMESTEP = DEFAULT_TIMESTEP/FRAME_MULTIPLIER
 
@@ -47,18 +49,22 @@ RENDER_WIDTH = 1280
 RENDER_HEIGHT = 720
 
 
+timestamp = datetime.datetime.now().strftime("%I-%M-%S %p")
+filename = 'videos/video %s.mp4'%timestamp
+video = cv2.VideoWriter(filename, 0, 1, fps=30, frameSize=(RENDER_WIDTH,RENDER_HEIGHT))
+
+
 def building_env_creator(env_config):
     return MultiRobot({
         "monitor": True,
         "debug": 0,
         "num_robots": 2,
-        "world": Playground(timestep=DEFAULT_TIMESTEP)
+        "world": Playground(timestep=EVAL_TIMESTEP)
     })
 
 register_env(ENVIRONMENT, building_env_creator)
 
-import cv2
-video = cv2.VideoWriter('video-hd-13.mp4', 0, 1, fps=30, frameSize=(RENDER_WIDTH,RENDER_HEIGHT))
+
 
 
 

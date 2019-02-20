@@ -72,6 +72,13 @@ class MultiRobot(gym.Env, MultiAgentEnv):
         self.action_space = self.default_env.action_space
         self.observation_space = self.default_env.observation_space
 
+        for env in self.env.values():
+            for other in self.env.values():
+                if other != env:
+                    env.collision_objects.append(other.robot.racecarUniqueId)
+
+
+
 
     def step(self, actions):
         """
@@ -108,10 +115,6 @@ class MultiRobot(gym.Env, MultiAgentEnv):
 
 
     def render(self, *arg, **kwargs):
-        from PIL import Image
-        im = Image.fromarray(self.default_env.render(*arg, **kwargs)[:,:,:3])
-        im.save("your_file.jpeg")
-
         return self.default_env.render(*arg, **kwargs)
 
 

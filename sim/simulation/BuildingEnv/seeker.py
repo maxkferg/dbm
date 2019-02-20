@@ -25,7 +25,6 @@ RENDER_WIDTH = 960
 RENDER_HEIGHT = 720
 RENDER_SIZE = (RENDER_HEIGHT, RENDER_WIDTH)
 EPISODE_LEN = 100
-COLLISION_DISTANCE = 0.2
 ROBOT_CRASH_DISTANCE = 0.4
 TARGET_REWARD = 1
 CHECKPOINT_REWARD = 0.1
@@ -250,6 +249,8 @@ class Seeker():
                 intersections.append(-1)
             elif intersection[0][0] == self.world.wallId:
                 intersections.append(intersection[0][2]*ray_len)
+            elif intersection[0][0] in self.collision_objects:
+                intersections.append(intersection[0][2]*ray_len)
             else:
                 intersections.append(ray_len)
         return intersections
@@ -399,9 +400,10 @@ class Seeker():
         robot_collision = False
         pos, _ = self.physics.getBasePositionAndOrientation(self.robot.racecarUniqueId)
         for i in self.collision_objects:
-            robot_position = self.physics.getBasePositionAndOrientation(i)
+            robot_position, _ = self.physics.getBasePositionAndOrientation(i)
             robot_distance = np.linalg.norm(np.array(pos) - np.array(robot_position))
             robot_collision = robot_collision or robot_distance<ROBOT_CRASH_DISTANCE
+        if robot_collision:
         contact = self.physics.getContactPoints(self.robot.racecarUniqueId, self.world.wallId)
         return len(contact)>0 or robot_collision
 
