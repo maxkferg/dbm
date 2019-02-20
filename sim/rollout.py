@@ -22,32 +22,44 @@ from gym.spaces import Discrete, Box
 from gym.envs.registration import EnvSpec
 from gym.envs.registration import registry
 from ray.rllib.agents.registry import get_agent_class
-from simulation.BuildingEnv import BuildingEnv
+from simulation.BuildingEnv import MultiRobot
+from simulation.Worlds.worlds import Y2E2, Building, Playground, Maze
 from ray.tune.registry import register_env
 
 EXAMPLE_USAGE = """
 Example Usage via RLlib CLI:
-    python rollout.py --run APEX_DDPG --env BuildingEnv-v0 --steps 1000
+    python rollout.py --run APEX_DDPG --env MultiRobot-v0 --steps 1000
 """
 
 CHECKPOINT = "~/ray_results/seeker-apex-td3/APEX_DDPG_BuildingEnv_0_2019-02-18_04-51-11e4pm2tph/checkpoint_350/checkpoint-350"
 CHECKPOINT = "~/ray_results/seeker-apex-td3/APEX_DDPG_BuildingEnv_0_2019-02-18_11-42-201ouvwc85/checkpoint_150/checkpoint-150"
+CHECKPOINT = "~/ray_results/seeker-apex-td3/APEX_DDPG_MultiRobot-v0_0_2019-02-19_06-50-132hof5l29/checkpoint_550/checkpoint-550"
 
 CHECKPOINT = os.path.expanduser(CHECKPOINT)
-ENVIRONMENT = "BuildingEnv-v0"
+ENVIRONMENT = "MultiRobot-v0"
 
 RESET_ON_TARGET = True
-DEFAULT_TIMESTEP = 0.1
-FRAME_MULTIPLIER = 1
+DEFAULT_TIMESTEP = 0.02
+FRAME_MULTIPLIER = 5
 EVAL_TIMESTEP = DEFAULT_TIMESTEP/FRAME_MULTIPLIER
+
+RENDER_WIDTH = 1280
+RENDER_HEIGHT = 720
 
 
 def building_env_creator(env_config):
-    #env_config['timestep'] = EVAL_TIMESTEP
-    env_config['resetOnTarget'] = RESET_ON_TARGET
-    return BuildingEnv(env_config)
+    return MultiRobot({
+        "monitor": True,
+        "debug": 0,
+        "num_robots": 2,
+        "world": Playground(timestep=DEFAULT_TIMESTEP)
+    })
 
 register_env(ENVIRONMENT, building_env_creator)
+
+import cv2
+video = cv2.VideoWriter('video-hd-13.mp4', 0, 1, fps=30, frameSize=(RENDER_WIDTH,RENDER_HEIGHT))
+
 
 
 def create_parser(parser_creator=None):
@@ -124,13 +136,17 @@ def rollout(agent, env_name, num_steps, out=None, no_render=True):
                 action, state_init, logits = agent.compute_action(
                     state, state=state_init)
             else:
-                action = agent.compute_action(state)
+                action = {}
+                for key,value in state.items():
+                    action[key] = agent.compute_action(value)
             # Repeat this action n times, rendering each time
             for i in range(FRAME_MULTIPLIER):
-                next_state, reward, done, _ = env.step(action)
-                reward_total += reward
+                next_state, reward, dones, _ = env.step(action)
+                reward_total += np.sum(list(reward.values()))
+                done = dones['__all__']
                 if not no_render:
-                    env.render()
+                    i = env.render(width=RENDER_WIDTH, height=RENDER_HEIGHT)
+                    video.write(i)
                 if done:
                     break
             if out is not None:
@@ -200,4 +216,9 @@ def run(args, parser):
 if __name__ == "__main__":
     parser = create_parser()
     args = parser.parse_args()
-    run(args, parser)
+    try:
+        run(args, parser)
+    except KeyboardInterrupt:
+        cv2.destroyAllWindows()
+        video.release()
+

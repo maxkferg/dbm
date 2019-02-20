@@ -27,9 +27,14 @@ class World():
         'render.modes': None,
     }
 
-    def __init__(self, render=False):
+    def __init__(self, render=False, timestep=None):
         # Create the physics engine
         self.renders = render
+        if timestep is not None:
+            self.timestep = timestep
+        else:
+            self.timestep = self.metadata["timestep"]
+
         if self.renders:
             print("Creating new BulletClient (GUI)")
             self.physics = BulletClient(connection_mode=pybullet.GUI)
@@ -58,7 +63,7 @@ class World():
 
         print("Building simulation environment")
         self.physics.resetSimulation()
-        self.physics.setTimeStep(self.metadata["timestep"])
+        self.physics.setTimeStep(self.timestep)
         self.physics.setPhysicsEngineParameter(numSubSteps=self.metadata["substeps"])
 
         building_scale = self.metadata['scale']

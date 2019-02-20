@@ -26,6 +26,7 @@ RENDER_HEIGHT = 720
 RENDER_SIZE = (RENDER_HEIGHT, RENDER_WIDTH)
 EPISODE_LEN = 100
 COLLISION_DISTANCE = 0.2
+ROBOT_CRASH_DISTANCE = 0.4
 TARGET_REWARD = 1
 CHECKPOINT_REWARD = 0.1
 CHECKPOINT_DISTANCE = 0.5
@@ -63,6 +64,7 @@ class Seeker():
         self.robot = None               # The controlled robot
         self.checkpoints = []           # Each checkpoint is given an id. Closest checkpoints are near zero index
         self.dead_checkpoints = []      # List of checkpoints that are not active
+        self.collision_objects = []     # Other objects that can be collided with
         self.buildingIds = []           # Each plane is given an id
         self.width = 320                # The resolution of the sensor image (320x240)
         self.height = 240
@@ -394,8 +396,14 @@ class Seeker():
 
 
     def is_crashed(self):
+        robot_collision = False
+        pos, _ = self.physics.getBasePositionAndOrientation(self.robot.racecarUniqueId)
+        for i in self.collision_objects:
+            robot_position = self.physics.getBasePositionAndOrientation(i)
+            robot_distance = np.linalg.norm(np.array(pos) - np.array(robot_position))
+            robot_collision = robot_collision or robot_distance<ROBOT_CRASH_DISTANCE
         contact = self.physics.getContactPoints(self.robot.racecarUniqueId, self.world.wallId)
-        return len(contact)>0
+        return len(contact)>0 or robot_collision
 
 
     def is_at_target(self):
@@ -458,7 +466,7 @@ class Seeker():
         return reward
 
 
-    def render(self, mode='human', close=False, width=640, height=480):
+    def render(self, mode='rgb_array', close=False, width=640, height=480):
         """Render the simulation to a frame"""
         if mode != "rgb_array":
             return np.array([])

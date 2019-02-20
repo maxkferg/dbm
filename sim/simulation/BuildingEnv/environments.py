@@ -52,7 +52,7 @@ class SingleRobot(gym.Env):
 
 
 
-class MultiRobot(MultiAgentEnv):
+class MultiRobot(gym.Env, MultiAgentEnv):
 
     def __init__(self, env_config={}):
         if 'world' in env_config:
@@ -108,6 +108,10 @@ class MultiRobot(MultiAgentEnv):
 
 
     def render(self, *arg, **kwargs):
+        from PIL import Image
+        im = Image.fromarray(self.default_env.render(*arg, **kwargs)[:,:,:3])
+        im.save("your_file.jpeg")
+
         return self.default_env.render(*arg, **kwargs)
 
 
