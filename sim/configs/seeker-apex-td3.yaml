@@ -55,5 +55,5 @@ seeker-apex-td3:
         min_iter_time_s: 30
 
         # === Parallelism ===
-        num_gpus: 1
-        num_workers: 256
+        num_gpus: 0.5
+        num_workers: 164

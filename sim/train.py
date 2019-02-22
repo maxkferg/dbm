@@ -97,13 +97,13 @@ def run_pbt(args):
     pbt_scheduler = PopulationBasedTraining(
         time_attr='time_total_s',
         reward_attr='episode_reward_mean',
-        perturbation_interval=3600.0,
+        perturbation_interval=4*3600.0,
         hyperparam_mutations={
             "lr": [1e-3, 5e-4, 1e-4, 5e-5, 1e-5],
             "tau": [0.005, 0.001],
-            "target_noise": [0.1, 0.2],
-            "noise_scale": [0.1, 0.2],
-            "train_batch_size": [2048, 4096, 80192],
+            "target_noise": [0.01, 0.1, 0.2],
+            "noise_scale": [0.01, 0.1, 0.2],
+            "train_batch_size": [2048, 4096, 8192],
             "l2_reg": [1e-5, 1e-6, 1e-7],
         })
 

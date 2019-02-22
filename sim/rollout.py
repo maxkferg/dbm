@@ -36,6 +36,9 @@ Example Usage via RLlib CLI:
 CHECKPOINT = "~/ray_results/seeker-apex-td3/APEX_DDPG_BuildingEnv_0_2019-02-18_04-51-11e4pm2tph/checkpoint_350/checkpoint-350"
 CHECKPOINT = "~/ray_results/seeker-apex-td3/APEX_DDPG_BuildingEnv_0_2019-02-18_11-42-201ouvwc85/checkpoint_150/checkpoint-150"
 CHECKPOINT = "~/ray_results/seeker-apex-td3/APEX_DDPG_MultiRobot-v0_0_2019-02-19_06-50-132hof5l29/checkpoint_550/checkpoint-550"
+CHECKPOINT = "~/ray_results/seeker-apex-td3/APEX_DDPG_MultiRobot-v0_0_2019-02-20_10-31-19kor5er_l/checkpoint_4600/checkpoint-4600"
+
+
 
 CHECKPOINT = os.path.expanduser(CHECKPOINT)
 ENVIRONMENT = "MultiRobot-v0"
