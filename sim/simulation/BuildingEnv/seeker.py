@@ -25,6 +25,7 @@ RENDER_WIDTH = 960
 RENDER_HEIGHT = 720
 RENDER_SIZE = (RENDER_HEIGHT, RENDER_WIDTH)
 EPISODE_LEN = 100
+ROBOT_DANGER_DISTANCE = 0.8
 ROBOT_CRASH_DISTANCE = 0.4
 TARGET_REWARD = 1
 CHECKPOINT_REWARD = 0.1
@@ -133,7 +134,7 @@ class Seeker():
         
         self.robot = Turtlebot(self.physics, config=config)
         self.robot.set_position(car_pos)
-        pybullet.configureDebugVisualizer(pybullet.COV_ENABLE_RENDERING, 1)
+        #pybullet.configureDebugVisualizer(pybullet.COV_ENABLE_RENDERING, 0)
 
         for i in range(10):
             self.physics.stepSimulation()
@@ -324,6 +325,15 @@ class Seeker():
             print("Something went wrong with the simulation")
             state["is_broken"] = True
 
+        # Calculate the distance to other robots
+        state["other_robots"] = []
+        for i in self.collision_objects:
+            other_position, _ = self.physics.getBasePositionAndOrientation(i)
+            state["other_robots"].append(np.linalg.norm(np.array(robot_pos) - np.array(other_position)))
+
+        if np.any(np.less(state["other_robots"],[ROBOT_CRASH_DISTANCE])):
+            state["is_crashed"] = True
+
         if self.debug:
             print("Target orientation:", state["rel_target_orientation"])
             print("Target position:", state["rel_target_distance"])
@@ -397,14 +407,8 @@ class Seeker():
 
 
     def is_crashed(self):
-        robot_collision = False
-        pos, _ = self.physics.getBasePositionAndOrientation(self.robot.racecarUniqueId)
-        for i in self.collision_objects:
-            robot_position, _ = self.physics.getBasePositionAndOrientation(i)
-            robot_distance = np.linalg.norm(np.array(pos) - np.array(robot_position))
-            robot_collision = robot_collision or robot_distance<ROBOT_CRASH_DISTANCE
         contact = self.physics.getContactPoints(self.robot.racecarUniqueId, self.world.wallId)
-        return len(contact)>0 or robot_collision
+        return len(contact)>0
 
 
     def is_at_target(self):
@@ -444,6 +448,13 @@ class Seeker():
         else:
             checkpoint_reward = 0
 
+        # Penalty for closeness
+        danger_reward = 0
+        for other in state["other_robots"]:
+            if other < ROBOT_DANGER_DISTANCE:
+                danger_reward -= math.exp(20*(ROBOT_CRASH_DISTANCE-other))
+        danger_reward = max(-1, danger_reward)
+
         # There is a cost to acceleration and turning
         # We use the squared cost to incentivise careful use of battery resources
         battery_reward = BATTERY_WEIGHT*np.sum(positive_component(np.abs(action) - BATTERY_THRESHOLD))
@@ -452,7 +463,7 @@ class Seeker():
         rotation_reward = ROTATION_COST * abs(state["robot_vt"])
 
         # Total reward is the sum of components
-        reward = target_reward + crashed_reward + battery_reward + rotation_reward + checkpoint_reward
+        reward = target_reward + crashed_reward + battery_reward + rotation_reward + checkpoint_reward + danger_reward
 
         if self.debug:
             print("---- Step %i Summary -----"%self.envStepCounter)
@@ -462,6 +473,7 @@ class Seeker():
             print("Crashed Reward: %.3f"%crashed_reward)
             print("Battery Reward: %.3f"%battery_reward)
             print("Rotation Reward: %.3f"%rotation_reward)
+            print("Danger Reward: %.3f"%danger_reward)
             print("Total Reward:   %.3f\n"%reward)
 
         return reward

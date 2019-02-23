@@ -54,7 +54,7 @@ RENDER_HEIGHT = 720
 
 timestamp = datetime.datetime.now().strftime("%I-%M-%S %p")
 filename = 'videos/video %s.mp4'%timestamp
-video = cv2.VideoWriter(filename, 0, 1, fps=30, frameSize=(RENDER_WIDTH,RENDER_HEIGHT))
+video = cv2.VideoWriter(filename, 0, 1, fps=20, frameSize=(RENDER_WIDTH,RENDER_HEIGHT))
 
 
 def building_env_creator(env_config):
@@ -62,6 +62,7 @@ def building_env_creator(env_config):
         "monitor": True,
         "debug": 0,
         "num_robots": 2,
+        "reset_on_target": False,
         "world": Playground(timestep=EVAL_TIMESTEP)
     })
 

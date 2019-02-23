@@ -65,6 +65,9 @@ class MultiRobot(gym.Env, MultiAgentEnv):
         else:
             raise ValueError("The number of robots was not specified")
 
+        if "reset_on_target" in env_config:
+            env_config["resetOnTarget"] = env_config["reset_on_target"]
+
         self.dones = set()
         self.action_repeat = env_config.get("action_repeat") or DEFAULT_ACTION_REPEAT
         self.env = {i: Seeker(self.world, env_config) for i in range(self.num_robots)}
@@ -76,8 +79,6 @@ class MultiRobot(gym.Env, MultiAgentEnv):
             for other in self.env.values():
                 if other != env:
                     env.collision_objects.append(other.robot.racecarUniqueId)
-
-
 
 
     def step(self, actions):

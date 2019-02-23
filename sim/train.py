@@ -38,6 +38,8 @@ def robot_env_creator(env_config):
         "world": Playground()
     })
 
+register_env(ENVIRONMENT, robot_env_creator)
+
 
 
 def create_parser():
