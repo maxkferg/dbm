@@ -27,6 +27,7 @@ class World():
         'render.modes': None,
     }
 
+
     def __init__(self, render=False, timestep=None):
         # Create the physics engine
         self.renders = render
@@ -56,6 +57,7 @@ class World():
 
         self.grid = SearchGrid(top_left, bottom_right, tiles, size=0.2)
         self.build()
+
 
     def build(self, urdf_root=URDF_ROOT, reflection=True):
         self.urdf_root = urdf_root

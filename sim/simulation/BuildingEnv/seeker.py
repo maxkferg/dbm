@@ -499,11 +499,44 @@ class Seeker():
         proj_matrix = self.physics.computeProjectionMatrixFOV(
             fov=60, aspect=float(width) / height,
             nearVal=0.1, farVal=100.0)
-        (_, _, px, _, _) = self.physics.getCameraImage(
+        (_, _, px, _, seg) = self.physics.getCameraImage(
             width=width, height=height, viewMatrix=view_matrix,
             projectionMatrix=proj_matrix, renderer=pybullet.ER_BULLET_HARDWARE_OPENGL)
         rgb_array = np.array(px, dtype=np.uint8)
         rgb_array = rgb_array.reshape((height, width, 4))
+
+        h,w = 256,256
+        rgb_array[0:h,0:w] = self.render_observation(w,h)
+
+        return rgb_array
+
+
+    def render_observation(self, width=128, height=128):
+        # Move the camera with the base_pos
+        base_pos, carorn = self.physics.getBasePositionAndOrientation(self.robot.racecarUniqueId)
+
+        # Position the camera behind the car, slightly above
+        dir_vec = np.array(rotate_vector(carorn, [2, 0, 0]))
+        cam_eye = np.subtract(np.array(base_pos), np.array([0, 0, -5]))
+        cam_up = normalize(self.world.world_up - np.multiply(np.dot(self.world.world_up, dir_vec), dir_vec))
+
+        view_matrix = self.physics.computeViewMatrix(
+            cameraEyePosition=cam_eye,
+            cameraTargetPosition=base_pos,
+            cameraUpVector=cam_up)
+        proj_matrix = self.physics.computeProjectionMatrixFOV(
+            fov=60, aspect=float(width) / height,
+            nearVal=0.1, farVal=100.0)
+        (_, _, px, _, seg) = self.physics.getCameraImage(
+            width=width, height=height, viewMatrix=view_matrix,
+            projectionMatrix=proj_matrix, renderer=pybullet.ER_BULLET_HARDWARE_OPENGL)
+        #rgb_array = np.array(px, dtype=np.uint8)
+        #rgb_array = rgb_array.reshape((height, width, 4))
+
+        rgb_array = 40*np.array(seg, dtype=np.uint8)
+        rgb_array = rgb_array.reshape((height, width, 1))
+        rgb_array = np.tile(rgb_array, (1,1,4))
+
         return rgb_array
 
 

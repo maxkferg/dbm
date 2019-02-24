@@ -19,7 +19,7 @@ class SearchGrid(AStar):
     Uses PyBullet coordinates
     """
 
-    def __init__(self, v0, v2, tiles, size=0.1):
+    def __init__(self, v0, v2, tiles, size=0.05):
         self.size = size
         self.min_x = np.min((v0[0], v2[0]))
         self.max_x = np.max((v0[0], v2[0]))

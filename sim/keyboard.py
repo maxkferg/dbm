@@ -68,11 +68,11 @@ class ViewWindow():
         self.render(env.render(mode="rgb_array", width=self.width, height=self.height))
         self.map.render(env.render_map(mode="rgb_array", width=self.width, height=self.height))
         self.root.update()
-        self.times+=1
+        self.times += 1
         if self.times%33==0:
             print("%.02f FPS"%(self.times/(time.clock()-self.timestart)))
         self.root.after(10, self.step)
-        time.sleep(0.3)
+        #time.sleep(0.3)
         if all(done.values()):
             print("--- Resetting ---")
             env.reset()
