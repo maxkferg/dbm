@@ -452,7 +452,7 @@ class Seeker():
         danger_reward = 0
         for other in state["other_robots"]:
             if other < ROBOT_DANGER_DISTANCE:
-                danger_reward -= math.exp(20*(ROBOT_CRASH_DISTANCE-other))
+                danger_reward -= 0.3*math.exp(20*(ROBOT_CRASH_DISTANCE-other))
         danger_reward = max(-1, danger_reward)
 
         # There is a cost to acceleration and turning
