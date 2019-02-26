@@ -26,6 +26,7 @@ from gym.envs.registration import registry
 from ray.rllib.agents.registry import get_agent_class
 from simulation.BuildingEnv import MultiRobot
 from simulation.Worlds.worlds import Y2E2, Building, Playground, Maze
+from learning.custom_policy_graph import CustomDDPGPolicyGraph
 from ray.tune.registry import register_env
 
 EXAMPLE_USAGE = """
@@ -149,6 +150,10 @@ def rollout(agent, env_name, num_steps, out=None, no_render=True):
                 action = {}
                 for key,value in state.items():
                     action[key] = agent.compute_action(value)
+                    # Compute the value of this default actor
+                    q, qt = agent.get_policy().compute_q(value, action[key])
+                    print("Q",q,qt)
+
             # Repeat this action n times, rendering each time
             for i in range(FRAME_MULTIPLIER):
                 next_state, reward, dones, _ = env.step(action)
@@ -213,6 +218,7 @@ def run(args, parser):
     config["exploration_final_eps"] = 0
 
     cls = get_agent_class(args.run)
+    cls._policy_graph = CustomDDPGPolicyGraph
     agent = cls(env=args.env, config=config)
     agent.restore(args.checkpoint)
     num_steps = int(args.steps)
