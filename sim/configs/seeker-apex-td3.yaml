@@ -46,7 +46,7 @@ seeker-apex-td3:
             num_replay_buffer_shards: 8
 
         # === Optimization ===
-        lr: 0.001
+        lr: 0.0002
         actor_loss_coeff: 0.2
         critic_loss_coeff: 1.0
         use_huber: True

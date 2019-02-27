@@ -71,7 +71,7 @@ class MultiRobot(gym.Env, MultiAgentEnv):
         self.dones = set()
         self.action_repeat = env_config.get("action_repeat") or DEFAULT_ACTION_REPEAT
         self.env = {i: Mapper(self.world, env_config) for i in range(self.num_robots)}
-        self.default_env = self.env[random.choice(list(self.env.keys()))]
+        self.default_env = self.env[0]
         self.action_space = self.default_env.action_space
         self.observation_space = self.default_env.observation_space
 

@@ -60,7 +60,7 @@ class Mapper():
         self.isDiscrete = config.get("isDiscrete",False)
         self.messaging = config.get("messaging",False)
         self.previous_state = None
-        self.ckpt_count = 5
+        self.ckpt_count = 4
 
         self.urdf_root = URDF_ROOT
         self.targetUniqueId = -1
@@ -95,7 +95,8 @@ class Mapper():
             'robot_theta': spaces.Box(low=-math.pi, high=math.pi, shape=(1,), dtype=np.float32),
             'robot_velocity': spaces.Box(low=-1, high=1, shape=(3,), dtype=np.float32),
             'target': spaces.Box(low=-10, high=10, shape=(2,), dtype=np.float32),
-            'maps': spaces.Box(low=0, high=1, shape=(128, 128, 4), dtype=np.uint8),
+            'ckpts': spaces.Box(low=-10, high=10, shape=(2*self.ckpt_count,), dtype=np.float32),
+            'maps': spaces.Box(low=0, high=1, shape=(48, 48, 4), dtype=np.uint8),
         })
 
         if self.isDiscrete:
@@ -394,8 +395,8 @@ class Mapper():
                 ckpt_positions.append(tuple(rel_pos[0:2]))
 
         # Sort checkpoints. Pad with zeros until length n_ckpt
-        # ckpt_positions = list(reversed(ckpt_positions)) + [(0,0)]*self.ckpt_count
-        # ckpt_positions = ckpt_positions[:self.ckpt_count]
+        ckpt_positions = list(reversed(ckpt_positions)) + [(0,0)]*self.ckpt_count
+        ckpt_positions = ckpt_positions[:self.ckpt_count]
 
         state = {
             "robot_pos": robot_pos,
@@ -404,7 +405,7 @@ class Mapper():
             "robot_vx": 0,
             "robot_vy": 0,
             "robot_vt": 0,
-            #"rel_ckpt_positions": ckpt_positions,
+            "rel_ckpt_positions": ckpt_positions,
             "rel_target_orientation": math.atan2(tarPosInCar[1], tarPosInCar[0]),
             "rel_target_distance": math.sqrt(tarPosInCar[1]**2 + tarPosInCar[0]**2),
             "map_floor": self.map_floor,
@@ -420,7 +421,7 @@ class Mapper():
         }
 
         # Crop the map to the current orientation and rotation
-        view_size = 64
+        view_size = 24
         pad_size = int(1.5*view_size)
         robot_x, robot_y = self.get_map_position(state["robot_pos"])
 
@@ -503,6 +504,7 @@ class Mapper():
                 state["rel_target_orientation"],
                 state["rel_target_distance"]
             ], dtype=np.float32),
+            'ckpts': state["rel_ckpt_positions"],
             'maps': state["map"]
         }
         # Important that the order is the same as observation space

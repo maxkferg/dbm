@@ -99,7 +99,7 @@ class ViewWindow():
     def step(self):
         action = {}
         for robot, obser in self.obser.items():
-            steering = obser["robot_theta"]/math.pi / 4
+            steering = obser["target"][0] / math.pi / 4
             throttle = 0.6
             action[robot] = [steering, throttle]
         self.obser, r, done, info = env.step(action)
@@ -112,7 +112,7 @@ class ViewWindow():
             print("%.02f FPS"%(self.times/(time.clock()-self.timestart)))
         self.root.after(10, self.step)
         #time.sleep(0.3)
-        if done[1]:
+        if done[0]:
             print("--- Resetting ---")
             env.reset()
 

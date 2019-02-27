@@ -37,24 +37,19 @@ class Custom_CNN(Model):
         obs = input_dict["obs"]
 
         # Dense connections processing sensor data
-        with tf.name_scope("dense_net"):
-            dense = tf.concat([obs['robot_theta'], obs['robot_velocity']], axis=1, name='concat')
-            dense1 = slim.fully_connected(
-                dense, 
-                400,
-                weights_initializer=normc_initializer(1.0),
-                activation_fn=tf.nn.relu)
-            dense2 = slim.fully_connected(
-                dense1, 
-                300,
-                weights_initializer=normc_initializer(1.0),
-                activation_fn=tf.nn.relu)
+        with tf.name_scope("sensors"):
+            dense = tf.concat([
+                obs['robot_theta'], 
+                obs['robot_velocity'],
+                obs['target'],
+                obs['ckpts'],
+            ], axis=1, name='concat')
 
         # Convolutional layers processing maps
         with tf.name_scope("conv_net"):
             conv1 = slim.conv2d(
                 obs['maps'],
-                32,
+                16,
                 kernel_size=(3,3),
                 stride=2,
                 activation_fn=tf.nn.relu,
@@ -62,7 +57,7 @@ class Custom_CNN(Model):
                 scope="conv1")
             conv2 = slim.conv2d(
                 conv1,
-                64,
+                32,
                 kernel_size=(3,3),
                 stride=2,
                 activation_fn=tf.nn.relu,
@@ -72,29 +67,42 @@ class Custom_CNN(Model):
             )
             conv3 = slim.conv2d(
                 conv2,
-                64,
+                32,
                 kernel_size=(3,3),
                 stride=2,
                 activation_fn=tf.nn.relu,
                 scope="conv3")
             conv4 = slim.conv2d(
                 conv3,
-                64,
+                32,
                 kernel_size=(3,3),
                 stride=1,
                 activation_fn=tf.nn.relu,
                 scope="conv4")
+            print("CONV", conv4)
             conv_flat = flatten(conv4)
 
         # Combining with dense layers
         with tf.name_scope("combined"):
-            last_layer = tf.concat([dense2, conv_flat], axis=1)
+            combined = tf.concat([dense, conv_flat], axis=1)
+
+            hidden = slim.fully_connected(
+                combined, 
+                128,
+                weights_initializer=normc_initializer(1.0),
+                activation_fn=tf.nn.relu)
+
+            last_layer = slim.fully_connected(
+                hidden, 
+                64,
+                weights_initializer=normc_initializer(1.0),
+                activation_fn=tf.nn.relu)
+
             output = slim.fully_connected(
-                last_layer,
+                last_layer, 
                 num_outputs,
                 weights_initializer=normc_initializer(0.01),
-                activation_fn=None,
-                scope="combined_output")
+                activation_fn=None)
 
         return output, last_layer
 
