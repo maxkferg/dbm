@@ -206,6 +206,9 @@ class Mapper():
                     position = (node.x, node.y, 0.5)
                     self.create_checkpoint(position)
 
+        # Remap the position of the checkpoints
+        self.remap_checkpoints()
+
 
     def get_map_position(self,v):
         """
@@ -282,7 +285,7 @@ class Mapper():
         Return a full map of the environment showing the checkpoint locations
         Floor space is colored 0. Checkpoints are colored 1.
         """
-        self.map_targets.fill(0)
+        self.map_checkpoints.fill(0)
         for ckpt in self.checkpoints:
             ckpt_pos, _ = self.physics.getBasePositionAndOrientation(ckpt)
             ckpt_x, ckpt_y = self.get_map_position(ckpt_pos)
@@ -388,6 +391,7 @@ class Mapper():
                 is_at_checkpoint = True
             if is_at_checkpoint:
                 self.remove_checkpoint(ckpt)
+                self.remap_checkpoints()
             else:
                 ckpt_positions.append(tuple(rel_pos[0:2]))
 
@@ -408,7 +412,7 @@ class Mapper():
             "map_floor": self.map_floor,
             "map_targets": self.map_targets,
             "map_robots": self.remap_robots(),
-            "map_checkpoints": self.remap_checkpoints(),
+            "map_checkpoints": self.map_checkpoints,
             "map": np.array([]),
             #"lidar": lidar,
             "is_at_checkpoint": is_at_checkpoint,
