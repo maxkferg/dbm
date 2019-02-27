@@ -97,8 +97,6 @@ class Mapper():
             'target': spaces.Box(low=-10, high=10, shape=(2,), dtype=np.float32),
             'maps': spaces.Box(low=0, high=1, shape=(128, 128, 4), dtype=np.uint8),
         })
-        print(self.observation_space)
-        print('------------------')
 
         if self.isDiscrete:
             self.action_space = spaces.Discrete(9)
