@@ -3,6 +3,7 @@ import math
 import sys, gym, time
 import numpy as np
 import tkinter
+import argparse
 import learning.model
 from PIL import Image, ImageTk
 from gym.envs.registration import registry
@@ -15,17 +16,59 @@ RENDER_HEIGHT = 600
 RENDER_SIZE = (RENDER_HEIGHT, RENDER_WIDTH)
 
 
-def register(id, *args, **kvargs):
-    if id in registry.env_specs:
-        return
-    else:
-        return gym.envs.registration.register(id, *args, **kvargs)
-
 env = MultiRobot({
     "debug": 0,
     "num_robots": 2,
     "world": Playground()
 })
+
+
+def create_parser(parser_creator=None):
+    parser = argparse.ArgumentParser(
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        description="Benchmark or visualize a reinforcement learning agent ",
+        epilog="python benchmark.py --no-render")
+
+    parser.add_argument(
+        "--no-render",
+        default=False,
+        action="store_const",
+        const=True,
+        help="Optionally disable all rendering (default=False).")
+
+    return parser
+
+
+
+class BenchmarkWindow():
+    """
+    Dummy window that does not render the progress
+    """
+    times = 1
+    timestart = time.clock()
+
+    def __init__(self):
+        self.action = [0,0]
+        self.obs = env.reset()
+
+    def start(self):
+        while True:
+            self.step()
+
+    def step(self):
+        action = {}
+        for robot, obser in self.obs.items():
+            steering = obser["robot_theta"]/math.pi / 4
+            throttle = 0.6
+            action[robot] = [steering, throttle]
+        self.obs, r, done, info = env.step(action)
+        self.times += 1
+        if self.times%33==0:
+            print("%.02f FPS"%(self.times/(time.clock()-self.timestart)))
+        if done[1]:
+            print("--- Resetting ---")
+            env.reset()
+
 
 
 class ViewWindow():
@@ -99,6 +142,12 @@ class MapWindow():
         self.canvas.create_image(0, 0, image=self.photo, anchor=tkinter.NW)
 
 
-mapw = MapWindow(RENDER_WIDTH, RENDER_HEIGHT)
-view = ViewWindow(mapw, RENDER_WIDTH, RENDER_HEIGHT)
-view.start()
+if __name__=="__main__": 
+    parser = create_parser()
+    args = parser.parse_args()
+    if args.no_render:
+        view = BenchmarkWindow()
+    else:
+        mapw = MapWindow(RENDER_WIDTH, RENDER_HEIGHT)
+        view = ViewWindow(mapw, RENDER_WIDTH, RENDER_HEIGHT)
+    view.start()
