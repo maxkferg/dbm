@@ -20,6 +20,7 @@ import numpy as np
 import gym
 import ray
 import argparse
+import learning.model
 from pprint import pprint
 from gym.spaces import Discrete, Box
 from gym.envs.registration import EnvSpec

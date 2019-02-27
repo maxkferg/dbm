@@ -3,6 +3,7 @@ import math
 import sys, gym, time
 import numpy as np
 import tkinter
+import learning.model
 from PIL import Image, ImageTk
 from gym.envs.registration import registry
 from simulation.BuildingEnv import MultiRobot
@@ -55,7 +56,7 @@ class ViewWindow():
     def step(self):
         action = {}
         for robot, obser in self.obser.items():
-            steering = obser[0]/math.pi / 4
+            steering = obser["robot_theta"]/math.pi / 4
             throttle = 0.6
             action[robot] = [steering, throttle]
         self.obser, r, done, info = env.step(action)

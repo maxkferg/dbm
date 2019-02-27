@@ -9,6 +9,7 @@ import skimage
 import random
 import pybullet
 import numpy as np
+from collections import OrderedDict
 from gym import spaces
 from gym.utils import seeding
 from pprint import pprint
@@ -89,13 +90,15 @@ class Mapper():
         self.map_checkpoints = np.zeros((ny, nx), dtype=np.uint8)
         self.map_targets = np.zeros((ny, nx), dtype=np.uint8)
 
-        ray_count = 12                    # 12 rays of 30 degrees each
-        observationDim = 4                # These are positional coordinates
-        highs = [10, 10, 10, 10, math.pi, 1, 1, 1] # x, y, pos, pos, theta, vx, vy, vz
-        highs.extend([10]*2*self.ckpt_count)
-        highs.extend([5]*ray_count)
-
-        observation_high = np.array(highs)
+        # Define the observation space a dict of simpler spaces
+        self.observation_space = spaces.Dict({
+            'robot_theta': spaces.Box(low=-math.pi, high=math.pi, shape=(1,), dtype=np.float32),
+            'robot_velocity': spaces.Box(low=-1, high=1, shape=(3,), dtype=np.float32),
+            'target': spaces.Box(low=-10, high=10, shape=(2,), dtype=np.float32),
+            'maps': spaces.Box(low=0, high=1, shape=(128, 128, 4), dtype=np.uint8),
+        })
+        print(self.observation_space)
+        print('------------------')
 
         if self.isDiscrete:
             self.action_space = spaces.Discrete(9)
@@ -105,7 +108,6 @@ class Mapper():
             action_high = np.array([self._action_bound] * action_dim)
             self.action_space = spaces.Box(-action_high, action_high, dtype=np.float32)
 
-        self.observation_space = spaces.Box(-observation_high, observation_high, dtype=np.float32)
         self.viewer = None
 
         # Load the floor file so we don't have to repeatedly read it
@@ -488,15 +490,21 @@ class Mapper():
         """
         Return the observation that is passed to the learning algorithm
         """
-        observation = [
-            state["rel_target_orientation"],
-            state["rel_target_distance"],
-            state["robot_vx"],
-            state["robot_vy"],
-            state["robot_vt"],
-            state["map"]
-        ]
-        return observation
+        obs = {
+            'robot_theta': np.array(state["robot_theta"], dtype=np.float32),
+            'robot_velocity': np.array([
+                state["robot_vx"], 
+                state["robot_vy"],
+                state["robot_vt"]
+            ], dtype=np.float32),
+            'target': np.array([
+                state["rel_target_orientation"],
+                state["rel_target_distance"]
+            ], dtype=np.float32),
+            'maps': state["map"]
+        }
+        # Important that the order is the same as observation space
+        return OrderedDict((k, obs[k]) for k in self.observation_space.spaces.keys())
 
     """
     def get_observation_array(self):

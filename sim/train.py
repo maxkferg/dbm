@@ -13,6 +13,7 @@ import yaml
 import numpy as np
 import gym
 import argparse
+import learning.model
 from random import choice
 from pprint import pprint
 from gym.spaces import Discrete, Box

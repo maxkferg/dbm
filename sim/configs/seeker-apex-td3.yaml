@@ -18,9 +18,12 @@ seeker-apex-td3:
         actor_hiddens: [400, 300]
         critic_hiddens: [400, 300]
         n_step: 4
-        model: {}
         gamma: 0.99
         env_config: {}
+        model: {
+            custom_model: "custom_cnn",
+            custom_options: {}
+        }
 
         # === Exploration ===
         schedule_max_timesteps: 100000000 # 100 million
