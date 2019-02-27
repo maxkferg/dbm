@@ -34,7 +34,7 @@ class SearchGrid(AStar):
             row = []
             for y in np.arange(self.min_y, self.max_y, self.size):
                 row.append(Node(x,y))
-            self.nodes.append(row); 
+            self.nodes.append(row);
 
         print("Created %i Astar nodes"%len(self.nodes))
         print("Creating AStar neighbors")
@@ -103,7 +103,7 @@ class SearchGrid(AStar):
         y = self.min_y + cy*(self.size+0.5)
         return (x,y)
 
- 
+
     def neighbors(self, node):
         return [i for i in node.neighbors if i.valid]
 

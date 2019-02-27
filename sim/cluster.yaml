@@ -109,7 +109,7 @@ setup_commands:
 
     - source activate tensorflow_p36
     - pip install -U https://s3-us-west-2.amazonaws.com/ray-wheels/latest/ray-0.7.0.dev0-cp36-cp36m-manylinux1_x86_64.whl
-    - pip install astar lz4 pyyaml opencv-python gym pillow pybullet 
+    - pip install astar lz4 pyyaml opencv-python gym pillow pybullet scikit-image
     - pip install psutil setproctitle
 
 

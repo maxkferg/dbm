@@ -9,8 +9,8 @@ from simulation.BuildingEnv import MultiRobot
 from simulation.Worlds.worlds import Y2E2, Building, Playground, Maze
 tkinter.NoDefaultRoot()
 
-RENDER_WIDTH = 640
-RENDER_HEIGHT = 480
+RENDER_WIDTH = 800
+RENDER_HEIGHT = 600
 RENDER_SIZE = (RENDER_HEIGHT, RENDER_WIDTH)
 
 
@@ -19,11 +19,6 @@ def register(id, *args, **kvargs):
         return
     else:
         return gym.envs.registration.register(id, *args, **kvargs)
-
-
-#register(id='BuildingEnv-v0',
-#    entry_point='simulation.BuildingEnv:MultipleRobot',
-#    reward_threshold=.5)
 
 env = MultiRobot({
     "debug": 0,
@@ -73,7 +68,7 @@ class ViewWindow():
             print("%.02f FPS"%(self.times/(time.clock()-self.timestart)))
         self.root.after(10, self.step)
         #time.sleep(0.3)
-        if all(done.values()):
+        if done[1]:
             print("--- Resetting ---")
             env.reset()
 

@@ -4,7 +4,7 @@ import math
 import random
 import numpy as np
 from astar import AStar
-from .seeker import Seeker
+from .mapper import Mapper
 from ray.rllib.env import MultiAgentEnv
 from PIL import Image, ImageDraw, ImageColor
 
@@ -19,7 +19,7 @@ class SingleRobot(gym.Env):
         else:
             world = Playground()
         self.action_repeat = env_config.get("action_repeat") or DEFAULT_ACTION_REPEAT
-        self.env = Seeker(world, env_config)
+        self.env = Mapper(world, env_config)
         self.action_space = self.env.action_space
         self.observation_space = self.env.observation_space
 
@@ -37,7 +37,7 @@ class SingleRobot(gym.Env):
 
 
     def reset(self):
-        """ 
+        """
         Reset the base environment
         """
         return self.env.reset()
@@ -70,7 +70,7 @@ class MultiRobot(gym.Env, MultiAgentEnv):
 
         self.dones = set()
         self.action_repeat = env_config.get("action_repeat") or DEFAULT_ACTION_REPEAT
-        self.env = {i: Seeker(self.world, env_config) for i in range(self.num_robots)}
+        self.env = {i: Mapper(self.world, env_config) for i in range(self.num_robots)}
         self.default_env = self.env[random.choice(list(self.env.keys()))]
         self.action_space = self.default_env.action_space
         self.observation_space = self.default_env.observation_space
@@ -108,7 +108,7 @@ class MultiRobot(gym.Env, MultiAgentEnv):
 
 
     def reset(self):
-        """ 
+        """
         Reset the base environment
         """
         self.dones = set()

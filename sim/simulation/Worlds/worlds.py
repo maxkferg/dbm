@@ -97,12 +97,12 @@ class World():
         if shape == pybullet.GEOM_BOX and not "halfExtents" in kwargs:
             size = kwargs.pop('size')
             kwargs['halfExtents'] = [size,size,size]
-        
+
         length = 1
         if "length" in kwargs:
             length = kwargs.pop("length")
 
-        vid = self.physics.createVisualShape(shape, rgbaColor=color, specularColor=specular, length=length, **kwargs); 
+        vid = self.physics.createVisualShape(shape, rgbaColor=color, specularColor=specular, length=length, **kwargs);
         cid = self.physics.createCollisionShape(shape, height=length, **kwargs)
         bid = self.physics.createMultiBody(baseMass=1, baseVisualShapeIndex=cid, baseCollisionShapeIndex=cid, basePosition=position)
 

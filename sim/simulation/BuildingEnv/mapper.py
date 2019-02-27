@@ -4,6 +4,8 @@ import gym
 import time
 import math
 import time
+import scipy
+import skimage
 import random
 import pybullet
 import numpy as np
@@ -40,7 +42,7 @@ COUNT = 0
 
 
 
-class Seeker():
+class Mapper():
 
     def __init__(self, world, config={}):
         print("Initializing new SeekerEnv")
@@ -75,7 +77,17 @@ class Seeker():
 
         self.envStepCounter = 0
         self.startedTime = time.time()
-        self.seed()
+
+        map_scale = 0.2 # Each 20 cm is one pixel in the map
+        nx = 5*int((self.world.grid.max_x - self.world.grid.min_x) / map_scale)
+        ny = 5*int((self.world.grid.max_y - self.world.grid.min_y) / map_scale)
+
+        # Define all of the map arrays
+        self.map_scale = map_scale
+        self.map_floor = np.zeros((ny, nx), dtype=np.uint8)
+        self.map_robots = np.zeros((ny, nx), dtype=np.uint8)
+        self.map_checkpoints = np.zeros((ny, nx), dtype=np.uint8)
+        self.map_targets = np.zeros((ny, nx), dtype=np.uint8)
 
         ray_count = 12                    # 12 rays of 30 degrees each
         observationDim = 4                # These are positional coordinates
@@ -96,17 +108,9 @@ class Seeker():
         self.observation_space = spaces.Box(-observation_high, observation_high, dtype=np.float32)
         self.viewer = None
 
-        # Generate the sensor rays so we don't have to do it repeatedly
-        ray_angle = 2. * np.pi / ray_count
-        print("Lidar Ray Angle:", ray_angle)
-
-        self.rays = []
-        for i in range(ray_count):
-            q = make_quaternion([0, 0, 1], i*ray_angle)
-            self.rays.append(q)
-
         # Load the floor file so we don't have to repeatedly read it
         self.build()
+        self.remap_floor()
         self.reset_checkpoints()
         print("Initialization Complete")
 
@@ -175,6 +179,7 @@ class Seeker():
         target_pos = gen_start_position(.25, self.world.floor) + [.25]
         _, target_orn = self.physics.getBasePositionAndOrientation(self.targetUniqueId)
         self.physics.resetBasePositionAndOrientation(self.targetUniqueId, np.array(target_pos), target_orn)
+        self.remap_targets()
 
 
     def reset_checkpoints(self):
@@ -196,8 +201,131 @@ class Seeker():
         else:
             for i,node in enumerate(nodes):
                 if i>0 and i%3 == 0:
-                    position = (node.x, node.y, 0.25)
+                    position = (node.x, node.y, 0.5)
                     self.create_checkpoint(position)
+
+
+    def get_map_position(self,v):
+        """
+        Return the position of v1 in map coordiantes
+        """
+        x,y,_ = v
+        height, width = self.map_floor.shape
+        world_min_x = self.world.grid.min_x
+        world_max_x = self.world.grid.max_x
+        world_min_y = self.world.grid.min_y
+        world_max_y = self.world.grid.max_y
+        if x<world_min_x or x>world_max_x:
+            raise(ValueError("%i"%x+"%i"%world_min_x+"%i"%world_max_x))
+        x = int(width * (x - world_min_x) / (world_max_x - world_min_x))
+        y = int(height * (y - world_min_y) / (world_max_y - world_min_y))
+        return (x,y)
+
+
+    def remap_floor(self):
+        """
+        Return a full map of the environment floor
+        Usable floor space is colored 0. Walls are colored 1
+        """
+        self.map_floor.fill(0)
+        max_x = self.map_floor.shape[1]-1
+        max_y = self.map_floor.shape[0]-1
+
+        quads = self.world.get_quads()
+        for quad in quads:
+            v0,v1,v2 = quad
+            v0 = self.get_map_position(v0)
+            v1 = self.get_map_position(v1)
+            v2 = self.get_map_position(v2)
+            xmin = np.min((v0[0],v1[0],v2[0]))
+            xmax = np.max((v0[0],v1[0],v2[0]))
+            ymin = np.min((v0[1],v1[1],v2[1]))
+            ymax = np.max((v0[1],v1[1],v2[1]))
+            # Crop to bounds
+            xmin = max(xmin,0)
+            xmax = min(xmax, max_x)
+            ymin = max(ymin, 0)
+            ymax = min(ymax, max_y)
+            self.map_floor[ymin:ymax, xmin:xmax] = 1
+        return self.map_floor
+
+
+    def remap_targets(self):
+        """
+        Return a full map of the environment showing the target location
+        Floor space is colored 0. Targets are colored 1.
+        """
+        target_pos, _ = self.physics.getBasePositionAndOrientation(self.targetUniqueId)
+        target_x, target_y = self.get_map_position(target_pos)
+        # Pixels to color
+        xmin = target_x - 2
+        xmax = target_x + 3
+        ymin = target_y - 2
+        ymax = target_y + 3
+        # Clip
+        max_x = self.map_floor.shape[1]-1
+        max_y = self.map_floor.shape[0]-1
+        xmin = max(xmin,0)
+        xmax = min(xmax, max_x)
+        ymin = max(ymin, 0)
+        ymax = min(ymax, max_y)
+        # Color
+        self.map_targets.fill(0)
+        self.map_targets[ymin:ymax, xmin:xmax] = 1
+        return self.map_targets
+
+
+    def remap_checkpoints(self):
+        """
+        Return a full map of the environment showing the checkpoint locations
+        Floor space is colored 0. Checkpoints are colored 1.
+        """
+        self.map_targets.fill(0)
+        for ckpt in self.checkpoints:
+            ckpt_pos, _ = self.physics.getBasePositionAndOrientation(ckpt)
+            ckpt_x, ckpt_y = self.get_map_position(ckpt_pos)
+            # Pixels to color
+            xmin = int(ckpt_x - 1)
+            xmax = int(ckpt_x + 2)
+            ymin = int(ckpt_y - 1)
+            ymax = int(ckpt_y + 2)
+            # Clip
+            max_x = self.map_floor.shape[1]-1
+            max_y = self.map_floor.shape[0]-1
+            xmin = max(xmin,0)
+            xmax = min(xmax, max_x)
+            ymin = max(ymin, 0)
+            ymax = min(ymax, max_y)
+            # Color
+            self.map_checkpoints[ymin:ymax, xmin:xmax] = 1
+        return self.map_checkpoints
+
+
+    def remap_robots(self):
+        """
+        Return a full map of the environment showing the locations of other robots
+        Floor space is colored 0. Other robots are colored 1.
+        """
+        self.map_robots.fill(0)
+        for robot in self.collision_objects:
+            enemy_pos, _ = self.physics.getBasePositionAndOrientation(robot)
+            enemy_x, enemy_y = self.get_map_position(enemy_pos)
+            # Pixels to color
+            xmin = int(enemy_x - 1)
+            xmax = int(enemy_x + 2)
+            ymin = int(enemy_y - 1)
+            ymax = int(enemy_y + 2)
+            # Clip
+            max_x = self.map_floor.shape[1]-1
+            max_y = self.map_floor.shape[0]-1
+            xmin = max(xmin,0)
+            xmax = min(xmax, max_x)
+            ymin = max(ymin, 0)
+            ymax = min(ymax, max_y)
+            # Color
+            self.map_robots[ymin:ymax, xmin:xmax] = 1
+        return self.map_robots
+
 
 
     def create_checkpoint(self, position):
@@ -232,38 +360,6 @@ class Seeker():
         self.dead_checkpoints.append(ckpt)
 
 
-    def read_lidar_values(self, robot_pos, robot_orn):
-        """Read values from the laser scanner"""
-        # The LIDAR is assumed to be attached to the top (to avoid self-intersection)
-        lidar_pos = add_vec(robot_pos, [0, 0, .25])
-
-        # The total length of the ray emanating from the LIDAR
-        ray_len = 5
-
-        # Rotate the ray vector and determine intersection
-        intersections = []
-        for ray in self.rays:
-            rot = mul_quat(robot_orn, ray)
-            dir_vec = rotate_vector(rot, [1, 0, 0])
-            start_pos = add_vec(lidar_pos, scale_vec(.1, dir_vec))
-            end_pos = add_vec(lidar_pos, scale_vec(ray_len, dir_vec))
-            intersection = self.physics.rayTest(start_pos, end_pos)
-            if intersection[0][0] == self.targetUniqueId:
-                intersections.append(-1)
-            elif intersection[0][0] == self.world.wallId:
-                intersections.append(intersection[0][2]*ray_len)
-            elif intersection[0][0] in self.collision_objects:
-                intersections.append(intersection[0][2]*ray_len)
-            else:
-                intersections.append(ray_len)
-        return intersections
-
-
-    def seed(self, seed=None):
-        self.np_random, seed = seeding.np_random(seed)
-        return [seed]
-
-
     def get_state(self, robot_pos, robot_orn):
         """
         Return a dict that describes the state of the car
@@ -277,8 +373,6 @@ class Seeker():
         tarpos, tarorn = self.physics.getBasePositionAndOrientation(self.targetUniqueId)
         invCarPos, invCarOrn = self.physics.invertTransform(robot_pos, robot_orn)
         tarPosInCar, tarOrnInCar = self.physics.multiplyTransforms(invCarPos, invCarOrn, tarpos, tarorn)
-
-        lidar = self.read_lidar_values(robot_pos, robot_orn)
 
         # Iterate through checkpoints appending them to the distance list
         # Delete any checkpoints close to the robot, and the subsequent checkpoints
@@ -296,8 +390,8 @@ class Seeker():
                 ckpt_positions.append(tuple(rel_pos[0:2]))
 
         # Sort checkpoints. Pad with zeros until length n_ckpt
-        ckpt_positions = list(reversed(ckpt_positions)) + [(0,0)]*self.ckpt_count
-        ckpt_positions = ckpt_positions[:self.ckpt_count]
+        # ckpt_positions = list(reversed(ckpt_positions)) + [(0,0)]*self.ckpt_count
+        # ckpt_positions = ckpt_positions[:self.ckpt_count]
 
         state = {
             "robot_pos": robot_pos,
@@ -306,15 +400,59 @@ class Seeker():
             "robot_vx": 0,
             "robot_vy": 0,
             "robot_vt": 0,
-            "rel_ckpt_positions": ckpt_positions,
+            #"rel_ckpt_positions": ckpt_positions,
             "rel_target_orientation": math.atan2(tarPosInCar[1], tarPosInCar[0]),
             "rel_target_distance": math.sqrt(tarPosInCar[1]**2 + tarPosInCar[0]**2),
-            "lidar": lidar,
+            "map_floor": self.map_floor,
+            "map_targets": self.map_targets,
+            "map_robots": self.remap_robots(),
+            "map_checkpoints": self.remap_checkpoints(),
+            "map": np.array([]),
+            #"lidar": lidar,
             "is_at_checkpoint": is_at_checkpoint,
             "is_crashed": self.is_crashed(),
             "is_at_target": self.is_at_target(),
             "is_broken": False,
         }
+
+        # Crop the map to the current orientation and rotation
+        view_size = 64
+        pad_size = int(1.5*view_size)
+        robot_x, robot_y = self.get_map_position(state["robot_pos"])
+
+        # Pad the image and shift the coordinates
+        xmin = robot_x - view_size + pad_size
+        xmax = robot_x + view_size + pad_size
+        ymin = robot_y - view_size + pad_size
+        ymax = robot_y + view_size + pad_size
+        padding = ((pad_size, pad_size), (pad_size, pad_size), (0,0))
+
+        stacked = np.stack((
+                state["map_floor"],
+                state["map_targets"],
+                state["map_robots"],
+                state["map_checkpoints"]
+            ), -1)
+
+        padded = np.pad(
+            stacked,
+            pad_width=padding,
+            mode="constant")
+
+        # Crop out a large square around the center (x,y)
+        cropped = padded[ymin:ymax, xmin:xmax, :]
+
+        # Rotate the panel and crop a square section
+        if False:
+            state["map"] = scipy.ndimage.rotate(
+                255*padded,
+                axes=(1,0,0),
+                order=0,
+                reshape=False,
+                angle=state["robot_theta"]*180/math.pi
+            )[ymin:ymax, xmin:xmax]
+
+        state["map"] = 255*padded[ymin:ymax, xmin:xmax]
 
         if self.previous_state is not None:
             state["robot_vx"] = robot_pos[0] - self.previous_state["robot_pos"][0]
@@ -353,23 +491,19 @@ class Seeker():
         observation = [
             state["rel_target_orientation"],
             state["rel_target_distance"],
-            state["robot_pos"][0],
-            state["robot_pos"][1],
-            state["robot_theta"],
             state["robot_vx"],
             state["robot_vy"],
             state["robot_vt"],
+            state["map"]
         ]
-        observation.extend(flatten(state["rel_ckpt_positions"]))
-        observation.extend(state["lidar"])
-        return np.array(observation)
+        return observation
 
-
+    """
     def get_observation_array(self):
-        """
+        ""
         Return simulated observations at every point in the grid
         The observation array has dimension (ny, nx, n_observations)
-        """
+        ""
         robot_pos, robot_orn = self.physics.getBasePositionAndOrientation(self.robot.racecarUniqueId)
         state = self.get_state(robot_pos, robot_orn)
         obser = self.get_observation(state)
@@ -386,7 +520,7 @@ class Seeker():
                 state = self.get_state(robot_pos, robot_orn)
                 observations[j,i,:] = self.get_observation(state)
         return observations
-
+    """
 
     def act(self, action):
         """
@@ -510,6 +644,7 @@ class Seeker():
 
         # Move the camera with the base_pos
         base_pos, carorn = self.physics.getBasePositionAndOrientation(self.robot.racecarUniqueId)
+        state = self.get_state(base_pos, carorn)
 
         # Position the camera behind the car, slightly above
         dir_vec = np.array(rotate_vector(carorn, [2, 0, 0]))
@@ -529,8 +664,13 @@ class Seeker():
         rgb_array = np.array(px, dtype=np.uint8)
         rgb_array = rgb_array.reshape((height, width, 4))
 
-        h,w = 256,256
-        rgb_array[0:h,0:w] = self.render_observation(w,h)
+        for i in range(state["map"].shape[2]):
+            xmin = 0
+            xmax = state["map"].shape[1]
+            ymin = i*state["map"].shape[0] + int(10*i)
+            ymax = (i+1)*state["map"].shape[0] + int(10*i)
+            rgb_array[ymin:ymax, xmin:xmax, :3] = state["map"][:,:,[i]]
+            rgb_array[int((ymin+ymax)/2), int((xmin+xmax)/2), :] = [255,0,0,255]
 
         return rgb_array
 
