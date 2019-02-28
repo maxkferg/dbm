@@ -1,6 +1,5 @@
 *.pyc
 *.DS_Store
-sim/logdir/*
-sim/visualise
-sim/videos/
+src/logdir/*
+src/videos/*
 bullet3

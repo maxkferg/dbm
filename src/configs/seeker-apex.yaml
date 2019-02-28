@@ -1,0 +1,14 @@
+pendulum-apex-ddpg:
+    env: SeekerSimEnv-v0
+    run: APEX_DDPG
+    checkpoint_freq: 100
+    stop:
+        episode_reward_mean: 1.2
+    config:
+        use_huber: True
+        clip_rewards: False
+        num_workers: 16
+        n_step: 1
+        target_network_update_freq: 50000
+        tau: 1.0
+        um_gpus: 1

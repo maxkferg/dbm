@@ -1,0 +1,32 @@
+seeker-appo:
+    env: SeekerSimEnv-v0
+    run: APPO
+    checkpoint_freq: 10
+    stop:
+        episode_reward_mean: 1.0
+        timesteps_total: 25000000
+    config:
+        monitor: False
+
+        # == PPO surrogate loss options ==
+        clip_param: 0.3
+
+        # == IMPALA optimizer params (see documentation in impala.py) ==
+        num_sgd_iter: 8
+        sample_batch_size: 3200
+        train_batch_size: 32000
+        num_workers: 64
+        broadcast_interval: 1
+        max_sample_requests_in_flight_per_worker: 1
+        num_data_loader_buffers: 1
+        num_envs_per_worker: 1
+        minibatch_buffer_size: 4
+        vf_loss_coeff: 1.0
+        clip_param: 0.3
+        grad_clip: 10
+        lr: 0.0005
+
+        # === Computation ===
+        num_gpus: 0
+        model:
+            use_lstm: False
