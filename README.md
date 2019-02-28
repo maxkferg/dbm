@@ -3,7 +3,6 @@
 Robotic navigation in a real-time digital building model. Agents learn how to navigate in a simulated environment, avoiding walls and other agents.
 
 ![Digital Building Model Demo](https://raw.githubusercontent.com/maxkferg/dbm/master/src/assets/results/readme.gif)
-/images/dbm.gif)
 
 # Setup
 The digital building model has realistic physics, implimented using PyBullet. A great tutorial for
