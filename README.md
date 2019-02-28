@@ -53,11 +53,10 @@ Some parts of the codebase rely on the latest (`0.7.0`) release of ray. Installi
 
 ```sh
 # Linux
-pip install -U https://s3-us-west-2.amazonaws.com/ray-wheels/latest/ray-0.7.0-cp36-cp36m-manylinux1_x86_64.whl
+pip install -U https://s3-us-west-2.amazonaws.com/ray-wheels/latest/ray-0.7.0.dev0-cp36-cp36m-manylinux1_x86_64.whl
 
 # Mac OSX
-wget https://s3-us-west-2.amazonaws.com/ray-wheels/latest/ray-0.6.2-cp36-cp36m-macosx_10_6_intel.whl
-pip install -U ray-0.6.2-cp36-cp36m-macosx_10_6_intel.whl
+pip install -U https://s3-us-west-2.amazonaws.com/ray-wheels/latest/ray-0.7.0.dev0-cp36-cp36m-macosx_10_6_intel.whl
 ```
 
 If you have problems with ROS, remove any references to python2.7 from PATH and PYTHONPATH
