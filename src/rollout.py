@@ -137,27 +137,19 @@ def render_q(env, agent):
     for i in range(len(observation)):
         act_t.append(np.expand_dims(action, axis=0))
         obs_t.append(np.expand_dims(prep.transform(observation[i]), axis=0))
-        if i%1000==0:
-            print("Preprocessed %i observations"%i)
-
     print("Prep took %.3f seconds"%(time.time()-start))
 
     q, qt = agent.get_policy().compute_q(obs_t, act_t)
     q_img = np.reshape(q, (nx,ny,1))
-
     print("Policy took %.3f seconds"%(time.time()-start))
 
     import cv2
     import scipy.misc
     q_img = 127*(np.clip(q_img, -1, 1)+1)
     q_img = q_img.astype(np.uint8)
-
     q_img = np.tile(q_img, (1,1,3))
-    print(np.max(q_img))
-    print(np.min(q_img))
-
     q_img = cv2.applyColorMap(q_img, cv2.COLORMAP_JET)
-    scipy.misc.imsave('outfile.jpg', q_img)
+    return q_img
 
 
 def rollout(agent, env_name, num_steps, out=None, no_render=True):
@@ -195,7 +187,6 @@ def rollout(agent, env_name, num_steps, out=None, no_render=True):
                 for key,value in state.items():
                     action[key] = agent.compute_action(value)
                     # Compute the value of this default actor
-                    render_q(env, agent)
 
             # Repeat this action n times, rendering each time
             for i in range(FRAME_MULTIPLIER):
@@ -203,8 +194,10 @@ def rollout(agent, env_name, num_steps, out=None, no_render=True):
                 reward_total += np.sum(list(reward.values()))
                 done = dones['__all__']
                 if not no_render:
-                    i = env.render(width=RENDER_WIDTH, height=RENDER_HEIGHT)
-                    video.write(i)
+                    q = render_q(env, agent)
+                    frame = env.render(width=RENDER_WIDTH, height=RENDER_HEIGHT)
+                    frame[0:q.shape[0], (frame.shape[1]-q.shape[1]):frame.shape[1], :3] = q
+                    video.write(frame)
                 if done:
                     break
             if out is not None:
