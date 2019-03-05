@@ -151,6 +151,7 @@ def render_q(env, agent):
     q_img = q_img.astype(np.uint8)
     q_img = np.tile(q_img, (1,1,3))
     q_img = cv2.applyColorMap(q_img, cv2.COLORMAP_JET)
+    q_img = q_img[:,:,::-1] # Flip colormap to RGB
     return q_img
 
 
