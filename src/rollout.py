@@ -58,7 +58,9 @@ RENDER_HEIGHT = 720
 
 timestamp = datetime.datetime.now().strftime("%I-%M-%S %p")
 filename = 'videos/video %s.mp4'%timestamp
-video = cv2.VideoWriter(filename, 0, 1, fps=20, frameSize=(RENDER_WIDTH,RENDER_HEIGHT))
+
+video_FourCC = cv2.VideoWriter_fourcc(*"mp4v")
+video = cv2.VideoWriter(filename, video_FourCC, fps=20, frameSize=(RENDER_WIDTH,RENDER_HEIGHT))
 
 
 
