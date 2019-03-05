@@ -278,9 +278,13 @@ class CustomDDPGPolicyGraph(TFPolicyGraph):
 
 
     def compute_q(self, observation, action):
-        feed_dict = {self.obs_t: observation, self.act_t: action }
-        feed_dict.update(self.extra_compute_action_feed_dict())
-        q_values, q_twin_values = self.sess.run([self.q_t, self.twin_q_t], feed_dict=feed_dict)
+        q_values, q_twin_values = [],[]
+        for i in range(len(observation)):
+            feed_dict = {self.obs_t: observation[i], self.act_t: action[i] }
+            feed_dict.update(self.extra_compute_action_feed_dict())
+            q_value, q_twin_value = self.sess.run([self.q_t, self.twin_q_t], feed_dict=feed_dict)
+            q_values.append(q_value)
+            q_twin_values.append(q_twin_value)
         return q_values, q_twin_values
 
 

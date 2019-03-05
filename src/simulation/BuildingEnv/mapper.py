@@ -496,7 +496,7 @@ class Mapper():
         obs = {
             'robot_theta': np.array(state["robot_theta"], dtype=np.float32),
             'robot_velocity': np.array([
-                state["robot_vx"], 
+                state["robot_vx"],
                 state["robot_vy"],
                 state["robot_vt"]
             ], dtype=np.float32),
@@ -510,12 +510,12 @@ class Mapper():
         # Important that the order is the same as observation space
         return OrderedDict((k, obs[k]) for k in self.observation_space.spaces.keys())
 
-    """
+
     def get_observation_array(self):
-        ""
+        """
         Return simulated observations at every point in the grid
         The observation array has dimension (ny, nx, n_observations)
-        ""
+        """
         robot_pos, robot_orn = self.physics.getBasePositionAndOrientation(self.robot.racecarUniqueId)
         state = self.get_state(robot_pos, robot_orn)
         obser = self.get_observation(state)
@@ -525,14 +525,14 @@ class Mapper():
         nx = len(xlist)
         ny = len(ylist)
 
-        observations  = np.zeros((ny, nx, len(obser)))
+        observations = []
         for i in range(nx):
             for j in range(ny):
                 robot_pos = (xlist[i], ylist[j], robot_pos[2])
                 state = self.get_state(robot_pos, robot_orn)
-                observations[j,i,:] = self.get_observation(state)
-        return observations
-    """
+                observations.append(self.get_observation(state))
+        return observations, nx, ny
+
 
     def act(self, action):
         """
