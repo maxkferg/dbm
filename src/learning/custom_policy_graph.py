@@ -123,7 +123,7 @@ class CustomDDPGPolicyGraph(TFPolicyGraph):
             q_t, self.q_model = self._build_q_network(
                 self.obs_t, observation_space, self.act_t)
             self.q_func_vars = _scope_vars(scope.name)
-        self.q_t = q_t
+            self.q_t = q_t
         self.stats = {
             "mean_q": tf.reduce_mean(q_t),
             "max_q": tf.reduce_max(q_t),
@@ -137,15 +137,14 @@ class CustomDDPGPolicyGraph(TFPolicyGraph):
                 twin_q_t, self.twin_q_model = self._build_q_network(
                     self.obs_t, observation_space, self.act_t)
                 self.twin_q_func_vars = _scope_vars(scope.name)
+                self.twin_q_t = twin_q_t
+                self.stats.update({
+                    "mean_twin_q_t": tf.reduce_mean(twin_q_t),
+                    "max_twin_q_t": tf.reduce_max(twin_q_t),
+                    "min_twin_q_t": tf.reduce_min(twin_q_t),
+                })
         q_batchnorm_update_ops = list(
             set(tf.get_collection(tf.GraphKeys.UPDATE_OPS)) - prev_update_ops)
-
-        self.twin_q_t = twin_q_t
-        self.stats = {
-            "mean_twin_q_t": tf.reduce_mean(twin_q_t),
-            "max_twin_q_t": tf.reduce_max(twin_q_t),
-            "min_twin_q_t": tf.reduce_min(twin_q_t),
-        }
 
         # target q network evalution
         with tf.variable_scope(Q_TARGET_SCOPE) as scope:
@@ -178,13 +177,6 @@ class CustomDDPGPolicyGraph(TFPolicyGraph):
                     if "bias" not in var.name:
                         self.loss.critic_loss += (
                             config["l2_reg"] * 0.5 * tf.nn.l2_loss(var))
-
-        # Model self-supervised losses
-        self.loss.actor_loss = self.p_model.custom_loss(self.loss.actor_loss)
-        self.loss.critic_loss = self.q_model.custom_loss(self.loss.critic_loss)
-        if self.config["twin_q"]:
-            self.loss.critic_loss = self.twin_q_model.custom_loss(
-                self.loss.critic_loss)
 
         # update_target_fn will be called periodically to copy Q network to
         # target Q network
@@ -221,6 +213,17 @@ class CustomDDPGPolicyGraph(TFPolicyGraph):
             ("dones", self.done_mask),
             ("weights", self.importance_weights),
         ]
+        input_dict = dict(self.loss_inputs)
+
+        # Model self-supervised losses
+        self.loss.actor_loss = self.p_model.custom_loss(
+            self.loss.actor_loss, input_dict)
+        self.loss.critic_loss = self.q_model.custom_loss(
+            self.loss.critic_loss, input_dict)
+        if self.config["twin_q"]:
+            self.loss.critic_loss = self.twin_q_model.custom_loss(
+                self.loss.critic_loss, input_dict)
+
         TFPolicyGraph.__init__(
             self,
             observation_space,
@@ -275,9 +278,13 @@ class CustomDDPGPolicyGraph(TFPolicyGraph):
 
 
     def compute_q(self, observation, action):
-        feed_dict = {self.obs_t: observation, self.act_t: action }
-        feed_dict.update(self.extra_compute_action_feed_dict())
-        q_values, q_twin_values = self.sess.run([self.q_t, self.twin_q_t], feed_dict=feed_dict)
+        q_values, q_twin_values = [],[]
+        for i in range(len(observation)):
+            feed_dict = {self.obs_t: observation[i], self.act_t: action[i] }
+            feed_dict.update(self.extra_compute_action_feed_dict())
+            q_value, q_twin_value = self.sess.run([self.q_t, self.twin_q_t], feed_dict=feed_dict)
+            q_values.append(q_value)
+            q_twin_values.append(q_twin_value)
         return q_values, q_twin_values
 
 

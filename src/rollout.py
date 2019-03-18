@@ -27,6 +27,7 @@ from gym.spaces import Discrete, Box
 from gym.envs.registration import EnvSpec
 from gym.envs.registration import registry
 from ray.rllib.agents.registry import get_agent_class
+from ray.rllib.models.preprocessors import get_preprocessor
 from simulation.BuildingEnv import MultiRobot
 from simulation.Worlds.worlds import Y2E2, Building, Playground, Maze, House
 from learning.custom_policy_graph import CustomDDPGPolicyGraph
@@ -41,6 +42,7 @@ Example Usage via RLlib CLI:
 
 CHECKPOINT = "~/ray_results/seeker-apex-td3/APEX_DDPG_MultiRobot-v0_0_2019-02-23_01-54-076wuy8g2a/checkpoint_2200/checkpoint-2200"
 CHECKPOINT = "~/ray_results/seeker-apex-td3/APEX_DDPG_MultiRobot-v0_0_2019-02-27_11-39-53d4m4cbl2/checkpoint_1350/checkpoint-1350"
+CHECKPOINT = "~/ray_results/saved/mapper/checkpoint_1350/checkpoint-1350"
 
 CHECKPOINT = os.path.expanduser(CHECKPOINT)
 ENVIRONMENT = "MultiRobot-v0"
@@ -56,7 +58,9 @@ RENDER_HEIGHT = 720
 
 timestamp = datetime.datetime.now().strftime("%I-%M-%S %p")
 filename = 'videos/video %s.mp4'%timestamp
-video = cv2.VideoWriter(filename, 0, 1, fps=20, frameSize=(RENDER_WIDTH,RENDER_HEIGHT))
+
+video_FourCC = cv2.VideoWriter_fourcc(*"mp4v")
+video = cv2.VideoWriter(filename, video_FourCC, fps=20, frameSize=(RENDER_WIDTH,RENDER_HEIGHT))
 
 
 
@@ -119,35 +123,36 @@ def create_parser(parser_creator=None):
 
 
 def render_q(env, agent):
-    action = [0,0]
-    action = np.expand_dims(action, axis=0)
+    action = np.array([0,0])
+    prep = get_preprocessor(env.observation_space)(env.observation_space)
+
     start = time.time()
-
-    observation = env.default_env.get_observation_array()
-
-    print("Observation took %.3f seconds"%(time.time()-start))
+    observation, nx, ny = env.default_env.get_observation_array()
+    print("Got %i observations in %.3f seconds"%(len(observation),time.time()-start))
 
     # Reshape action and observation so that the first dimension is the batch
-    nx, ny, ns = observation.shape
-    observation = np.reshape(observation, (-1, ns))
-    action = np.tile(action, (nx*ny,1))
+    #nx, ny, ns = observation.shape
+    #observation = np.reshape(observation, (-1, ns))
+    #action = np.tile(action, (nx*ny,1))
+    obs_t = []
+    act_t = []
+    for i in range(len(observation)):
+        act_t.append(np.expand_dims(action, axis=0))
+        obs_t.append(np.expand_dims(prep.transform(observation[i]), axis=0))
+    print("Prep took %.3f seconds"%(time.time()-start))
 
-    q, qt = agent.get_policy().compute_q(observation, action)
+    q, qt = agent.get_policy().compute_q(obs_t, act_t)
     q_img = np.reshape(q, (nx,ny,1))
-
     print("Policy took %.3f seconds"%(time.time()-start))
 
     import cv2
     import scipy.misc
     q_img = 127*(np.clip(q_img, -1, 1)+1)
     q_img = q_img.astype(np.uint8)
-
     q_img = np.tile(q_img, (1,1,3))
-    print(np.max(q_img))
-    print(np.min(q_img))
-
     q_img = cv2.applyColorMap(q_img, cv2.COLORMAP_JET)
-    scipy.misc.imsave('outfile.jpg', q_img)
+    q_img = q_img[:,:,::-1] # Flip colormap to RGB
+    return q_img
 
 
 def rollout(agent, env_name, num_steps, out=None, no_render=True):
@@ -185,7 +190,6 @@ def rollout(agent, env_name, num_steps, out=None, no_render=True):
                 for key,value in state.items():
                     action[key] = agent.compute_action(value)
                     # Compute the value of this default actor
-                    #render_q(env, agent)
 
             # Repeat this action n times, rendering each time
             for i in range(FRAME_MULTIPLIER):
@@ -193,8 +197,10 @@ def rollout(agent, env_name, num_steps, out=None, no_render=True):
                 reward_total += np.sum(list(reward.values()))
                 done = dones['__all__']
                 if not no_render:
-                    i = env.render(width=RENDER_WIDTH, height=RENDER_HEIGHT)
-                    video.write(i)
+                    q = render_q(env, agent)
+                    frame = env.render(width=RENDER_WIDTH, height=RENDER_HEIGHT)
+                    frame[0:q.shape[0], (frame.shape[1]-q.shape[1]):frame.shape[1], :3] = q
+                    video.write(frame)
                 if done:
                     break
             if out is not None:

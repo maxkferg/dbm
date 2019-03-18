@@ -157,7 +157,7 @@ class MapWindow():
         self.canvas.create_image(0, 0, image=self.photo, anchor=tkinter.NW)
 
 
-if __name__=="__main__": 
+if __name__=="__main__":
     parser = create_parser()
     args = parser.parse_args()
     if args.no_render:

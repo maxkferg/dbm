@@ -39,7 +39,7 @@ class Custom_CNN(Model):
         # Dense connections processing sensor data
         with tf.name_scope("sensors"):
             dense = tf.concat([
-                obs['robot_theta'], 
+                obs['robot_theta'],
                 obs['robot_velocity'],
                 obs['target'],
                 obs['ckpts'],
