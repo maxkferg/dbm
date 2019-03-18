@@ -15,6 +15,11 @@ python maps.py assets/building.png \
         --render-image assets/env/building/output.png \
         --export-obj assets/env/building/output.obj \
         --export-sdf assets/env/building/output.sdf
+
+python maps.py assets/house.png \
+        --render-image assets/env/house/output.png \
+        --export-obj assets/env/house/output.obj \
+        --export-sdf assets/env/house/output.sdf
 """
 import argparse
 import gym
@@ -46,6 +51,8 @@ if args.plan_file == "assets/test1.png":
     scale = 30
 if args.plan_file == "assets/test2.png":
     scale = 30
+if args.plan_file == "assets/house.png":
+    scale = 18
 
 if args.render_image:
     generator.render_to_image(args.render_image)

@@ -64,10 +64,10 @@ dependencies:
     - markdown==2.6.11
     - mpi4py==3.0.0
     - mujoco-py==1.50.1.56
-    - numpy==1.14.2
+    - numpy==1.16.2
     - pillow==5.1.0
     - progressbar2==3.37.1
-    - protobuf==3.5.2.post1
+    - protobuf==3.4.0
     - psutil
     - pybullet==1.9.5
     - pycparser==2.18
@@ -75,9 +75,11 @@ dependencies:
     - pyopengl==3.1.0
     - python-utils==2.3.0
     - pyzmq==17.0.0
+    - roslibpy
     - requests==2.18.4
     - ruamel.yaml==0.15.37
     - scipy==1.0.1
+    - scikit-image-0.14.2
     - six==1.11.0
     - tensorflow
     - termcolor==1.1.0

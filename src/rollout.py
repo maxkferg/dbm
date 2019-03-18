@@ -28,7 +28,7 @@ from gym.envs.registration import EnvSpec
 from gym.envs.registration import registry
 from ray.rllib.agents.registry import get_agent_class
 from simulation.BuildingEnv import MultiRobot
-from simulation.Worlds.worlds import Y2E2, Building, Playground, Maze
+from simulation.Worlds.worlds import Y2E2, Building, Playground, Maze, House
 from learning.custom_policy_graph import CustomDDPGPolicyGraph
 from ray.tune.registry import register_env
 colored_traceback.add_hook()
@@ -67,7 +67,7 @@ def building_env_creator(env_config):
         "renders": True,
         "num_robots": 2,
         "reset_on_target": False,
-        "world": Playground(timestep=EVAL_TIMESTEP)
+        "world": House(timestep=EVAL_TIMESTEP)
     })
 
 register_env(ENVIRONMENT, building_env_creator)

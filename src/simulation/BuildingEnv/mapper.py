@@ -659,8 +659,9 @@ class Mapper():
         state = self.get_state(base_pos, carorn)
 
         # Position the camera behind the car, slightly above
-        dir_vec = np.array(rotate_vector(carorn, [2, 0, 0]))
-        cam_eye = np.subtract(np.array(base_pos), np.add(dir_vec, np.array([0, 0, -1])))
+        dist = 1
+        dir_vec = np.array(rotate_vector(carorn, [2*dist, 0, 0]))
+        cam_eye = np.subtract(np.array(base_pos), np.add(dir_vec, np.array([0, 0, -1*dist])))
         cam_up = normalize(self.world.world_up - np.multiply(np.dot(self.world.world_up, dir_vec), dir_vec))
 
         view_matrix = self.physics.computeViewMatrix(
@@ -728,8 +729,8 @@ class Mapper():
 
         base_pos_pixels = self.world.scale(base_pos, width, height)
         target_pos_pixels = self.world.scale(target_pos, width, height)
-        robot = [base_pos_pixels[0]-20, base_pos_pixels[1]-20, base_pos_pixels[0]+20, base_pos_pixels[1]+20]
-        target = [target_pos_pixels[0]-20, target_pos_pixels[1]-20, target_pos_pixels[0]+20, target_pos_pixels[1]+20]
+        robot = [base_pos_pixels[0]-10, base_pos_pixels[1]-10, base_pos_pixels[0]+10, base_pos_pixels[1]+10]
+        target = [target_pos_pixels[0]-10, target_pos_pixels[1]-10, target_pos_pixels[0]+10, target_pos_pixels[1]+10]
 
         for v0, v1, v2 in self.world.get_quads():
             v0 = self.world.scale(v0, width, height)

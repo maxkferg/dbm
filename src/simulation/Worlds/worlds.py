@@ -245,4 +245,20 @@ class Maze(World):
 
 
 
+class House(World):
+    """
+    Abstract class for loading the Y2E2 building
+    Does not load any robot objects
+    """
+    metadata = {
+        'scale': 2,
+        'substeps': 20,  # 20 Physics steps per timestep
+        'timestep': 0.1, # Simulate every 0.1 seconds
+        'orientation': pybullet.getQuaternionFromEuler([0, 0, 0]),
+        'world': 'env/house/output.sdf',
+        'floor_vertices': 'env/house/output_floors.obj',
+        'render.modes': ['human', 'rgb_array'],
+    }
+
+
  

@@ -17,20 +17,23 @@ import learning.model
 import colored_traceback
 from PIL import Image, ImageTk
 from gym.envs.registration import registry
-from simulation.BuildingEnv import MultiRobot
-from simulation.Worlds.worlds import Y2E2, Building, Playground, Maze
+from simulation.RealEnv import MultiRobot
+from simulation.Worlds.worlds import Y2E2, Building, Playground, Maze, House
 colored_traceback.add_hook()
 tkinter.NoDefaultRoot()
 
 RENDER_WIDTH = 800
 RENDER_HEIGHT = 600
+MAP_WIDTH = int(195*1.6)
+MAP_HEIGHT = int(520*1.6)
+
 RENDER_SIZE = (RENDER_HEIGHT, RENDER_WIDTH)
 
 
 env = MultiRobot({
     "debug": 0,
-    "num_robots": 2,
-    "world": Playground()
+    "num_robots": 1,
+    "world": House()
 })
 
 
@@ -116,7 +119,7 @@ class ViewWindow():
         self.obser, r, done, info = env.step(action)
         # Render current state
         self.render(env.render(mode="rgb_array", width=self.width, height=self.height))
-        self.map.render(env.render_map(mode="rgb_array", width=self.width, height=self.height))
+        self.map.render(env.render_map(mode="rgb_array", width=MAP_WIDTH, height=MAP_HEIGHT))
         self.root.update()
         self.times += 1
         if self.times%33==0:
@@ -148,6 +151,7 @@ class MapWindow():
         self.root.mainloop()
 
     def render(self, pixels):
+        pixels = np.flip(pixels, axis=0)
         self.im = Image.fromarray(pixels)
         self.photo = ImageTk.PhotoImage(master=self.root, image=self.im)
         self.canvas.create_image(0, 0, image=self.photo, anchor=tkinter.NW)
@@ -159,6 +163,6 @@ if __name__=="__main__":
     if args.no_render:
         view = BenchmarkWindow()
     else:
-        mapw = MapWindow(RENDER_WIDTH, RENDER_HEIGHT)
+        mapw = MapWindow(MAP_WIDTH, MAP_HEIGHT)
         view = ViewWindow(mapw, RENDER_WIDTH, RENDER_HEIGHT)
     view.start()
