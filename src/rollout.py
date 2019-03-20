@@ -28,7 +28,8 @@ from gym.envs.registration import EnvSpec
 from gym.envs.registration import registry
 from ray.rllib.agents.registry import get_agent_class
 from ray.rllib.models.preprocessors import get_preprocessor
-from simulation.BuildingEnv import MultiRobot
+#from simulation.RealEnv import MultiRobot # Env type
+from simulation.BuildingEnv import MultiRobot # Env type
 from simulation.Worlds.worlds import Y2E2, Building, Playground, Maze, House
 from learning.custom_policy_graph import CustomDDPGPolicyGraph
 from ray.tune.registry import register_env
@@ -42,13 +43,14 @@ Example Usage via RLlib CLI:
 
 CHECKPOINT = "~/ray_results/seeker-apex-td3/APEX_DDPG_MultiRobot-v0_0_2019-02-23_01-54-076wuy8g2a/checkpoint_2200/checkpoint-2200"
 CHECKPOINT = "~/ray_results/seeker-apex-td3/APEX_DDPG_MultiRobot-v0_0_2019-02-27_11-39-53d4m4cbl2/checkpoint_1350/checkpoint-1350"
-CHECKPOINT = "~/ray_results/saved/mapper/checkpoint_1350/checkpoint-1350"
+#CHECKPOINT = "~/ray_results/saved/mapper/checkpoint_1350/checkpoint-1350"
 
 CHECKPOINT = os.path.expanduser(CHECKPOINT)
 ENVIRONMENT = "MultiRobot-v0"
 
 RESET_ON_TARGET = True
 DEFAULT_TIMESTEP = 0.1
+FRAME_MULTIPLIER = 1
 FRAME_MULTIPLIER = 5
 EVAL_TIMESTEP = DEFAULT_TIMESTEP/FRAME_MULTIPLIER
 
@@ -59,7 +61,7 @@ RENDER_HEIGHT = 720
 timestamp = datetime.datetime.now().strftime("%I-%M-%S %p")
 filename = 'videos/video %s.mp4'%timestamp
 
-video_FourCC = cv2.VideoWriter_fourcc(*"mp4v")
+video_FourCC = -1#cv2.VideoWriter_fourcc(*"mp4v")
 video = cv2.VideoWriter(filename, video_FourCC, fps=20, frameSize=(RENDER_WIDTH,RENDER_HEIGHT))
 
 
@@ -69,7 +71,7 @@ def building_env_creator(env_config):
         "monitor": True,
         "debug": 0,
         "renders": True,
-        "num_robots": 2,
+        "num_robots": 3,
         "reset_on_target": False,
         "world": House(timestep=EVAL_TIMESTEP)
     })
@@ -111,6 +113,18 @@ def create_parser(parser_creator=None):
         const=True,
         help="Surpress rendering of the environment.")
     parser.add_argument(
+        "--render-q",
+        default=True,
+        action='store_true',
+        dest='render_q',
+        help='Render the q function. Write it to the environment video')
+    parser.add_argument(
+        "--save-q",
+        default=True,
+        action='store_true',
+        dest='save_q',
+        help='Render the q function. Save it as an image file')
+    parser.add_argument(
         "--steps", default=10000, help="Number of steps to roll out.")
     parser.add_argument("--out", default=None, help="Output filename.")
     parser.add_argument(
@@ -122,7 +136,7 @@ def create_parser(parser_creator=None):
     return parser
 
 
-def render_q(env, agent):
+def render_q_function(env, agent):
     action = np.array([0,0])
     prep = get_preprocessor(env.observation_space)(env.observation_space)
 
@@ -147,15 +161,16 @@ def render_q(env, agent):
 
     import cv2
     import scipy.misc
+    q_img = np.tile(q_img, (1,1,3))
+    q_img = cv2.blur(q_img, (5,5))
     q_img = 127*(np.clip(q_img, -1, 1)+1)
     q_img = q_img.astype(np.uint8)
-    q_img = np.tile(q_img, (1,1,3))
-    q_img = cv2.applyColorMap(q_img, cv2.COLORMAP_JET)
+    q_img = cv2.applyColorMap(q_img, cv2.COLORMAP_RAINBOW)
     q_img = q_img[:,:,::-1] # Flip colormap to RGB
     return q_img
 
 
-def rollout(agent, env_name, num_steps, out=None, no_render=True):
+def rollout(agent, env_name, num_steps, out=None, no_render=True, render_q=False, save_q=False):
     if hasattr(agent, "local_evaluator"):
         env = agent.local_evaluator.env
     else:
@@ -197,9 +212,16 @@ def rollout(agent, env_name, num_steps, out=None, no_render=True):
                 reward_total += np.sum(list(reward.values()))
                 done = dones['__all__']
                 if not no_render:
-                    q = render_q(env, agent)
                     frame = env.render(width=RENDER_WIDTH, height=RENDER_HEIGHT)
-                    frame[0:q.shape[0], (frame.shape[1]-q.shape[1]):frame.shape[1], :3] = q
+                    if render_q or save_q:
+                        q = render_q_function(env, agent)
+                    if save_q:
+                        cv2.imwrite('q.png',q)
+                    if render_q:
+                        frame[0:q.shape[0], (frame.shape[1]-q.shape[1]):frame.shape[1], :3] = q
+                    #from matplotlib import pyplot as plt
+                    #plt.imshow(frame, interpolation = 'bicubic')
+                    #plt.show()
                     video.write(frame)
                 if done:
                     break
@@ -246,6 +268,7 @@ def run(args, parser):
     config['noise_scale'] = 0
     config['per_worker_exploration'] = False
     config['schedule_max_timesteps'] = 0
+    config['num_workers'] = 0
 
     if not args.env:
         raise("No environment")
@@ -263,7 +286,7 @@ def run(args, parser):
     agent.restore(args.checkpoint)
     num_steps = int(args.steps)
     pprint(config)
-    rollout(agent, args.env, num_steps, args.out, args.no_render)
+    rollout(agent, args.env, num_steps, args.out, args.no_render, args.render_q, args.save_q)
     cv2.destroyAllWindows()
     video.release()
 
@@ -275,7 +298,9 @@ if __name__ == "__main__":
     args = parser.parse_args()
     try:
         run(args, parser)
-    except KeyboardInterrupt:
+    except Exception as e:
+        print(e)
         cv2.destroyAllWindows()
         video.release()
+        raise e
 

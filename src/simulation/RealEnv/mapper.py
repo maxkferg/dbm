@@ -44,12 +44,13 @@ PORT = 8080
 HOST = "10.0.0.39"
 
 TARGETS = [
-    [-2, 0, 0.3],
-    [0, 0, 0.3]
+    [0.2, 4, 0.3],
+    [-0.2, 0, 0.3]
 ]
 
-OFFSET_X = -0.2
-OFFSET_Y = -4.9
+OFFSET_X = -0.6
+OFFSET_Y = -5.5
+REAL = True
 
 # Fix targets
 TARGETS = [[x+OFFSET_X, y+OFFSET_Y, z] for x,y,z in TARGETS]
@@ -60,8 +61,11 @@ class RealMapper(Mapper):
         self.ros = roslibpy.Ros(host=HOST, port=PORT)
         self.ros_odom = roslibpy.Topic(self.ros, '/odom', 'nav_msgs/Odometry')
         self.ros_vel = roslibpy.Topic(self.ros, '/cmd_vel_mux/input/teleop', 'geometry_msgs/Twist')
+        self.step = 0
+        self.prev_robot_action = np.array([0,0])
         super().__init__(*args, **kwargs)
-        self.start_ros()
+        if REAL:
+            self.start_ros()  
 
     def start_ros(self):
         """Setup a connection with the robot to wait for ODOM messages"""
@@ -78,7 +82,6 @@ class RealMapper(Mapper):
         def start_listening():
             print("ROS: listening for odom messages")
             self.ros_odom.subscribe(receive_message)
-            self.ros_vel.subscribe(print)
 
         self.ros.get_topics(print)
         self.ros.on_ready(start_listening)
@@ -87,21 +90,11 @@ class RealMapper(Mapper):
 
     def send_control(self, control):
         """Send a control action to the robot"""
-        left = control[0]
-        right = control[1]
-        decay = 0.9
-
-        if not hasattr(self, 'prev_left') or not hasattr(self, 'prev_right'):
-            self.prev_left = 0
-            self.prev_right = 0
-
-        left = decay*(0.4*left + 0.6*self.prev_left)
-        right = decay*(0.4*right + 0.6*self.prev_right)
-        self.prev_left = left
-        self.prev_right = right
+        rotation = control[0]
+        velocity = control[1]
 
         linear = {
-            'x': np.mean([left, right]),
+            'x': velocity,
             'y': 0,
             'z': 0
         }
@@ -109,7 +102,7 @@ class RealMapper(Mapper):
         angular = {
             'x': 0,
             'y': 0,
-            'z': (left-right)/2
+            'z': 4*rotation
         }
 
         message = roslibpy.Message({
@@ -118,9 +111,15 @@ class RealMapper(Mapper):
         })
 
         def send():
-            print('Sending control', [left, right])
+            print('Sending rotation: ', rotation, ' and velocity: ',velocity)
             self.ros_vel.publish(message)
         self.ros.on_ready(send)
+
+
+    def reset_robot_position(self):
+        """Move the robot to a new position"""
+        car_pos = [OFFSET_X, OFFSET_Y, .25]
+        self.robot.set_position(car_pos)
 
 
     def reset_target_position(self):
@@ -151,23 +150,30 @@ class RealMapper(Mapper):
             realaction = action
         self.action = action
         self.robot.applyAction(realaction)
-        self.send_control(realaction)
+        if not REAL:
+            return
 
         print("ACTION:", action)
 
         # Ramp up to realaction
-        current = np.array([0,0])
+        current = self.prev_robot_action
         realaction = np.array(realaction)
-        for i in range(10):
-            current = (0.1*realaction + 0.9*current)
-            control = (0.3 * current).tolist()
+        for i in range(8):
+            current = (0.2 * realaction + 0.8 * current)
+            control = (0.2 * current).tolist()
+            control[0] = 3*control[0]
             self.send_control(control)
-
-        # Ramp down to zero
-        for i in range(10):
-            current = 0.9*current
-            control = (0.3 * current).tolist()
             time.sleep(0.1)
 
-        input("Next?")
+        self.prev_robot_action = current
+
+        self.step +=1
+
+        if self.step % 5 ==0:
+            next_action = control
+            for i in range(4):
+                self.prev_robot_action = self.prev_robot_action/1.4
+                self.send_control(self.prev_robot_action.tolist())
+                time.sleep(0.05)
+            input("Next?")
 

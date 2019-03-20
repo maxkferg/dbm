@@ -116,7 +116,7 @@ class ViewWindow():
             steering = obser["target"][0] / math.pi / 4
             throttle = 0.6
             action[robot] = [steering, throttle]
-        self.obser, r, done, info = env.step(action)
+        #self.obser, r, done, info = env.step(action)
         # Render current state
         self.render(env.render(mode="rgb_array", width=self.width, height=self.height))
         self.map.render(env.render_map(mode="rgb_array", width=MAP_WIDTH, height=MAP_HEIGHT))
@@ -126,9 +126,9 @@ class ViewWindow():
             print("%.02f FPS"%(self.times/(time.clock()-self.timestart)))
         self.root.after(10, self.step)
         #time.sleep(0.3)
-        if done[0]:
-            print("--- Resetting ---")
-            env.reset()
+        #if done[0]:
+        #    print("--- Resetting ---")
+        #    env.reset()
 
 
 

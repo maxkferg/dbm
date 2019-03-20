@@ -74,6 +74,7 @@ class MultiRobot(gym.Env, MultiAgentEnv):
         self.default_env = self.env[0]
         self.action_space = self.default_env.action_space
         self.observation_space = self.default_env.observation_space
+        print("Created an environment with %i robots"%len(self.env))
 
         for env in self.env.values():
             for other in self.env.values():

@@ -37,7 +37,7 @@ ENVIRONMENT = "MultiRobot-v0"
 def robot_env_creator(env_config):
     return MultiRobot({
         "debug": 0,
-        "num_robots": 2,
+        "num_robots": 4,
         "world": Playground()
     })
 
