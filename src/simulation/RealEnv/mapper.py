@@ -36,20 +36,19 @@ BATTERY_WEIGHT = -0.005
 ROTATION_COST = -0.002
 CRASHED_PENALTY = -1
 TARGET_DISTANCE_THRESHOLD = 0.6 # Max distance to the target
-HOST, PORT = "localhost", 9999
 COUNT = 0
 
 # ROS BRIDGE
 PORT = 8080
-HOST = "10.0.0.39"
+HOST = "robot.com"
 
 TARGETS = [
     [0.2, 4, 0.3],
     [-0.2, 0, 0.3]
 ]
 
-OFFSET_X = -0.6
-OFFSET_Y = -5.5
+OFFSET_X = 0.2
+OFFSET_Y = 1.2
 REAL = True
 
 # Fix targets
@@ -65,7 +64,7 @@ class RealMapper(Mapper):
         self.prev_robot_action = np.array([0,0])
         super().__init__(*args, **kwargs)
         if REAL:
-            self.start_ros()  
+            self.start_ros()
 
     def start_ros(self):
         """Setup a connection with the robot to wait for ODOM messages"""

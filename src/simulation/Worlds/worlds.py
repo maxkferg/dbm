@@ -261,4 +261,18 @@ class House(World):
     }
 
 
- 
+
+class Lab(World):
+    """
+    Abstract class for loading the Lab
+    Does not load any robot objects
+    """
+    metadata = {
+        'scale': 2,
+        'substeps': 20,  # 20 Physics steps per timestep
+        'timestep': 0.1, # Simulate every 0.1 seconds
+        'orientation': pybullet.getQuaternionFromEuler([0, 0, 0]),
+        'world': 'env/lab/output.sdf',
+        'floor_vertices': 'env/lab/output_floors.obj',
+        'render.modes': ['human', 'rgb_array'],
+    }

@@ -5,6 +5,9 @@ import math
 import random
 from tools import SDFGenerator
 
+HIGH_WALL = 20.0
+LOW_WALL = 2.0
+
 '''Lines are based on the assumption that they are horizontal or vertical and
 therefore are identified by a range over x or y and a single value for the coordinate
 axis thus:
@@ -191,6 +194,10 @@ class Generator:
         self.clear()
 
         image = Image.open(image_path)
+        if image.mode != "RGB":
+            print("Converting grayscale to RGB")
+            image = image.convert("RGB")
+
         self.pixels = image.load()
         px = self.pixels
         print("Image Size:", image.size)
@@ -216,12 +223,14 @@ class Generator:
                         if len(verts) > 0:
                             verts[0][1][1] += 1
                         else:
-                            if row + 1 < height and px[col, row + 1][0] != 255: self.verticals.append([col, [row, row]])
+                            if row + 1 < height and px[col, row + 1][0] != 255:
+                                self.verticals.append([col, [row, row]])
 
                         if len(horzs) > 0:
                             horzs[0][0][1] += 1
                         else:
-                            if col + 1 < width and px[col + 1, row][0] != 255: self.horizontals.append([[col, col], row])
+                            if col + 1 < width and px[col + 1, row][0] != 255:
+                                self.horizontals.append([[col, col], row])
 
         # Remove all single-pixel lines
         clean_horizontals = list(filter(lambda h: h[0][0] != h[0][1], self.horizontals))
@@ -585,7 +594,7 @@ class Generator:
         wall_vertices = []
         wall_indices = []
 
-        line_height = 20.
+        line_height = 5.
 
         # Add the walls
         for i in range(len(self.lines)):

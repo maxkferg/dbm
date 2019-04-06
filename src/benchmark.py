@@ -18,7 +18,7 @@ import colored_traceback
 from PIL import Image, ImageTk
 from gym.envs.registration import registry
 from simulation.RealEnv import MultiRobot
-from simulation.Worlds.worlds import Y2E2, Building, Playground, Maze, House
+from simulation.Worlds.worlds import Y2E2, Building, Playground, Maze, House, Lab
 colored_traceback.add_hook()
 tkinter.NoDefaultRoot()
 
@@ -33,7 +33,7 @@ RENDER_SIZE = (RENDER_HEIGHT, RENDER_WIDTH)
 env = MultiRobot({
     "debug": 0,
     "num_robots": 1,
-    "world": House()
+    "world": Lab()
 })
 
 

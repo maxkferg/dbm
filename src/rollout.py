@@ -7,7 +7,7 @@ gcloud compute --project "stanford-projects" scp --zone "us-west1-b" --recurse "
 ray rsync-down cluster.yaml ray_results ~/
 
 
-python rollout.py --run APEX_DDPG --env BuildingEnv-v0 --steps 10000 --no-render
+python rollout.py --run APEX_DDPG --env MultiRobot-v0 --steps 10000 --no-render
 
 """
 import io
@@ -22,6 +22,7 @@ import ray
 import argparse
 import learning.model
 import colored_traceback
+from matplotlib import cm
 from pprint import pprint
 from gym.spaces import Discrete, Box
 from gym.envs.registration import EnvSpec
@@ -35,7 +36,6 @@ from learning.custom_policy_graph import CustomDDPGPolicyGraph
 from ray.tune.registry import register_env
 colored_traceback.add_hook()
 
-
 EXAMPLE_USAGE = """
 Example Usage via RLlib CLI:
     python rollout.py --run APEX_DDPG --env MultiRobot-v0 --steps 1000
@@ -43,7 +43,7 @@ Example Usage via RLlib CLI:
 
 CHECKPOINT = "~/ray_results/seeker-apex-td3/APEX_DDPG_MultiRobot-v0_0_2019-02-23_01-54-076wuy8g2a/checkpoint_2200/checkpoint-2200"
 CHECKPOINT = "~/ray_results/seeker-apex-td3/APEX_DDPG_MultiRobot-v0_0_2019-02-27_11-39-53d4m4cbl2/checkpoint_1350/checkpoint-1350"
-#CHECKPOINT = "~/ray_results/saved/mapper/checkpoint_1350/checkpoint-1350"
+CHECKPOINT = "~/ray_results/saved/mapper/checkpoint_1350/checkpoint-1350"
 
 CHECKPOINT = os.path.expanduser(CHECKPOINT)
 ENVIRONMENT = "MultiRobot-v0"
@@ -57,13 +57,12 @@ EVAL_TIMESTEP = DEFAULT_TIMESTEP/FRAME_MULTIPLIER
 RENDER_WIDTH = 1280
 RENDER_HEIGHT = 720
 
-
 timestamp = datetime.datetime.now().strftime("%I-%M-%S %p")
 filename = 'videos/video %s.mp4'%timestamp
 
 video_FourCC = -1#cv2.VideoWriter_fourcc(*"mp4v")
 video = cv2.VideoWriter(filename, video_FourCC, fps=20, frameSize=(RENDER_WIDTH,RENDER_HEIGHT))
-
+viridis = cm.get_cmap('viridis')
 
 
 def building_env_creator(env_config):
@@ -159,13 +158,13 @@ def render_q_function(env, agent):
     q_img = np.reshape(q, (nx,ny,1))
     print("Policy took %.3f seconds"%(time.time()-start))
 
-    import cv2
-    import scipy.misc
     q_img = np.tile(q_img, (1,1,3))
     q_img = cv2.blur(q_img, (5,5))
-    q_img = 127*(np.clip(q_img, -1, 1)+1)
+    q_img = np.mean(q_img, axis=-1)
+    q_img = 1-(np.clip(q_img, -0.6, 1)+0.6)/1.6
+    q_img = 255*viridis(q_img)
     q_img = q_img.astype(np.uint8)
-    q_img = cv2.applyColorMap(q_img, cv2.COLORMAP_RAINBOW)
+    q_img = q_img[:,:,:3] # Remove alpha
     q_img = q_img[:,:,::-1] # Flip colormap to RGB
     return q_img
 
