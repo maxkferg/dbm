@@ -59,7 +59,7 @@
           <geometry>
             <mesh>
               <scale>10 10 10</scale>
-              <uri>assets/env/lab/output_floors.obj</uri>
+              <uri>assets/env/lab/output_floors.dae</uri>
             </mesh>
           </geometry>
           <material>
@@ -73,7 +73,7 @@
           <geometry>
             <mesh>
               <scale>10 10 10</scale>
-              <uri>assets/env/lab/output_floors.obj</uri>
+              <uri>assets/env/lab/output_floors.dae</uri>
             </mesh>
           </geometry>
         </collision>

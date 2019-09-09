@@ -59,7 +59,7 @@ class RealMapper(Mapper):
     def __init__(self, *args, **kwargs):
         self.ros = roslibpy.Ros(host=HOST, port=PORT)
         self.ros_odom = roslibpy.Topic(self.ros, '/odom', 'nav_msgs/Odometry')
-        self.ros_vel = roslibpy.Topic(self.ros, '/cmd_vel_mux/input/teleop', 'geometry_msgs/Twist')
+        self.ros_vel = roslibpy.Topic(self.ros, '/cmd_vel_mux/input/safety_controller', 'geometry_msgs/Twist')
         self.step = 0
         self.prev_robot_action = np.array([0,0])
         super().__init__(*args, **kwargs)
@@ -74,7 +74,7 @@ class RealMapper(Mapper):
             pos, orn = list(pos), list(orn)
             pos[0] = message['pose']['pose']['position']['x'] + OFFSET_X
             pos[1] = message['pose']['pose']['position']['y'] + OFFSET_Y
-            orn[2] = message['pose']['pose']['orientation']['z'] 
+            orn[2] = message['pose']['pose']['orientation']['z']
             orn[3] = message['pose']['pose']['orientation']['w']
             self.physics.resetBasePositionAndOrientation(self.robot.racecarUniqueId, pos, orn)
 

@@ -113,7 +113,7 @@ def create_parser(parser_creator=None):
         help="Surpress rendering of the environment.")
     parser.add_argument(
         "--render-q",
-        default=True,
+        default=False,
         action='store_true',
         dest='render_q',
         help='Render the q function. Write it to the environment video')
@@ -212,12 +212,12 @@ def rollout(agent, env_name, num_steps, out=None, no_render=True, render_q=False
                 done = dones['__all__']
                 if not no_render:
                     frame = env.render(width=RENDER_WIDTH, height=RENDER_HEIGHT)
-                    if render_q or save_q:
-                        q = render_q_function(env, agent)
-                    if save_q:
-                        cv2.imwrite('q.png',q)
-                    if render_q:
-                        frame[0:q.shape[0], (frame.shape[1]-q.shape[1]):frame.shape[1], :3] = q
+                    #if render_q or save_q:
+                    #    q = render_q_function(env, agent)
+                    #if save_q:
+                    #    cv2.imwrite('q.png',q)
+                    #if render_q:
+                    #    frame[0:q.shape[0], (frame.shape[1]-q.shape[1]):frame.shape[1], :3] = q
                     #from matplotlib import pyplot as plt
                     #plt.imshow(frame, interpolation = 'bicubic')
                     #plt.show()
